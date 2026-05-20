@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
-import { BarCodeScanner } from 'expo-barcode-scanner';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { createClawXClient } from './api';
 
 export default function App() {
@@ -8,23 +8,22 @@ export default function App() {
   const [connected, setConnected] = useState(false);
   const [workspaces, setWorkspaces] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [hasPermission, setHasPermission] = useState(null);
+  const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
+    if (!permission) {
+      requestPermission();
+    }
+  }, [permission]);
 
   const handleConnect = async (customConfig = config) => {
     setLoading(true);
     try {
       const client = createClawXClient(customConfig);
       const data = await client.getWorkspaces();
-      if (data && Array.isArray(data)) {
-        setWorkspaces(data);
+      if (data && data.success && Array.isArray(data.agents)) {
+        setWorkspaces(data.agents);
         setConnected(true);
         setConfig(customConfig);
       } else {
@@ -37,7 +36,7 @@ export default function App() {
     }
   };
 
-  const handleBarCodeScanned = ({ data }) => {
+  const onBarcodeScanned = ({ data }) => {
     setScanning(false);
     try {
       const parsed = JSON.parse(data);
@@ -59,8 +58,11 @@ export default function App() {
 
           {scanning ? (
             <View style={styles.scannerContainer}>
-              <BarCodeScanner
-                onBarCodeScanned={handleBarCodeScanned}
+              <CameraView
+                onBarcodeScanned={onBarcodeScanned}
+                barcodeScannerSettings={{
+                  barcodeTypes: ["qr"],
+                }}
                 style={StyleSheet.absoluteFillObject}
               />
               <TouchableOpacity style={styles.cancelButton} onPress={() => setScanning(false)}>

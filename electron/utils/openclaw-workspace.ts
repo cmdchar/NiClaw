@@ -28,11 +28,12 @@ function isCurrentOpenClawPath(p: string): boolean {
   return workspaceDir === openclawDir || workspaceDir.startsWith(openclawDir + sep);
 }
 
-export function buildDefaultClawXIdentityContent(): string {
+export function buildDefaultClawXIdentityContent(role?: string): string {
+  const roleSection = role ? `- **Role:** ${role}` : '';
   return [
     '# IDENTITY.md - ClawX',
     '',
-    '- **Name:** ClawX',
+    roleSection,
     '- **Creature:** desktop AI assistant',
     '- **Vibe:** concise, capable, and practical',
     '- **Emoji:** 🐾',
@@ -69,7 +70,7 @@ async function writeFileIfMissing(path: string, content: string): Promise<boolea
  */
 export async function ensureClawXIdentityFile(
   workspaceDir: string,
-  options: { createDir?: boolean } = {},
+  options: { createDir?: boolean; role?: string } = {},
 ): Promise<void> {
   const resolvedWorkspaceDir = resolve(workspaceDir);
   if (options.createDir) {
@@ -79,7 +80,7 @@ export async function ensureClawXIdentityFile(
   }
 
   const identityPath = join(resolvedWorkspaceDir, DEFAULT_IDENTITY_FILENAME);
-  const defaultIdentity = buildDefaultClawXIdentityContent();
+  const defaultIdentity = buildDefaultClawXIdentityContent(options.role);
   let wroteIdentity = await writeFileIfMissing(identityPath, defaultIdentity);
 
   if (!wroteIdentity) {

@@ -128,6 +128,8 @@ export async function handleAgentRoutes(
         parentAgentId?: string;
         tags?: string[];
         brainPath?: string;
+        systemPrompt?: string;
+        sandboxPath?: string;
       }>(req);
       const { name, inheritWorkspace, ...metadata } = body;
       const snapshot = await createAgent(name, { inheritWorkspace });
@@ -170,6 +172,8 @@ export async function handleAgentRoutes(
           parentAgentId?: string;
           tags?: string[];
           brainPath?: string;
+          systemPrompt?: string;
+          sandboxPath?: string;
         }>(req);
         const agentId = decodeURIComponent(parts[0]);
         const snapshot = await updateAgentConfig(agentId, body);

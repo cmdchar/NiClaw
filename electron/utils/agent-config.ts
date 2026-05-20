@@ -52,6 +52,8 @@ interface AgentListEntry extends Record<string, unknown> {
   tags?: string[];
   brainPath?: string;
   mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
+  systemPrompt?: string;
+  sandboxPath?: string;
 }
 
 interface AgentsConfig extends Record<string, unknown> {
@@ -441,7 +443,7 @@ async function provisionAgentFilesystem(
   if (options?.inheritWorkspace && targetWorkspace !== sourceWorkspace) {
     await copyBootstrapFiles(sourceWorkspace, targetWorkspace);
   }
-  await ensureClawXIdentityFile(targetWorkspace, { createDir: true });
+  await ensureClawXIdentityFile(targetWorkspace, { createDir: true, role: agent.role });
   if (targetAgentDir !== sourceAgentDir) {
     await copyRuntimeFiles(sourceAgentDir, targetAgentDir);
   }
@@ -548,6 +550,8 @@ async function buildSnapshotFromConfig(config: AgentConfigDocument, preloadedCha
       tags: entry.tags,
       brainPath: entry.brainPath,
       mcpServers: entry.mcpServers,
+      systemPrompt: entry.systemPrompt,
+      sandboxPath: entry.sandboxPath,
     };
   });
 
@@ -647,6 +651,8 @@ export interface UpdateAgentOptions {
   tags?: string[];
   brainPath?: string;
   mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
+  systemPrompt?: string;
+  sandboxPath?: string;
 }
 
 export async function updateAgentConfig(agentId: string, options: UpdateAgentOptions): Promise<AgentsSnapshot> {
@@ -668,6 +674,8 @@ export async function updateAgentConfig(agentId: string, options: UpdateAgentOpt
     if (options.tags !== undefined) nextEntry.tags = options.tags;
     if (options.brainPath !== undefined) nextEntry.brainPath = options.brainPath;
     if (options.mcpServers !== undefined) nextEntry.mcpServers = options.mcpServers;
+    if (options.systemPrompt !== undefined) nextEntry.systemPrompt = options.systemPrompt;
+    if (options.sandboxPath !== undefined) nextEntry.sandboxPath = options.sandboxPath;
 
     entries[index] = nextEntry;
 

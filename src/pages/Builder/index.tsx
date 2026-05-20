@@ -11,7 +11,9 @@ import {
   Globe,
   MessageSquare,
   Trash2,
-  Share2
+  Share2,
+  UserCheck,
+  Zap as ZapIcon
 } from 'lucide-react';
 import {
   ReactFlow,
@@ -42,6 +44,8 @@ const nodeTypes = {
   agent: AgentNode,
   action: ActionNode,
   knowledge: KnowledgeNode,
+  approval: ApprovalNode,
+  api: ApiNode,
 };
 
 function TriggerNode({ data }: NodeProps) {
@@ -54,6 +58,38 @@ function TriggerNode({ data }: NodeProps) {
         </div>
         <p className="text-sm font-semibold">{(data.label as string) || 'Event Trigger'}</p>
         <Handle type="source" position={Position.Right} className="w-3 h-3 bg-blue-500 border-2 border-background" />
+      </Card>
+    </div>
+  );
+}
+
+function ApprovalNode({ data }: NodeProps) {
+  return (
+    <div className="p-1 rounded-2xl bg-red-500/20 shadow-xl border border-red-500/30">
+      <Card className="w-48 p-4 rounded-xl border-0 bg-card/90 backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-2">
+          <UserCheck className="h-3 w-3 text-red-500" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter opacity-50">Human Gateway</span>
+        </div>
+        <p className="text-sm font-semibold">{(data.label as string) || 'Verify Output'}</p>
+        <Handle type="target" position={Position.Left} className="w-3 h-3 bg-red-500 border-2 border-background" />
+        <Handle type="source" position={Position.Right} className="w-3 h-3 bg-red-500 border-2 border-background" />
+      </Card>
+    </div>
+  );
+}
+
+function ApiNode({ data }: NodeProps) {
+  return (
+    <div className="p-1 rounded-2xl bg-zinc-500/20 shadow-xl border border-zinc-500/30">
+      <Card className="w-48 p-4 rounded-xl border-0 bg-card/90 backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-2">
+          <ZapIcon className="h-3 w-3 text-zinc-500" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter opacity-50">External API</span>
+        </div>
+        <p className="text-sm font-semibold">{(data.label as string) || 'HTTP Request'}</p>
+        <Handle type="target" position={Position.Left} className="w-3 h-3 bg-zinc-500 border-2 border-background" />
+        <Handle type="source" position={Position.Right} className="w-3 h-3 bg-zinc-500 border-2 border-background" />
       </Card>
     </div>
   );
@@ -151,15 +187,20 @@ export function Builder() {
   const handleSavePlan = async () => {
     try {
       setLoading(true);
-      // Persist plan nodes as agents for the AI OS orchestration
+      // Persist the builder state to a hidden file for persistence
+      const builderState = { nodes, edges };
+      // In a real implementation we'd use a dedicated API
+      // Here we simulate the AI OS sync
       const agentNodes = nodes.filter(n => n.type === 'agent');
       for (const node of agentNodes) {
         await createAgent(node.data.label as string, {
-          role: node.type === 'agent' ? 'Execution' : 'Standard',
+          role: 'Execution',
           tags: ['builder-orchestrated'],
-          description: `Orchestrated via Visual Builder plan: ${node.id}`
+          description: `Orchestrated via Visual Builder plan: ${node.id}`,
+          systemPrompt: `Visual Builder context: part of a graph with ${edges.length} connections.`
         });
       }
+      localStorage.setItem('clawx:builder-v1-state', JSON.stringify(builderState));
       toast.success('AI OS Plan saved and synchronized with Agent Cluster');
     } catch (e) {
       toast.error('Failed to save AI OS Plan');
@@ -285,6 +326,21 @@ export function Builder() {
               label="Send Email"
               color="text-green-500"
               onClick={() => addNode('action', 'Notification')}
+            />
+          </div>
+          <div className="space-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Controls</p>
+            <PaletteItem
+              icon={<UserCheck className="h-4 w-4" />}
+              label="Human Approval"
+              color="text-red-500"
+              onClick={() => addNode('approval', 'Review Output')}
+            />
+            <PaletteItem
+              icon={<ZapIcon className="h-4 w-4" />}
+              label="API Request"
+              color="text-zinc-500"
+              onClick={() => addNode('api', 'External Tool')}
             />
           </div>
         </aside>

@@ -16,6 +16,7 @@ import { Channels } from './pages/Channels';
 import { Skills } from './pages/Skills';
 import { Cron } from './pages/Cron';
 import { Builder } from './pages/Builder';
+import { Analytics } from './pages/Analytics';
 import { Dreams } from './pages/Dreams';
 import { Settings } from './pages/Settings';
 import { Setup } from './pages/Setup';
@@ -208,6 +209,7 @@ function App() {
             <Route path="/skills" element={<Skills />} />
             <Route path="/cron" element={<Cron />} />
             <Route path="/builder" element={<Builder />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/dreams" element={devModeUnlocked ? <Dreams /> : <Navigate to="/" replace />} />
             <Route path="/settings/*" element={<Settings />} />
             {extraRoutes.map((r) => (

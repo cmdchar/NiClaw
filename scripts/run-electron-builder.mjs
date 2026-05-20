@@ -3,6 +3,7 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -39,6 +40,17 @@ function spawnElectronBuilder() {
 
 const child = spawnElectronBuilder();
 child.on('exit', (code, signal) => {
+  if (code === 0) {
+    // Generate UPDATE_INFO.md in the release folder
+    const releaseDir = path.join(ROOT, 'release');
+    if (!existsSync(releaseDir)) {
+      mkdirSync(releaseDir, { recursive: true });
+    }
+    const updateInfo = `# ClawX AI OS Update Info\n\nLatest Release: https://github.com/ValueCell-ai/ClawX/releases\n\nBuild Timestamp: ${new Date().toISOString()}\n`;
+    writeFileSync(path.join(releaseDir, 'UPDATE_INFO.md'), updateInfo);
+    console.log('✅ Generated UPDATE_INFO.md in release/ folder');
+  }
+
   if (signal) {
     process.kill(process.pid, signal);
     return;

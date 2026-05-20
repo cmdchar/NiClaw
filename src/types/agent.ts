@@ -17,6 +17,8 @@ export interface AgentSummary {
   tags?: string[];
   brainPath?: string;
   mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
+  systemPrompt?: string;
+  sandboxPath?: string;
 }
 
 export interface AgentsSnapshot {

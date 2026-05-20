@@ -266,7 +266,7 @@ export function Skills() {
   const [installQuery, setInstallQuery] = useState('');
   const [installSheetOpen, setInstallSheetOpen] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-  const [selectedSource, setSelectedSource] = useState<'all' | 'built-in' | 'marketplace'>('all');
+  const [selectedSource, setSelectedSource] = useState<'all' | 'built-in' | 'marketplace' | 'apps'>('all');
 
   const gatewayRunning = gatewayStatus.state === 'running';
   const gatewayReportedReady = gatewayStatus.gatewayReady !== false;
@@ -596,6 +596,13 @@ export function Skills() {
               >
                 {t('filter.marketplace', { count: sourceStats.marketplace })}
               </button>
+              <button
+                onClick={() => setSelectedSource('apps')}
+                className={cn("font-medium transition-colors flex items-center gap-1.5", selectedSource === 'apps' ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
+              >
+                AI App Store
+                <Badge variant="outline" className="text-[9px] h-3.5 px-1 bg-primary/5 text-primary border-primary/20">NEW</Badge>
+              </button>
             </div>
           </div>
 
@@ -656,7 +663,30 @@ export function Skills() {
           )}
 
           <div className="flex flex-col gap-1">
-            {filteredSkills.length === 0 ? (
+            {selectedSource === 'apps' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                <AppStoreCard
+                  title="Lead Generation OS"
+                  desc="Autonomous agent cluster that finds, researches, and contacts leads via LinkedIn and Email."
+                  icon="🎯"
+                />
+                <AppStoreCard
+                  title="YouTube Automation"
+                  desc="A team of agents that scripts, generates images, and manages SEO for your channel."
+                  icon="🎬"
+                />
+                <AppStoreCard
+                  title="Legal Shield"
+                  desc="Review contracts, detect red flags, and ensure compliance with local laws automatically."
+                  icon="⚖️"
+                />
+                <AppStoreCard
+                  title="E-commerce Analyst"
+                  desc="Monitor competitors, optimize pricing, and predict inventory needs using your store data."
+                  icon="🛒"
+                />
+              </div>
+            ) : filteredSkills.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <Puzzle className="h-10 w-10 mb-4 opacity-50" />
                 <p>{searchQuery ? t('noSkillsSearch') : t('noSkillsAvailable')}</p>
