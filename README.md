@@ -3,19 +3,19 @@
   <img src="src/assets/logo.svg" width="128" height="128" alt="ClawX Logo" />
 </p>
 
-<h1 align="center">ClawX</h1>
+<h1 align="center">ClawX AI OS</h1>
 
 <p align="center">
-  <strong>The Desktop Interface for OpenClaw AI Agents</strong>
+  <strong>The Next-Generation AI Operating System for Autonomous Agent Orchestration</strong>
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> •
-  <a href="#why-clawx">Why ClawX</a> •
+  <a href="#vision">Vision</a> •
+  <a href="#core-capabilities">Core Capabilities</a> •
   <a href="#getting-started">Getting Started</a> •
   <a href="#architecture">Architecture</a> •
-  <a href="#development">Development</a> •
-  <a href="#contributing">Contributing</a>
+  <a href="#telemetry">Telemetry</a> •
+  <a href="#development">Development</a>
 </p>
 
 <p align="center">
@@ -35,13 +35,21 @@
 
 ---
 
-## Overview
+## Vision
 
-**ClawX** bridges the gap between powerful AI agents and everyday users. Built on top of [OpenClaw](https://github.com/OpenClaw), it transforms command-line AI orchestration into an accessible, beautiful desktop experience—no terminal required.
+**ClawX AI OS** is not just a GUI; it is a full-scale **AI Operating System** designed to be the "Windows for AI Agents." It transforms the raw power of [OpenClaw](https://github.com/OpenClaw) into a structured, hierarchical, and self-improving agent environment.
 
-Whether you're automating workflows, managing AI-powered channels, or scheduling intelligent tasks, ClawX provides the interface you need to harness AI agents effectively.
+ClawX provides the foundation for building **AI Teams**, where agents aren't just chat bots, but specialized employees (CEOs, Planners, Researchers) working within isolated, persistent **Workspaces**.
 
-ClawX comes pre-configured with best-practice model providers and natively supports Windows as well as multi-language settings. Of course, you can also fine-tune advanced configurations via **Settings → Advanced → Developer Mode**.
+### Why an AI OS?
+
+| Concept | Traditional AI App | ClawX AI OS |
+|-----------|--------------------|-------------|
+| **Scope** | Single Chat / Agent | Multi-agent Orchestration |
+| **Context** | Temporary History | Persistent **Knowledge Brain** (Graph-based) |
+| **Logic** | Flat List of Bots | **Agent Hierarchy** (Delegation & Supervision) |
+| **Performance** | Basic Logs | **Telemetry Engine** (Latency, Cost, Success Rate) |
+| **Storage** | Cloud-first | **Local-first Architecture** (Encrypted, Private) |
 
 <p align="center"><strong style="font-size:1.1em; text-decoration: underline;">For a full enterprise edition, dedicated service support, or tailored deployment guidance for your business scenario, contact us at <a href="mailto:public@valuecell.ai">public@valuecell.ai</a>.</strong></p>
 
@@ -97,26 +105,37 @@ When Developer Mode is enabled, the sidebar also provides a native Dreams page f
 
 ---
 
-## Features
+## Core Capabilities
 
-### 🎯 Zero Configuration Barrier
-Complete the entire setup—from installation to your first AI interaction—through an intuitive graphical interface. No terminal commands, no YAML files, no environment variable hunting.
+### 🏢 Real AI Workspaces
+Every workspace in ClawX acts as a mini-OS environment.
+- **Role-based Isolation:** Assign agents as CEO, Planner, Researcher, or Executioner.
+- **Persistent Memory:** Each workspace maintains its own local Vector DB and audit logs.
+- **Knowledge Brain:** Native integration with Obsidian-like local knowledge graphs for relational memory.
+- **Filesystem Sandbox:** Secure, local-first file access for agent operations.
 
-### 💬 Intelligent Chat Interface
-Communicate with AI agents through a modern chat experience. Support for multiple conversation contexts, message history, rich content rendering with Markdown (including GitHub-flavored tables and KaTeX-powered LaTeX math: `$inline$`, `$$block$$`, `\(inline\)`, and `\[block\]`), and direct `@agent` routing in the main composer for multi-agent setups.
-Skills you insert from the composer appear as `/skill-name` chips; click a chip to open the preview sidebar and read that skill's `SKILL.md`.
-When you target another agent with `@agent`, ClawX switches into that agent's own conversation context directly instead of relaying through the default agent. Agent workspaces stay separate by default, and stronger isolation depends on OpenClaw sandbox settings.
-Each agent can also override its own `provider/model` runtime setting; agents without overrides continue inheriting the global default model.
+### 🧠 Multi-Agent Orchestration (Agent Hierarchy)
+Move beyond single-agent chats. ClawX implements a true hierarchy:
+- **Delegation:** The CEO agent can delegate tasks to Planners or Researchers.
+- **Supervision:** QA and Security agents audit the output of Execution agents before finalizing tasks.
+- **Execution Graphs:** Visualize complex multi-turn reasoning and agent handovers in real-time.
 
-### 📡 Multi-Channel Management
-Configure and monitor multiple AI channels simultaneously. Each channel operates independently, allowing you to run specialized agents for different tasks.
-Each channel now supports multiple accounts, per-account agent binding, and switching the channel default account directly from the Channels page.
-For custom channel account IDs, ClawX enforces OpenClaw-compatible canonical IDs (`[a-z0-9_-]`, lowercase, max 64 chars, must start with a letter/number) to prevent routing mismatches.
-ClawX now also bundles Tencent's official personal WeChat channel plugin, so you can link WeChat directly from the Channels page with an in-app QR flow.
+### 📊 Agent Telemetry Engine
+A self-improving system requires data. ClawX tracks every turn:
+- **Performance Metrics:** Real-time tracking of latency (ms), token cost, and success rates.
+- **Hallucination Scoring:** Automated feedback loops to detect and correct agent drift.
+- **Optimization:** Over time, the system suggests the best model/agent pairing for specific task patterns.
 
-### ⏰ Cron-Based Automation
-Schedule AI tasks to run automatically. Define triggers, set intervals, and let your AI agents work around the clock without manual intervention.
-The Cron page now lets you configure external delivery directly in the task form with separate sender-account and recipient-target selectors. For supported channels, recipient targets are discovered automatically from channel directories or known session history, so you no longer need to edit `jobs.json` by hand.
+### 🏠 Local-First & Local-Inference
+ClawX is built for privacy and performance:
+- **Offline-First:** Your memory and configurations stay on your machine.
+- **Encrypted Storage:** All local memory and knowledge graphs are encrypted.
+- **Inference Integration:** Seamless support for local model providers (Ollama, LM Studio) alongside Enterprise APIs.
+
+### ⏰ Cron-Based Autonomous Operations
+Schedule your "AI Employees" to work around the clock.
+- **Background Tasks:** Auto-triggered monitoring, analysis, and reporting.
+- **Multi-Channel Delivery:** Integrated delivery to Discord, Telegram, Feishu, and WhatsApp.
 
 
 ### 🧩 Extensible Skill System
@@ -222,47 +241,35 @@ ClawX employs a **dual-process architecture** with a unified host API layer. The
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        ClawX Desktop App                         │
+│                        ClawX AI OS Core                          │
 │                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
-│  │              Electron Main Process                         │  │
-│  │  • Window & application lifecycle management               │  │
-│  │  • Gateway process supervision                             │  │
-│  │  • System integration (tray, notifications, keychain)      │  │
-│  │  • Auto-update orchestration                               │  │
+│  │              AI Orchestration Plane (Main)                 │  │
+│  │  • Multi-Agent Hierarchy & Delegation                      │  │
+│  │  • Telemetry Collection (Latency, Tokens, Cost)            │  │
+│  │  • Local Memory Graph & Vector DB Manager                  │  │
+│  │  • Secrets Vault & Identity Management                     │  │
 │  └────────────────────────────────────────────────────────────┘  │
 │                              │                                   │
-│                              │ IPC (authoritative control plane) │
+│                              │ High-Performance IPC              │
 │                              ▼                                   │
 │  ┌────────────────────────────────────────────────────────────┐  │
-│  │              React Renderer Process                        │  │
-│  │  • Modern component-based UI (React 19)                    │  │
-│  │  • State management with Zustand                           │  │
-│  │  • Unified host-api/api-client calls                       │  │
-│  │  • Rich Markdown rendering                                 │  │
+│  │              Command & Control (UI)                        │  │
+│  │  • Real-time Execution Graph Visualization                │  │
+│  │  • Workspace/Role Management Interface                     │  │
+│  │  • Knowledge Brain (Markdown/Obsidian Preview)             │  │
+│  │  • Telemetry Dashboards                                    │  │
 │  └────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────┬───────────────────────────────────┘
                                │
-                               │ Main-owned transport strategy
-                               │ (WS first, HTTP then IPC fallback)
+                               │ OS-Level Transport Strategy
                                ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                Host API & Main Process Proxies                   │
+│                     Autonomous Gateway                           │
 │                                                                  │
-│  • hostapi:fetch (Main proxy, avoids CORS in dev/prod)           │
-│  • gateway:httpProxy (Renderer never calls Gateway HTTP direct)  │
-│  • Unified error mapping & retry/backoff                         │
-└──────────────────────────────┬───────────────────────────────────┘
-                               │
-                               │ WS / HTTP / IPC fallback
-                               ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                     OpenClaw Gateway                             │
-│                                                                  │
-│  • AI agent runtime and orchestration                            │
-│  • Message channel management                                    │
-│  • Skill/plugin execution environment                            │
-│  • Provider abstraction layer                                    │
+│  • Multi-Channel I/O (Discord, WhatsApp, Telegram, etc.)         │
+│  • Skill Runtime Isolation (Sandboxed Plugins)                │
+│  • Distributed Inference Abstraction Layer                       │
 └──────────────────────────────────────────────────────────────────┘
 ```
 ### Design Principles

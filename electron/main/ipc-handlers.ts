@@ -14,6 +14,7 @@ import {
 } from '../utils/secure-storage';
 import { getOpenClawStatus, getOpenClawDir, getOpenClawConfigDir, getOpenClawSkillsDir, ensureDir, expandPath } from '../utils/paths';
 import { getOpenClawCliCommand } from '../utils/openclaw-cli';
+import { getHostApiToken } from '../api/server';
 import { getAllSettings, getSetting, resetSettings, setSetting, type AppSettings } from '../utils/store';
 import {
   saveProviderKeyToOpenClaw,
@@ -2208,6 +2209,17 @@ function registerAppHandlers(): void {
   // Get platform
   ipcMain.handle('app:platform', () => {
     return process.platform;
+  });
+
+  // Get Host API Port
+  ipcMain.handle('app:getHostApiPort', async () => {
+    const { getPort } = await import('../utils/config');
+    return getPort('CLAWX_HOST_API');
+  });
+
+  // Get Host API Token
+  ipcMain.handle('app:getHostApiToken', () => {
+    return getHostApiToken();
   });
 
   // Quit app

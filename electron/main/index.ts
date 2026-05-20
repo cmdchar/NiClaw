@@ -55,6 +55,7 @@ import { syncAllProviderAuthToRuntime } from '../services/providers/provider-run
 
 const WINDOWS_APP_USER_MODEL_ID = 'app.clawx.desktop';
 const isE2EMode = process.env.CLAWX_E2E === '1';
+const isHeadlessMode = process.argv.includes('--headless') || process.env.CLAWX_HEADLESS === '1';
 const requestedUserDataDir = process.env.CLAWX_USER_DATA_DIR?.trim();
 
 if (isE2EMode && requestedUserDataDir) {
@@ -308,13 +309,20 @@ async function initialize(): Promise<void> {
   }
 
   // Set application menu
-  createMenu();
+  if (!isHeadlessMode) {
+    createMenu();
+  }
 
   // Create the main window
-  const window = createMainWindow();
+  let window: BrowserWindow | null = null;
+  if (!isHeadlessMode) {
+    window = createMainWindow();
+  } else {
+    logger.info('Running in HEADLESS mode: UI window creation skipped');
+  }
 
   // Create system tray
-  if (!isE2EMode) {
+  if (!isE2EMode && !isHeadlessMode && window) {
     createTray(window);
   }
 
@@ -342,13 +350,13 @@ async function initialize(): Promise<void> {
   );
 
   // Register IPC handlers
-  registerIpcHandlers(gatewayManager, clawHubService, window);
+  registerIpcHandlers(gatewayManager, clawHubService, window!);
 
   hostApiServer = startHostApiServer({
     gatewayManager,
     clawHubService,
     eventBus: hostEventBus,
-    mainWindow: window,
+    mainWindow: window!,
   });
 
   // Initialize extension system

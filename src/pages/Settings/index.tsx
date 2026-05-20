@@ -23,6 +23,7 @@ import { useSettingsStore } from '@/stores/settings';
 import { useGatewayStore } from '@/stores/gateway';
 import { useUpdateStore } from '@/stores/update';
 import { UpdateSettings } from '@/components/settings/UpdateSettings';
+import { RemoteAccessSettings } from '@/components/settings/RemoteAccessSettings';
 import {
   getGatewayWsDiagnosticEnabled,
   invokeIpc,
@@ -550,6 +551,16 @@ export function Settings() {
                 />
               </div>
             </div>
+          </div>
+
+          <Separator className="bg-black/5 dark:bg-white/5" />
+
+          {/* Remote Access */}
+          <div>
+            <h2 className="text-3xl font-serif text-foreground mb-6 font-normal tracking-tight">
+              {t('remoteAccess.title')}
+            </h2>
+            <RemoteAccessSettings />
           </div>
 
           <Separator className="bg-black/5 dark:bg-white/5" />

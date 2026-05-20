@@ -61,6 +61,10 @@ interface SettingsState {
   setSidebarCollapsed: (value: boolean) => void;
   setSidebarWidth: (value: number) => void;
   setDevModeUnlocked: (value: boolean) => void;
+  remoteAccessEnabled: boolean;
+  setRemoteAccessEnabled: (value: boolean) => void;
+  remoteAccessPort: number;
+  setRemoteAccessPort: (value: number) => void;
   markSetupComplete: () => void;
   resetSettings: () => void;
 }
@@ -84,6 +88,8 @@ const defaultSettings = {
   sidebarCollapsed: false,
   sidebarWidth: 280,
   devModeUnlocked: false,
+  remoteAccessEnabled: false,
+  remoteAccessPort: 13210,
   setupComplete: false,
 };
 
@@ -184,6 +190,20 @@ export const useSettingsStore = create<SettingsState>()(
         void hostApiFetch('/api/settings/devModeUnlocked', {
           method: 'PUT',
           body: JSON.stringify({ value: devModeUnlocked }),
+        }).catch(() => { });
+      },
+      setRemoteAccessEnabled: (remoteAccessEnabled) => {
+        set({ remoteAccessEnabled });
+        void hostApiFetch('/api/settings/remoteAccessEnabled', {
+          method: 'PUT',
+          body: JSON.stringify({ value: remoteAccessEnabled }),
+        }).catch(() => { });
+      },
+      setRemoteAccessPort: (remoteAccessPort) => {
+        set({ remoteAccessPort });
+        void hostApiFetch('/api/settings/remoteAccessPort', {
+          method: 'PUT',
+          body: JSON.stringify({ value: remoteAccessPort }),
         }).catch(() => { });
       },
       markSetupComplete: () => set({ setupComplete: true }),

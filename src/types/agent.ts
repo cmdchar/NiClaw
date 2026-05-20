@@ -16,6 +16,7 @@ export interface AgentSummary {
   parentAgentId?: string;
   tags?: string[];
   brainPath?: string;
+  mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
 }
 
 export interface AgentsSnapshot {

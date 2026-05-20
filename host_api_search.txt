@@ -1,0 +1,14 @@
+electron/api/server.ts: * Per-session secret token used to authenticate Host API requests.
+electron/api/server.ts:/** Retrieve the current Host API auth token (for use by IPC proxy). */
+electron/api/server.ts:      logger.error('Host API request failed:', error);
+electron/api/server.ts:        `Host API server failed to bind port ${port}: ${error.message}. ` +
+electron/api/server.ts:      logger.error('Host API server error:', error);
+electron/api/server.ts:    logger.info(`Host API server listening on http://127.0.0.1:${port}`);
+electron/main/ipc/host-api-proxy.ts:  // path in host-api.ts can authenticate against the Host API server.
+electron/main/ipc/host-api-proxy.ts:      // Inject the per-session auth token so the Host API server accepts this request.
+electron/main/ipc-handlers.ts:  // Host API proxy handlers
+electron/api/server.ts:import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+electron/api/server.ts:  const server = createServer(async (req, res) => {
+electron/utils/openai-codex-oauth.ts:import { createServer } from 'node:http';
+electron/utils/openai-codex-oauth.ts:  const server = createServer((req, res) => {
+electron/gateway/supervisor.ts:      const server = net.createServer();

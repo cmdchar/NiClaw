@@ -11,6 +11,7 @@ import {
   Puzzle,
   Clock,
   Settings as SettingsIcon,
+  Workflow,
   PanelLeftClose,
   PanelLeft,
   Plus,
@@ -306,6 +307,7 @@ export function Sidebar() {
     { to: '/channels', icon: <Network className="h-4 w-4" strokeWidth={2} />, label: t('sidebar.channels'), testId: 'sidebar-nav-channels' },
     { to: '/skills', icon: <Puzzle className="h-4 w-4" strokeWidth={2} />, label: t('sidebar.skills'), testId: 'sidebar-nav-skills' },
     { to: '/cron', icon: <Clock className="h-4 w-4" strokeWidth={2} />, label: t('sidebar.cronTasks'), testId: 'sidebar-nav-cron' },
+    { to: '/builder', icon: <Workflow className="h-4 w-4" strokeWidth={2} />, label: 'Visual Builder', testId: 'sidebar-nav-builder' },
     ...(devModeUnlocked
       ? [{ to: '/dreams', icon: <Moon className="h-4 w-4" strokeWidth={2} />, label: t('common:sidebar.openClawDreams'), testId: 'sidebar-nav-dreams' }]
       : []),

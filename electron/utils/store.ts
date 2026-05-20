@@ -56,6 +56,10 @@ export interface AppSettings {
   selectedBundles: string[];
   enabledSkills: string[];
   disabledSkills: string[];
+
+  // Remote Access (AI OS Bridge)
+  remoteAccessEnabled: boolean;
+  remoteAccessPort: number;
 }
 
 /**
@@ -107,6 +111,10 @@ function createDefaultSettings(): AppSettings {
     selectedBundles: ['productivity', 'developer'],
     enabledSkills: [],
     disabledSkills: [],
+
+    // Remote Access (AI OS Bridge)
+    remoteAccessEnabled: false,
+    remoteAccessPort: 13210,
   };
 }
 

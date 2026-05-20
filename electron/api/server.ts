@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { getPort } from '../utils/config';
+import { getSetting } from '../utils/store';
 import { logger } from '../utils/logger';
 import { extensionRegistry } from '../extensions/registry';
 import type { HostApiContext } from './context';
@@ -127,9 +128,13 @@ export function startHostApiServer(ctx: HostApiContext, port = getPort('CLAWX_HO
     }
   });
 
-  server.listen(port, '127.0.0.1', () => {
-    logger.info(`Host API server listening on http://127.0.0.1:${port}`);
-  });
+  void (async () => {
+    const remoteAccess = await getSetting('remoteAccessEnabled');
+    const bindAddress = remoteAccess ? '0.0.0.0' : '127.0.0.1';
+    server.listen(port, bindAddress, () => {
+      logger.info(`Host API server listening on http://${bindAddress}:${port} (Remote Access: ${remoteAccess})`);
+    });
+  })();
 
   return server;
 }
