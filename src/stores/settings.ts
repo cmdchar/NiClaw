@@ -65,6 +65,10 @@ interface SettingsState {
   setRemoteAccessEnabled: (value: boolean) => void;
   remoteAccessPort: number;
   setRemoteAccessPort: (value: number) => void;
+  remoteHostUrl: string;
+  setRemoteHostUrl: (value: string) => void;
+  remoteHostToken: string;
+  setRemoteHostToken: (value: string) => void;
   markSetupComplete: () => void;
   resetSettings: () => void;
 }
@@ -90,6 +94,8 @@ const defaultSettings = {
   devModeUnlocked: false,
   remoteAccessEnabled: false,
   remoteAccessPort: 13210,
+  remoteHostUrl: '',
+  remoteHostToken: '',
   setupComplete: false,
 };
 
@@ -206,6 +212,8 @@ export const useSettingsStore = create<SettingsState>()(
           body: JSON.stringify({ value: remoteAccessPort }),
         }).catch(() => { });
       },
+      setRemoteHostUrl: (remoteHostUrl) => set({ remoteHostUrl }),
+      setRemoteHostToken: (remoteHostToken) => set({ remoteHostToken }),
       markSetupComplete: () => set({ setupComplete: true }),
       resetSettings: () => set(defaultSettings),
     }),

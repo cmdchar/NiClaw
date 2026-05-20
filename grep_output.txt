@@ -1,8 +1,0 @@
-41:interface AgentListEntry extends Record<string, unknown> {
-81:export interface AgentSummary {
-461:async function buildSnapshotFromConfig(config: AgentConfigDocument, preloadedChannels?: string[]): Promise<AgentsSnapshot> {
-623:export async function updateAgentName(agentId: string, name: string): Promise<AgentsSnapshot> {
-144:  if (url.pathname.startsWith('/api/agents/') && req.method === 'PUT') {
-243:function AgentCard({
-362:function AddAgentDialog({
-449:function AgentSettingsModal({

@@ -1,6 +1,7 @@
 import { invokeIpc } from '@/lib/api-client';
 import { trackUiEvent } from './telemetry';
 import { normalizeAppError } from './error-model';
+import { useSettingsStore } from '@/stores/settings';
 
 const HOST_API_PORT = 13210;
 const HOST_API_BASE = `http://127.0.0.1:${HOST_API_PORT}`;
@@ -153,6 +154,29 @@ function allowLocalhostFallback(): boolean {
 export async function hostApiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const startedAt = Date.now();
   const method = init?.method || 'GET';
+
+  // Remote client logic: if remoteHostUrl is set, skip IPC and fetch directly from remote host
+  const { remoteHostUrl, remoteHostToken } = useSettingsStore.getState();
+  if (remoteHostUrl) {
+    const baseUrl = remoteHostUrl.endsWith('/') ? remoteHostUrl.slice(0, -1) : remoteHostUrl;
+    const response = await fetch(`${baseUrl}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${remoteHostToken}`,
+        ...headersToRecord(init?.headers),
+      },
+    });
+    trackUiEvent('hostapi.remote_fetch', {
+      path,
+      method,
+      source: 'remote-host',
+      durationMs: Date.now() - startedAt,
+      status: response.status,
+    });
+    return await parseResponse<T>(response);
+  }
+
   // In Electron renderer, always proxy through main process to avoid CORS.
   try {
     const response = await invokeIpc<HostApiProxyResponse>('hostapi:fetch', {
