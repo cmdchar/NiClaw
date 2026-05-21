@@ -33,11 +33,13 @@ export function Analytics() {
     const totalTokens = history.reduce((acc, curr) => acc + curr.totalTokens, 0);
     // Rough estimation: $0.01 per 1k tokens
     const totalCost = (totalTokens / 1000 * 0.01).toFixed(4);
+    const successfulTasks = history.filter(h => h.success !== false).length;
+    const successRate = totalTasks > 0 ? Math.round((successfulTasks / totalTasks) * 100) : 0;
 
     return {
       totalTasks,
       avgLatency,
-      successRate: totalTasks > 0 ? 100 : 0, // Placeholder as we don't track errors yet in history
+      successRate,
       totalCost,
       cpuUsage: 15 + Math.random() * 10,
       memoryUsage: 40 + Math.random() * 15
@@ -110,6 +112,9 @@ export function Analytics() {
                     ? Math.round(agentHistory.reduce((acc, curr) => acc + (curr.latencyMs || 0), 0) / agentHistory.length)
                     : 0;
 
+                  const agentSuccessful = agentHistory.filter(h => h.success !== false).length;
+                  const agentSuccessRate = agentHistory.length > 0 ? Math.round((agentSuccessful / agentHistory.length) * 100) : 100;
+
                   return (
                     <div key={agent.id} className="flex items-center justify-between p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors">
                       <div className="flex items-center gap-3">
@@ -119,7 +124,8 @@ export function Analytics() {
                         <span className="text-sm font-medium">{agent.name}</span>
                       </div>
                       <div className="flex items-center gap-4 font-mono text-xs">
-                        <span className="text-green-600">{agentHistory.length} turns</span>
+                        <span className={cn(agentSuccessRate < 90 ? "text-amber-600" : "text-green-600")}>{agentSuccessRate}% SR</span>
+                        <span className="text-muted-foreground">{agentHistory.length} turns</span>
                         <span className="text-muted-foreground">{agentLatency}ms</span>
                       </div>
                     </div>

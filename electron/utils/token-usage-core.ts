@@ -13,6 +13,7 @@ export interface TokenUsageHistoryEntry {
   totalTokens: number;
   costUsd?: number;
   latencyMs?: number;
+  success?: boolean;
 }
 
 export function extractSessionIdFromTranscriptFileName(fileName: string): string | undefined {
@@ -296,6 +297,7 @@ export function parseUsageEntriesFromJsonl(
         ...(contentText ? { content: contentText } : {}),
         ...usage,
         latencyMs: (message as any).duration ?? (message as any).latency,
+      success: !(message as any).error,
       });
       continue;
     }
@@ -326,6 +328,7 @@ export function parseUsageEntriesFromJsonl(
       ...(contentText ? { content: contentText } : {}),
       ...usage,
       latencyMs: (details as any).duration ?? (details as any).latency,
+      success: !(details as any).error,
     });
   }
 

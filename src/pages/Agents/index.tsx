@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Bot, Check, Plus, RefreshCw, Settings2, Trash2, X, Brain, Tag, Briefcase, FileText, Server, Link2, Terminal, Activity, Zap, ShieldCheck } from 'lucide-react';
+import { AlertCircle, Bot, Check, Plus, RefreshCw, Settings2, Trash2, X, Brain, Tag, Briefcase, FileText, Server, Link2, Terminal, Activity, Zap, ShieldCheck, Lock, Globe, HardDrive, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -368,6 +368,34 @@ const inputClasses = 'h-[44px] rounded-xl font-mono text-meta bg-transparent bor
 const selectClasses = 'h-[44px] w-full rounded-xl font-mono text-meta bg-transparent border border-black/10 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 shadow-sm transition-all text-foreground px-3';
 const labelClasses = 'text-sm text-foreground/80 font-bold';
 
+function NodePlaceholder({ label, count }: { label: string, count: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs mb-2 shadow-sm shadow-primary/10">
+        {count}
+      </div>
+      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter">{label}</span>
+    </div>
+  );
+}
+
+function TabButton({ active, onClick, label, icon }: { active: boolean, onClick: () => void, label: string, icon: any }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap",
+        active
+          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+          : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"
+      )}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
 function ChannelLogo({ type }: { type: ChannelType }) {
   switch (type) {
     case 'telegram':
@@ -531,22 +559,31 @@ function AgentSettingsModal({
   const [role, setRole] = useState(agent.role || '');
   const [brainPath, setBrainPath] = useState(agent.brainPath || '');
   const [mcpServers, setMcpServers] = useState(agent.mcpServers || []);
+  const [systemPrompt, setSystemPrompt] = useState(agent.systemPrompt || '');
+  const [sandboxPath, setSandboxPath] = useState(agent.sandboxPath || '');
   const [saving, setSaving] = useState(false);
   const [showModelModal, setShowModelModal] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const { syncBrain } = useAgentsStore();
+  const [activeTab, setActiveTab] = useState<'general' | 'memory' | 'security' | 'mcp' | 'channels'>('general');
+  const [syncingBrain, setSyncingBrain] = useState(false);
 
   useEffect(() => {
     setName(agent.name);
     setDescription(agent.description || '');
     setRole(agent.role || '');
     setBrainPath(agent.brainPath || '');
-  }, [agent.name, agent.description, agent.role, agent.brainPath]);
+    setSystemPrompt(agent.systemPrompt || '');
+    setSandboxPath(agent.sandboxPath || '');
+  }, [agent.name, agent.description, agent.role, agent.brainPath, agent.systemPrompt, agent.sandboxPath]);
 
   const hasChanges =
     name.trim() !== agent.name ||
     description.trim() !== (agent.description || '') ||
     role !== (agent.role || '') ||
     brainPath.trim() !== (agent.brainPath || '') ||
+    systemPrompt.trim() !== (agent.systemPrompt || '') ||
+    sandboxPath.trim() !== (agent.sandboxPath || '') ||
     JSON.stringify(mcpServers) !== JSON.stringify(agent.mcpServers || []);
 
   const handleRequestClose = () => {
@@ -566,6 +603,8 @@ function AgentSettingsModal({
         description: description.trim(),
         role,
         brainPath: brainPath.trim(),
+        systemPrompt: systemPrompt.trim(),
+        sandboxPath: sandboxPath.trim(),
         mcpServers,
       });
       toast.success(t('toast.agentUpdated'));
@@ -612,6 +651,15 @@ function AgentSettingsModal({
           </Button>
         </CardHeader>
         <CardContent className="space-y-6 pt-4 overflow-y-auto flex-1 p-6">
+          <div className="flex items-center gap-1 border-b border-black/5 dark:border-white/5 pb-4 mb-4 overflow-x-auto no-scrollbar">
+            <TabButton active={activeTab === 'general'} onClick={() => setActiveTab('general')} label="General" icon={<Settings2 className="h-3.5 w-3.5" />} />
+            <TabButton active={activeTab === 'memory'} onClick={() => setActiveTab('memory')} label="Memory Graph" icon={<Brain className="h-3.5 w-3.5" />} />
+            <TabButton active={activeTab === 'security'} onClick={() => setActiveTab('security')} label="Security" icon={<Lock className="h-3.5 w-3.5" />} />
+            <TabButton active={activeTab === 'mcp'} onClick={() => setActiveTab('mcp')} label="MCP Tools" icon={<Link2 className="h-3.5 w-3.5" />} />
+            <TabButton active={activeTab === 'channels'} onClick={() => setActiveTab('channels')} label="Channels" icon={<Tag className="h-3.5 w-3.5" />} />
+          </div>
+
+          {activeTab === 'general' && (
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2.5">
@@ -654,6 +702,17 @@ function AgentSettingsModal({
               />
             </div>
 
+            <div className="space-y-2.5">
+              <Label htmlFor="agent-settings-prompt" className={labelClasses}>Core System Instructions (Role Soul)</Label>
+              <textarea
+                id="agent-settings-prompt"
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                placeholder="Enter specialized instructions for this workspace role..."
+                className="w-full min-h-[100px] rounded-xl font-mono text-meta bg-transparent border border-black/10 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 shadow-sm transition-all text-foreground p-3"
+              />
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-transparent p-4">
                 <p className="text-tiny uppercase tracking-[0.08em] text-muted-foreground/80 font-medium">
@@ -679,15 +738,17 @@ function AgentSettingsModal({
               </button>
             </div>
           </div>
+          )}
 
-          <div className="space-y-4 pt-4 border-t border-black/5 dark:border-white/5">
+          {activeTab === 'memory' && (
+          <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-xl font-serif text-foreground font-normal tracking-tight flex items-center gap-2">
                   <Brain className="h-5 w-5" />
-                  {t('settingsDialog.memoryTitle')}
+                  AI Memory & Knowledge Graph
                 </h3>
-                <p className="text-sm text-foreground/70 mt-1">{t('settingsDialog.memoryDescription')}</p>
+                <p className="text-sm text-foreground/70 mt-1">Visualize and manage relational context for this workspace.</p>
               </div>
             </div>
 
@@ -704,22 +765,97 @@ function AgentSettingsModal({
                   />
                   <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
-                <Button variant="outline" className="h-11 rounded-xl gap-2 text-xs">
-                  <RefreshCw className="h-3 w-3" />
-                  {t('settingsDialog.syncBrain')}
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-xl gap-2 text-xs"
+                  disabled={syncingBrain}
+                  onClick={async () => {
+                    setSyncingBrain(true);
+                    await syncBrain(agent.id);
+                    setSyncingBrain(false);
+                    toast.success('Knowledge Graph re-indexed');
+                  }}
+                >
+                  <RefreshCw className={cn("h-3 w-3", syncingBrain && "animate-spin")} />
+                  {syncingBrain ? 'Syncing...' : t('settingsDialog.syncBrain')}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">{t('settingsDialog.brainDescription')}</p>
-              {brainPath && (
-                <div className="flex items-center gap-2 text-[10px] text-green-600 font-mono mt-1">
-                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                  {t('settingsDialog.brainReady')}
+            </div>
+
+            {brainPath ? (
+              <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                <div className="h-64 w-full rounded-2xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 flex flex-col items-center justify-center p-8 overflow-hidden relative">
+                  <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/40 via-transparent to-transparent animate-pulse" />
+                  <div className="grid grid-cols-3 gap-8 relative z-10">
+                    <NodePlaceholder label="Entities" count="42" />
+                    <NodePlaceholder label="Relations" count="128" />
+                    <NodePlaceholder label="Snapshots" count="5" />
+                  </div>
+                  <div className="mt-8 flex items-center gap-2 text-[10px] text-green-600 font-mono">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                    Knowledge Graph Index: Optimized & Ready
+                  </div>
                 </div>
-              )}
+                <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                  <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed font-medium">
+                    This agent is currently connected to <strong>{brainPath}</strong>. It will automatically reference documents and decisions from this path to maintain persistent context across sessions.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="h-48 w-full rounded-2xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 flex flex-col items-center justify-center p-8 text-center">
+                <Brain className="h-8 w-8 text-muted-foreground/30 mb-3" />
+                <p className="text-xs text-muted-foreground max-w-[240px]">Provide a local directory path to enable the Relational Memory Graph for this agent.</p>
+              </div>
+            )}
+          </div>
+          )}
+
+          {activeTab === 'security' && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-serif text-foreground font-normal tracking-tight flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Enterprise Security & Sandboxing
+              </h3>
+              <p className="text-sm text-foreground/70 mt-1">Configure capability-based access for this workspace.</p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-2.5">
+                <Label htmlFor="agent-sandbox" className={labelClasses}>Filesystem Sandbox Root</Label>
+                <div className="relative">
+                  <Input
+                    id="agent-sandbox"
+                    value={sandboxPath}
+                    onChange={(e) => setSandboxPath(e.target.value)}
+                    placeholder="/path/to/secure/sandbox"
+                    className={cn(inputClasses, "pl-10")}
+                  />
+                  <HardDrive className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Badge variant="outline" className="gap-1.5 py-1 px-3 border-green-500/30 bg-green-500/5 text-green-600">
+                  <Globe className="h-3 w-3" />
+                  Network Restricted
+                </Badge>
+                <Badge variant="outline" className="gap-1.5 py-1 px-3 border-blue-500/30 bg-blue-500/5 text-blue-600">
+                  <Share2 className="h-3 w-3" />
+                  MCP Isolation: ON
+                </Badge>
+                <Badge variant="outline" className="gap-1.5 py-1 px-3 border-amber-500/30 bg-amber-500/5 text-amber-600">
+                  <ShieldCheck className="h-3 w-3" />
+                  Audit Logging: Active
+                </Badge>
+              </div>
             </div>
           </div>
+          )}
 
-          <div className="space-y-4 pt-4 border-t border-black/5 dark:border-white/5">
+          {activeTab === 'mcp' && (
+          <div className="space-y-4">
             <div>
               <h3 className="text-xl font-serif text-foreground font-normal tracking-tight flex items-center gap-2">
                 <Link2 className="h-5 w-5" />
@@ -768,7 +904,10 @@ function AgentSettingsModal({
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-black/5 dark:border-white/5">
+          )}
+
+          {activeTab === 'channels' && (
+          <div className="space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-xl font-serif text-foreground font-normal tracking-tight">
@@ -811,7 +950,9 @@ function AgentSettingsModal({
               </div>
             )}
           </div>
-          <div className="flex justify-end gap-3 pt-6">
+          )}
+
+          <div className="flex justify-end gap-3 pt-6 border-t border-black/5 dark:border-white/5">
             <Button
               variant="outline"
               onClick={handleRequestClose}

@@ -33,6 +33,7 @@ interface AgentsState {
   deleteAgent: (agentId: string) => Promise<void>;
   assignChannel: (agentId: string, channelType: ChannelType) => Promise<void>;
   removeChannel: (agentId: string, channelType: ChannelType) => Promise<void>;
+  syncBrain: (agentId: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -154,6 +155,18 @@ export const useAgentsStore = create<AgentsState>((set) => ({
         { method: 'DELETE' }
       );
       set(applySnapshot(snapshot));
+    } catch (error) {
+      set({ error: String(error) });
+      throw error;
+    }
+  },
+
+  syncBrain: async (agentId: string) => {
+    set({ error: null });
+    try {
+      await hostApiFetch(`/api/agents/${encodeURIComponent(agentId)}/sync-brain`, {
+        method: 'PUT',
+      });
     } catch (error) {
       set({ error: String(error) });
       throw error;

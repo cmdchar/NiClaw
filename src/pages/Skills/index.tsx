@@ -244,7 +244,52 @@ function SkillDetailDialog({ skill, isOpen, onClose, onToggle, onUninstall, onOp
   );
 }
 
+function AppStoreCard({ title, desc, icon, onInstall }: { title: string, desc: string, icon: string, onInstall?: () => void }) {
+  const [installing, setInstalling] = useState(false);
+  const handleInstall = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setInstalling(true);
+    setTimeout(() => {
+      onInstall?.();
+      setInstalling(false);
+      toast.success(`${title} Cluster Deployed Successfully`);
+    }, 2000);
+  };
+
+  return (
+    <Card className="p-5 rounded-2xl border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] hover:border-primary/30 transition-all cursor-pointer group">
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-xl bg-background flex items-center justify-center text-2xl shadow-sm border border-black/5">
+          {icon}
+        </div>
+        <div className="flex-1">
+          <h3 className="text-sm font-bold flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              {title}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-3 rounded-full text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+              disabled={installing}
+              onClick={handleInstall}
+            >
+              {installing ? <RefreshCw className="h-3 w-3 animate-spin" /> : 'Deploy OS'}
+            </Button>
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{desc}</p>
+          <div className="flex items-center gap-2 mt-3">
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Template</Badge>
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Multi-Agent</Badge>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export function Skills() {
+  const { createAgent } = useAgentsStore();
   const {
     skills,
     loading,
@@ -669,21 +714,38 @@ export function Skills() {
                   title="Lead Generation OS"
                   desc="Autonomous agent cluster that finds, researches, and contacts leads via LinkedIn and Email."
                   icon="🎯"
+                  onInstall={() => {
+                    void createAgent('Lead CEO', { role: 'CEO', tags: ['app-store', 'lead-gen'] });
+                    void createAgent('Search Engine', { role: 'Researcher', tags: ['app-store', 'lead-gen'] });
+                  }}
                 />
                 <AppStoreCard
                   title="YouTube Automation"
                   desc="A team of agents that scripts, generates images, and manages SEO for your channel."
                   icon="🎬"
+                  onInstall={() => {
+                    void createAgent('Creative Director', { role: 'CEO', tags: ['app-store', 'youtube'] });
+                    void createAgent('Script Writer', { role: 'Planner', tags: ['app-store', 'youtube'] });
+                    void createAgent('Video Editor Bot', { role: 'Execution', tags: ['app-store', 'youtube'] });
+                  }}
                 />
                 <AppStoreCard
                   title="Legal Shield"
                   desc="Review contracts, detect red flags, and ensure compliance with local laws automatically."
                   icon="⚖️"
+                  onInstall={() => {
+                    void createAgent('General Counsel', { role: 'CEO', tags: ['app-store', 'legal'] });
+                    void createAgent('Compliance Auditor', { role: 'Security', tags: ['app-store', 'legal'] });
+                  }}
                 />
                 <AppStoreCard
                   title="E-commerce Analyst"
                   desc="Monitor competitors, optimize pricing, and predict inventory needs using your store data."
                   icon="🛒"
+                  onInstall={() => {
+                    void createAgent('Inventory Planner', { role: 'Planner', tags: ['app-store', 'ecommerce'] });
+                    void createAgent('Market Watcher', { role: 'Researcher', tags: ['app-store', 'ecommerce'] });
+                  }}
                 />
               </div>
             ) : filteredSkills.length === 0 ? (

@@ -11,6 +11,7 @@ export interface TokenUsageEntry {
   outputTokens: number;
   totalTokens: number;
   latencyMs?: number;
+  success?: boolean;
 }
 
 interface AnalyticsState {
