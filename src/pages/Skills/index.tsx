@@ -747,6 +747,16 @@ export function Skills() {
                     void createAgent('Market Watcher', { role: 'Researcher', tags: ['app-store', 'ecommerce'] });
                   }}
                 />
+                <AppStoreCard
+                  title="Private Transport OS"
+                  desc="Manage scheduled trips, track drivers, and optimize routes for private transportation services."
+                  icon="🚐"
+                  onInstall={() => {
+                    void createAgent('Dispatcher CEO', { role: 'CEO', tags: ['app-store', 'transport'] });
+                    void createAgent('Route Optimizer', { role: 'Planner', tags: ['app-store', 'transport'] });
+                    void createAgent('Driver Bridge', { role: 'Execution', tags: ['app-store', 'transport'] });
+                  }}
+                />
               </div>
             ) : filteredSkills.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">

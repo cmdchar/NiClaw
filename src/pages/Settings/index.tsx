@@ -79,6 +79,8 @@ export function Settings() {
     setDevModeUnlocked,
     telemetryEnabled,
     setTelemetryEnabled,
+    updateChannel,
+    setUpdateChannel,
   } = useSettingsStore();
 
   const { status: gatewayStatus, restart: restartGateway } = useGatewayStore();
