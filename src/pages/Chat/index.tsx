@@ -11,6 +11,7 @@ import { buildBaselineRunKey, getBaseline } from '@/stores/baseline-cache';
 import { useGatewayStore } from '@/stores/gateway';
 import { useAgentsStore } from '@/stores/agents';
 import { useArtifactPanel } from '@/stores/artifact-panel';
+import { useSettingsStore } from '@/stores/settings';
 import { hostApiFetch } from '@/lib/host-api';
 import { invokeIpc } from '@/lib/api-client';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -277,6 +278,48 @@ export function Chat() {
       streamingTimestampStore.set(currentSessionKey, streamTimestamp || Date.now() / 1000);
     }
   }, [currentSessionKey, sending, streamTimestamp]);
+
+  // Premium Text-to-Speech logic for completed assistant messages
+  const lastSpokenMessageId = useRef<string | null>(null);
+  const { ttsEnabled } = useSettingsStore();
+
+  useEffect(() => {
+    if (!ttsEnabled || messages.length === 0) return;
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role !== 'assistant') return;
+
+    const messageId = lastMessage.id || `msg-${messages.length - 1}`;
+    if (lastSpokenMessageId.current === messageId) return;
+
+    // Extract and clean assistant message text
+    const fullText = extractText(lastMessage);
+    const steps = deriveTaskSteps({ 
+      messages: messages.slice(Math.max(0, messages.length - 2)),
+      streamingMessage: null,
+      streamingTools: []
+    });
+    const cleanedText = stripProcessMessagePrefix(fullText, getPrimaryMessageStepTexts(steps));
+    const textToSpeak = cleanedText.trim();
+
+    if (!textToSpeak) return;
+
+    lastSpokenMessageId.current = messageId;
+
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel(); // stop any current speech
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'ro-RO';
+
+      const voices = window.speechSynthesis.getVoices();
+      const roVoice = voices.find(v => v.lang.startsWith('ro'));
+      if (roVoice) {
+        utterance.voice = roVoice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [messages, ttsEnabled]);
 
   const streamingTimestamp = sending
     ? (streamingTimestampStore.get(currentSessionKey) ?? streamTimestamp)

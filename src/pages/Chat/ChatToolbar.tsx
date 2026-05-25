@@ -3,13 +3,14 @@
  * Session selector, new session, refresh, and the workspace browser
  * entry point.  Rendered in the Header when on the Chat page.
  */
-import { useMemo } from 'react';
-import { RefreshCw, Bot, FolderTree, ListTree } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { RefreshCw, Bot, FolderTree, ListTree, Volume2, VolumeX, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useChatStore } from '@/stores/chat';
 import { useAgentsStore } from '@/stores/agents';
 import { useArtifactPanel } from '@/stores/artifact-panel';
+import { useSettingsStore } from '@/stores/settings';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { WORKSPACE_BROWSER_ENABLED } from '@/components/file-preview/workspace-browser-config';
@@ -34,6 +35,25 @@ export function ChatToolbar({
   const panelTab = useArtifactPanel((s) => s.tab);
   const closePanel = useArtifactPanel((s) => s.close);
   const { t } = useTranslation('chat');
+
+  const { ttsEnabled, setTtsEnabled } = useSettingsStore();
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        setIsSpeaking(window.speechSynthesis.speaking);
+      }
+    }, 250);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleStopSpeech = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
   const currentAgent = useMemo(
     () => (agents ?? []).find((agent) => agent.id === currentAgentId) ?? null,
     [agents, currentAgentId],
@@ -45,6 +65,48 @@ export function ChatToolbar({
 
   return (
     <div className="flex items-center gap-2">
+      {/* Voice controls */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn('h-8 w-8 rounded-full transition-all duration-200', ttsEnabled ? 'text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10' : 'text-muted-foreground')}
+            onClick={() => {
+              setTtsEnabled(!ttsEnabled);
+              if (ttsEnabled) {
+                handleStopSpeech();
+              }
+            }}
+            aria-label="Toggle Voice Reading"
+          >
+            {ttsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{ttsEnabled ? 'Dezactiveaza citirea vocala' : 'Activeaza citirea vocala (TTS)'}</p>
+        </TooltipContent>
+      </Tooltip>
+
+      {ttsEnabled && isSpeaking && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full text-red-500 hover:text-red-400 hover:bg-red-500/10 border border-red-500/30 animate-pulse animate-duration-1000"
+              onClick={handleStopSpeech}
+              aria-label="Stop Voice"
+            >
+              <Square className="h-3 w-3 fill-current" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Opreste vocea (Stop)</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+
       <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-xs font-medium text-foreground/80 dark:border-white/10 dark:bg-white/5">
         <Bot className="h-3.5 w-3.5 text-primary" />
         <span>{t('toolbar.currentAgent', { agent: currentAgentName })}</span>

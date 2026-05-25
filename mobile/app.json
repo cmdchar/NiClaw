@@ -1,0 +1,8 @@
+{
+  "android": {
+    "package": "com.anonymous.clawxmobile"
+  },
+  "plugins": [
+    "expo-asset"
+  ]
+}

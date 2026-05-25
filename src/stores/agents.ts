@@ -20,6 +20,7 @@ interface AgentsState {
     parentAgentId?: string;
     tags?: string[];
     brainPath?: string;
+    mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
   }) => Promise<void>;
   updateAgent: (agentId: string, updates: {
     name?: string;
@@ -28,6 +29,7 @@ interface AgentsState {
     parentAgentId?: string;
     tags?: string[];
     brainPath?: string;
+    mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
   }) => Promise<void>;
   updateAgentModel: (agentId: string, modelRef: string | null) => Promise<void>;
   deleteAgent: (agentId: string) => Promise<void>;

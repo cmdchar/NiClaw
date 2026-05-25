@@ -7,7 +7,7 @@
  * are sent with the message (no base64 over WebSocket).
  */
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { SendHorizontal, Square, X, Paperclip, FileText, Film, Music, FileArchive, File, Loader2, AtSign, Search, ChevronDown } from 'lucide-react';
+import { SendHorizontal, Square, X, Paperclip, FileText, Film, Music, FileArchive, File, Loader2, AtSign, Search, ChevronDown, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -208,6 +208,67 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
   const skillPickerRef = useRef<HTMLDivElement>(null);
   const modelPickerRef = useRef<HTMLDivElement>(null);
   const isComposingRef = useRef(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const startSpeechRecognition = () => {
+    if (typeof window === 'undefined') return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Recunoașterea vocală nu este suportată în acest client.');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'ro-RO';
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+        toast.info('Te ascult (în Română)...', { duration: 2000 });
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event);
+        setIsRecording(false);
+        if (event.error === 'not-allowed') {
+          toast.error('Permisiunea pentru microfon a fost refuzată.');
+        } else {
+          toast.error(`Eroare de recunoaștere: ${event.error}`);
+        }
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.onresult = (event: any) => {
+        const text = event.results[0]?.[0]?.transcript;
+        if (text) {
+          setInput((prev) => {
+            const separator = prev.trim() ? ' ' : '';
+            return prev + separator + text;
+          });
+          toast.success('Voce transcrisă cu succes!');
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (e) {
+      console.error(e);
+      setIsRecording(false);
+    }
+  };
+
+  const stopSpeechRecognition = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
+  };
   const gatewayStatus = useGatewayStore((s) => s.status);
   const agents = useAgentsStore((s) => s.agents);
   const updateAgentModel = useAgentsStore((s) => s.updateAgentModel);
@@ -1029,6 +1090,31 @@ export function ChatInput({ onSend, onStop, disabled = false, sending = false, i
                 )}
               </div>
             )}
+
+            {/* STT Microphone Button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  size="icon"
+                  className={cn(
+                    'shrink-0 h-8 w-8 rounded-lg transition-all duration-300 mr-1',
+                    isRecording
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 animate-pulse shadow-[0_0_10px_rgba(6,182,212,0.3)] hover:bg-cyan-500/30'
+                      : 'text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10 hover:text-foreground'
+                  )}
+                  onClick={isRecording ? stopSpeechRecognition : startSpeechRecognition}
+                  disabled={inputDisabled || sending}
+                  title="Vorbește în Română (STT)"
+                >
+                  {isRecording ? <Mic className="h-3.5 w-3.5 text-cyan-400" /> : <Mic className="h-3.5 w-3.5" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isRecording ? 'Oprește ascultarea' : 'Vorbește în Română (Speech-to-Text)'}</p>
+              </TooltipContent>
+            </Tooltip>
 
             {/* Send Button — pushed to the right */}
             <Button

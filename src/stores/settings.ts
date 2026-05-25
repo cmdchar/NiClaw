@@ -71,6 +71,8 @@ interface SettingsState {
   setRemoteHostToken: (value: string) => void;
   markSetupComplete: () => void;
   resetSettings: () => void;
+  ttsEnabled: boolean;
+  setTtsEnabled: (value: boolean) => void;
 }
 
 const defaultSettings = {
@@ -97,6 +99,7 @@ const defaultSettings = {
   remoteHostUrl: '',
   remoteHostToken: '',
   setupComplete: false,
+  ttsEnabled: false,
 };
 
 const clampSidebarWidth = (value: number) => Math.min(420, Math.max(220, Math.round(value)));
@@ -216,6 +219,7 @@ export const useSettingsStore = create<SettingsState>()(
       setRemoteHostToken: (remoteHostToken) => set({ remoteHostToken }),
       markSetupComplete: () => set({ setupComplete: true }),
       resetSettings: () => set(defaultSettings),
+      setTtsEnabled: (ttsEnabled) => set({ ttsEnabled }),
     }),
     {
       name: 'clawx-settings',

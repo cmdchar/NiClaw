@@ -1,5 +1,5 @@
 {
-    "name": "clawx",
+    "name": "niclaw",
     "version": "0.4.4",
     "pnpm": {
         "onlyBuiltDependencies": [
@@ -77,6 +77,7 @@
         "postversion": "node scripts/post-version-push.mjs"
     },
     "dependencies": {
+        "@xyflow/react": "^12.10.2",
         "clawhub": "^0.5.0",
         "electron-store": "^11.0.2",
         "electron-updater": "^6.8.3",

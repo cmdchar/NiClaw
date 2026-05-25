@@ -177,9 +177,9 @@ export async function fetchProviderSnapshot(): Promise<ProviderSnapshot> {
   }
 
   return {
-    accounts,
-    statuses,
-    vendors,
+    accounts: Array.isArray(accounts) ? accounts : [],
+    statuses: Array.isArray(statuses) ? statuses : [],
+    vendors: Array.isArray(vendors) ? vendors : [],
     defaultAccountId: defaultInfo?.accountId ?? null,
   };
 }
@@ -200,7 +200,7 @@ export function pickPreferredAccount(
   vendorId: ProviderType | string,
   statusMap: Map<string, ProviderWithKeyInfo>,
 ): ProviderAccount | null {
-  const sameVendor = accounts.filter((account) => account.vendorId === vendorId);
+  const sameVendor = (Array.isArray(accounts) ? accounts : []).filter((account) => account.vendorId === vendorId);
   if (sameVendor.length === 0) return null;
 
   return (
@@ -219,7 +219,7 @@ export function buildProviderAccountId(
     return existingAccountId;
   }
 
-  const vendor = vendors.find((candidate) => candidate.id === vendorId);
+  const vendor = (Array.isArray(vendors) ? vendors : []).find((candidate) => candidate.id === vendorId);
   return vendor?.supportsMultipleAccounts ? `${vendorId}-${crypto.randomUUID()}` : vendorId;
 }
 
@@ -247,9 +247,9 @@ export function buildProviderListItems(
   vendors: ProviderVendorInfo[],
   defaultAccountId: string | null,
 ): ProviderListItem[] {
-  const safeAccounts = accounts ?? [];
-  const safeStatuses = statuses ?? [];
-  const safeVendors = vendors ?? [];
+  const safeAccounts = Array.isArray(accounts) ? accounts : [];
+  const safeStatuses = Array.isArray(statuses) ? statuses : [];
+  const safeVendors = Array.isArray(vendors) ? vendors : [];
   const vendorMap = new Map(safeVendors.map((vendor) => [vendor.id, vendor]));
   const statusMap = new Map(safeStatuses.map((status) => [status.id, status]));
 

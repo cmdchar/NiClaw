@@ -113,6 +113,26 @@ export async function handleAgentRoutes(
   url: URL,
   ctx: HostApiContext,
 ): Promise<boolean> {
+  if (url.pathname === '/api/agents/write-workspace-file' && req.method === 'POST') {
+    try {
+      const body = await parseJsonBody<{ agentId: string; fileName: string; content: string }>(req);
+      const { agentId, fileName, content } = body;
+      const fsP = await import('node:fs/promises');
+      const { join } = await import('node:path');
+      const { expandPath } = await import('../../utils/paths');
+      const targetWorkspace = expandPath(`~/.openclaw/workspace-${agentId}`);
+      const filePath = join(targetWorkspace, fileName);
+      await fsP.mkdir(targetWorkspace, { recursive: true });
+      await fsP.writeFile(filePath, content, 'utf8');
+      console.log(`[agents] Visual Builder wrote workspace file for agent ${agentId}: ${filePath}`);
+      sendJson(res, 200, { success: true, filePath });
+    } catch (error) {
+      console.error('[agents] Failed to write workspace file:', error);
+      sendJson(res, 500, { success: false, error: String(error) });
+    }
+    return true;
+  }
+
   if (url.pathname === '/api/agents' && req.method === 'GET') {
     sendJson(res, 200, { success: true, ...(await listAgentsSnapshot()) });
     return true;
