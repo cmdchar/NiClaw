@@ -2,6 +2,8 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import type { HostApiContext } from '../context';
 import { parseJsonBody, sendJson } from '../route-utils';
 import { runOpenClawDoctor, runOpenClawDoctorFix } from '../../utils/openclaw-doctor';
+import { executionEngine } from '../../main/execution/engine';
+import { ExecutionGraph } from '../../../shared/types/execution';
 
 export async function handleAppRoutes(
   req: IncomingMessage,
@@ -28,6 +30,17 @@ export async function handleAppRoutes(
     const body = await parseJsonBody<{ mode?: 'diagnose' | 'fix' }>(req);
     const mode = body.mode === 'fix' ? 'fix' : 'diagnose';
     sendJson(res, 200, mode === 'fix' ? await runOpenClawDoctorFix() : await runOpenClawDoctor());
+    return true;
+  }
+
+  if (url.pathname === '/api/intent/execute' && req.method === 'POST') {
+    try {
+      const body = await parseJsonBody<{ graph: ExecutionGraph }>(req);
+      const trace = await executionEngine.execute(body.graph);
+      sendJson(res, 200, { success: true, executionId: trace.executionId });
+    } catch (error) {
+      sendJson(res, 500, { success: false, error: String(error) });
+    }
     return true;
   }
 

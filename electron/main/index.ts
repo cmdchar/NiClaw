@@ -12,6 +12,7 @@ import { createMenu } from './menu';
 import { registerZoomShortcuts } from './zoom-shortcuts';
 
 import { appUpdater, registerUpdateHandlers } from './updater';
+import { registerExecutionHandlers } from './ipc/execution';
 import { logger } from '../utils/logger';
 import { warmupNetworkOptimization } from '../utils/uv-env';
 import { initTelemetry } from '../utils/telemetry';
@@ -374,6 +375,9 @@ async function initialize(): Promise<void> {
 
   // Register update handlers
   registerUpdateHandlers(appUpdater, window);
+
+  // Register execution handlers
+  registerExecutionHandlers();
 
   // Note: Auto-check for updates is driven by the renderer (update store init)
   // so it respects the user's "Auto-check for updates" setting.

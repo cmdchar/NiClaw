@@ -16,9 +16,9 @@ export const createClawXClient = (config) => {
 
   return {
     getWorkspaces: () => fetchApi('/api/agents'),
-    sendMessage: (message) => fetchApi('/api/chat/send', {
+    sendIntent: (graph) => fetchApi('/api/intent/execute', {
       method: 'POST',
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ graph })
     }),
     getStatus: () => fetchApi('/api/gateway/status'),
   };

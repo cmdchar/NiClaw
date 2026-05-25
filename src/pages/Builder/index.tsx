@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
@@ -13,7 +13,10 @@ import {
   Trash2,
   Share2,
   UserCheck,
-  Zap as ZapIcon
+  Zap as ZapIcon,
+  GitBranch,
+  Repeat,
+  AlertCircle
 } from 'lucide-react';
 import {
   ReactFlow,
@@ -37,6 +40,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAgentsStore } from '@/stores/agents';
+import { invokeIpc } from '@/lib/api-client';
+import { ExecutionGraph } from '../../../shared/types/execution';
 
 // Custom Node Types
 const nodeTypes = {
@@ -46,6 +51,7 @@ const nodeTypes = {
   knowledge: KnowledgeNode,
   approval: ApprovalNode,
   api: ApiNode,
+  condition: ConditionNode,
 };
 
 function TriggerNode({ data }: NodeProps) {
@@ -58,6 +64,31 @@ function TriggerNode({ data }: NodeProps) {
         </div>
         <p className="text-sm font-semibold">{(data.label as string) || 'Event Trigger'}</p>
         <Handle type="source" position={Position.Right} className="w-3 h-3 bg-blue-500 border-2 border-background" />
+      </Card>
+    </div>
+  );
+}
+
+function ConditionNode({ data }: NodeProps) {
+  return (
+    <div className="p-1 rounded-2xl bg-orange-500/20 shadow-xl border border-orange-500/30">
+      <Card className="w-48 p-4 rounded-xl border-0 bg-card/90 backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-2">
+          <GitBranch className="h-3 w-3 text-orange-500" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter opacity-50">Logic Split</span>
+        </div>
+        <p className="text-xs opacity-70 mb-1 font-mono">{(data.expression as string) || 'if(success)'}</p>
+        <Handle type="target" position={Position.Left} className="w-3 h-3 bg-orange-500" />
+        <div className="flex flex-col gap-4 mt-2 items-end">
+           <div className="flex items-center gap-2">
+             <span className="text-[8px] font-bold text-green-500 uppercase">True</span>
+             <Handle type="source" position={Position.Right} id="true" style={{ top: '65%' }} className="w-3 h-3 bg-green-500" />
+           </div>
+           <div className="flex items-center gap-2">
+             <span className="text-[8px] font-bold text-red-500 uppercase">False</span>
+             <Handle type="source" position={Position.Right} id="false" style={{ top: '85%' }} className="w-3 h-3 bg-red-500" />
+           </div>
+        </div>
       </Card>
     </div>
   );
@@ -103,6 +134,7 @@ function AgentNode({ data }: NodeProps) {
           <Cpu className="h-3 w-3 text-purple-500" />
           <span className="text-[10px] font-bold uppercase tracking-tighter opacity-50">AI OS Agent</span>
         </div>
+        <Badge variant="secondary" className="mb-2 text-[8px] uppercase">{(data.role as string) || 'Agent'}</Badge>
         <p className="text-sm font-semibold">{(data.label as string) || 'AI OS Agent'}</p>
         <Handle type="target" position={Position.Left} className="w-3 h-3 bg-purple-500 border-2 border-background" />
         <Handle type="source" position={Position.Right} className="w-3 h-3 bg-purple-500 border-2 border-background" />
@@ -153,7 +185,7 @@ const initialNodes: Node[] = [
     id: '2',
     type: 'agent',
     position: { x: 350, y: 150 },
-    data: { label: 'Strategic Planner' }
+    data: { label: 'Strategic Planner', role: 'CEO' }
   },
 ];
 
@@ -166,19 +198,31 @@ export function Builder() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const { createAgent } = useAgentsStore();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('clawx:builder-v1-state');
+    if (saved) {
+      try {
+        const { nodes: sn, edges: se } = JSON.parse(saved);
+        setNodes(sn);
+        setEdges(se);
+      } catch (e) {}
+    }
+  }, []);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
     [setEdges],
   );
 
-  const addNode = (type: string, label: string) => {
+  const addNode = (type: string, label: string, extraData: any = {}) => {
     const id = Date.now().toString();
     const newNode: Node = {
       id,
       type,
-      position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: { label },
+      position: { x: 400, y: 300 },
+      data: { label, ...extraData },
     };
     setNodes((nds) => nds.concat(newNode));
     toast.success(`Added ${label} to workspace`);
@@ -187,21 +231,23 @@ export function Builder() {
   const handleSavePlan = async () => {
     try {
       setLoading(true);
-      // Persist the builder state to a hidden file for persistence
       const builderState = { nodes, edges };
-      // In a real implementation we'd use a dedicated API
-      // Here we simulate the AI OS sync
+
+      // Persist to local storage
+      localStorage.setItem('clawx:builder-v1-state', JSON.stringify(builderState));
+
+      // Synchronize agents mentioned in the graph
       const agentNodes = nodes.filter(n => n.type === 'agent');
       for (const node of agentNodes) {
         await createAgent(node.data.label as string, {
-          role: 'Execution',
+          role: node.data.role as string || 'Execution',
           tags: ['builder-orchestrated'],
-          description: `Orchestrated via Visual Builder plan: ${node.id}`,
-          systemPrompt: `Visual Builder context: part of a graph with ${edges.length} connections.`
+          description: `Part of AI OS Plan: ${node.data.label}`,
+          systemPrompt: `You are the ${node.data.role} in a multi-agent AI OS graph.`
         });
       }
-      localStorage.setItem('clawx:builder-v1-state', JSON.stringify(builderState));
-      toast.success('AI OS Plan saved and synchronized with Agent Cluster');
+
+      toast.success('AI OS Plan saved and synchronized');
     } catch (e) {
       toast.error('Failed to save AI OS Plan');
     } finally {
@@ -209,12 +255,33 @@ export function Builder() {
     }
   };
 
-  const [loading, setLoading] = useState(false);
+  const handleDeploy = async () => {
+    const executionGraph: ExecutionGraph = {
+      id: `graph_${Date.now()}`,
+      version: '2.0.0',
+      nodes: nodes.map(n => ({
+        id: n.id,
+        type: n.type as any,
+        label: n.data.label as string,
+        config: n.data,
+        inputs: [],
+        outputs: []
+      })),
+      edges: edges.map(e => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        sourceHandle: e.sourceHandle || undefined
+      })),
+      metadata: {
+        name: 'Autonomous Team Workflow',
+        createdAt: new Date().toISOString()
+      }
+    };
 
-  const handleDeploy = () => {
-    toast.promise(new Promise(res => setTimeout(res, 2000)), {
-      loading: 'Compiling AI OS Execution Graph...',
-      success: 'Deployment successful! The agent swarm is now live.',
+    toast.promise(invokeIpc('execution:start', executionGraph), {
+      loading: 'Deploying AI Team Cluster...',
+      success: 'Execution Trace active. Monitoring telemetry...',
       error: 'Deployment failed.'
     });
   };
@@ -226,7 +293,7 @@ export function Builder() {
         <div className="flex items-center gap-4">
           <Workflow className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-serif font-semibold tracking-tight">AI OS Visual Builder</h1>
-          <Badge variant="outline" className="text-[10px] uppercase font-mono bg-primary/10 text-primary border-primary/20">Alpha</Badge>
+          <Badge variant="outline" className="text-[10px] uppercase font-mono bg-primary/10 text-primary border-primary/20">v2.0 Beta</Badge>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -236,7 +303,7 @@ export function Builder() {
             onClick={() => { setNodes([]); setEdges([]); }}
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            Clear
+            Reset
           </Button>
           <Button
             variant="outline"
@@ -246,7 +313,7 @@ export function Builder() {
             onClick={handleSavePlan}
           >
             <Save className="h-4 w-4" />
-            {loading ? 'Saving...' : 'Save OS Plan'}
+            {loading ? 'Saving...' : 'Save Plan'}
           </Button>
           <Button
             size="sm"
@@ -254,7 +321,7 @@ export function Builder() {
             onClick={handleDeploy}
           >
             <Play className="h-4 w-4 fill-current" />
-            Deploy to Cluster
+            Deploy OS
           </Button>
         </div>
       </div>
@@ -272,75 +339,60 @@ export function Builder() {
             />
             <PaletteItem
               icon={<MessageSquare className="h-4 w-4" />}
-              label="Discord Input"
+              label="User Message"
               color="text-blue-600"
-              onClick={() => addNode('trigger', 'Discord Message')}
+              onClick={() => addNode('trigger', 'Direct Input')}
             />
           </div>
           <div className="space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Agents</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Team Hierarchy</p>
             <PaletteItem
               icon={<Cpu className="h-4 w-4" />}
-              label="Planner Node"
+              label="CEO Agent"
               color="text-purple-500"
-              onClick={() => addNode('agent', 'Strategic Planner')}
+              onClick={() => addNode('agent', 'CEO Agent', { role: 'CEO' })}
             />
             <PaletteItem
               icon={<Cpu className="h-4 w-4" />}
-              label="Research Node"
+              label="Planner Agent"
               color="text-purple-500"
-              onClick={() => addNode('agent', 'Researcher Agent')}
+              onClick={() => addNode('agent', 'Planner Agent', { role: 'Planner' })}
             />
             <PaletteItem
               icon={<Cpu className="h-4 w-4" />}
-              label="Execution Node"
+              label="Researcher"
               color="text-purple-500"
-              onClick={() => addNode('agent', 'Execution Engine')}
+              onClick={() => addNode('agent', 'Researcher Agent', { role: 'Researcher' })}
             />
           </div>
           <div className="space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Knowledge</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Logic & Memory</p>
+             <PaletteItem
+              icon={<GitBranch className="h-4 w-4" />}
+              label="Condition"
+              color="text-orange-500"
+              onClick={() => addNode('condition', 'Logic Split', { expression: 'context.score > 0.8' })}
+            />
             <PaletteItem
               icon={<Database className="h-4 w-4" />}
-              label="Vector DB"
+              label="Knowledge Graph"
               color="text-amber-500"
               onClick={() => addNode('knowledge', 'Long-term Memory')}
             />
-            <PaletteItem
-              icon={<Database className="h-4 w-4" />}
-              label="Obsidian Sync"
-              color="text-amber-500"
-              onClick={() => addNode('knowledge', 'Knowledge Brain')}
-            />
           </div>
           <div className="space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Actions</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Execution</p>
             <PaletteItem
               icon={<Play className="h-4 w-4" />}
-              label="Terminal Cmd"
+              label="Bash Command"
               color="text-green-500"
-              onClick={() => addNode('action', 'Bash Script')}
+              onClick={() => addNode('action', 'Terminal Command')}
             />
-            <PaletteItem
-              icon={<Play className="h-4 w-4" />}
-              label="Send Email"
-              color="text-green-500"
-              onClick={() => addNode('action', 'Notification')}
-            />
-          </div>
-          <div className="space-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Controls</p>
             <PaletteItem
               icon={<UserCheck className="h-4 w-4" />}
-              label="Human Approval"
+              label="Human-in-loop"
               color="text-red-500"
-              onClick={() => addNode('approval', 'Review Output')}
-            />
-            <PaletteItem
-              icon={<ZapIcon className="h-4 w-4" />}
-              label="API Request"
-              color="text-zinc-500"
-              onClick={() => addNode('api', 'External Tool')}
+              onClick={() => addNode('approval', 'Manual Review')}
             />
           </div>
         </aside>
@@ -361,8 +413,17 @@ export function Builder() {
             <Controls className="bg-background border-black/10 shadow-xl" />
             <Panel position="top-right" className="p-2 bg-background/80 backdrop-blur-md border border-black/10 rounded-xl text-[10px] font-mono text-muted-foreground shadow-sm flex items-center gap-2">
               <Share2 className="h-3 w-3" />
-              AI OS Orchestration Layer V1.0
+              OS Engine Runtime: Deterministic
             </Panel>
+
+            {nodes.length === 0 && (
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                  <div className="text-center">
+                    <Workflow className="h-24 w-24 mx-auto mb-4" />
+                    <p className="text-xl font-serif">Drop components to build your AI OS</p>
+                  </div>
+               </div>
+            )}
           </ReactFlow>
         </main>
       </div>

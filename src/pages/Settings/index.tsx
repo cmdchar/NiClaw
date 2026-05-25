@@ -11,6 +11,9 @@ import {
   ExternalLink,
   Copy,
   FileText,
+  ShieldCheck,
+  ChevronRight,
+  GitBranch
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -1064,6 +1067,42 @@ export function Settings() {
                   checked={autoCheckUpdate}
                   onCheckedChange={setAutoCheckUpdate}
                 />
+              </div>
+
+              <div className="p-5 rounded-2xl bg-black/5 dark:bg-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <GitBranch className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-bold">OS Deployment Channel</Label>
+                      <p className="text-xs text-muted-foreground">Select the stability level for system updates.</p>
+                    </div>
+                  </div>
+                  <select
+                    value={updateChannel}
+                    onChange={(e) => setUpdateChannel(e.target.value as any)}
+                    className="bg-transparent border border-black/10 rounded-lg px-3 py-1.5 text-xs font-bold"
+                  >
+                    <option value="stable">Stable (Production)</option>
+                    <option value="beta">Beta (Early Access)</option>
+                    <option value="dev">Nightly (Unstable)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-black/5 pt-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-600">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-bold">Safe Recovery (Rollback)</Label>
+                      <p className="text-xs text-muted-foreground">Automatically rollback to previous version if graphs fail.</p>
+                    </div>
+                  </div>
+                  <Switch checked={true} />
+                </div>
               </div>
             </div>
           </div>

@@ -310,6 +310,7 @@ export function Sidebar() {
     { to: '/cron', icon: <Clock className="h-4 w-4" strokeWidth={2} />, label: t('sidebar.cronTasks'), testId: 'sidebar-nav-cron' },
     { to: '/builder', icon: <Workflow className="h-4 w-4" strokeWidth={2} />, label: 'Visual Builder', testId: 'sidebar-nav-builder' },
     { to: '/analytics', icon: <BarChart3 className="h-4 w-4" strokeWidth={2} />, label: 'OS Analytics', testId: 'sidebar-nav-analytics' },
+    { to: '/trace', icon: <Activity className="h-4 w-4" strokeWidth={2} />, label: 'Execution Trace', testId: 'sidebar-nav-trace' },
     ...(devModeUnlocked
       ? [{ to: '/dreams', icon: <Moon className="h-4 w-4" strokeWidth={2} />, label: t('common:sidebar.openClawDreams'), testId: 'sidebar-nav-dreams' }]
       : []),

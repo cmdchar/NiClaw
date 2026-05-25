@@ -49,6 +49,7 @@ import {
 } from '../utils/plugin-install';
 import { updateSkillConfig, getSkillConfig, getAllSkillConfigs } from '../utils/skill-config';
 import { whatsAppLoginManager } from '../utils/whatsapp-login';
+import { entityStore } from './memory/entity-store';
 import { getProviderConfig } from '../utils/provider-registry';
 import { deviceOAuthManager, OAuthProviderType } from '../utils/device-oauth';
 import { browserOAuthManager, type BrowserOAuthProviderType } from '../utils/browser-oauth';
@@ -1522,6 +1523,14 @@ function registerOpenClawHandlers(gatewayManager: GatewayManager): void {
   // Get the OpenClaw config directory (~/.openclaw)
   ipcMain.handle('openclaw:getConfigDir', () => {
     return getOpenClawConfigDir();
+  });
+
+  ipcMain.handle('memory:query', async (_, text: string) => {
+    return await entityStore.query(text);
+  });
+
+  ipcMain.handle('memory:save-entity', async (_, entity: any) => {
+    return await entityStore.saveEntity(entity);
   });
 
   // Get the OpenClaw skills directory (~/.openclaw/skills)
