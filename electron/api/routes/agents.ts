@@ -190,6 +190,15 @@ export async function handleAgentRoutes(
           parentAgentId?: string;
           tags?: string[];
           brainPath?: string;
+          mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
+          paused?: boolean;
+          currentTask?: string;
+          permissions?: {
+            fileWrite?: boolean;
+            cmdExecute?: 'always' | 'ask' | 'never';
+            webSearch?: boolean;
+            sandbox?: boolean;
+          };
         }>(req);
         const agentId = decodeURIComponent(parts[0]);
         const snapshot = await updateAgentConfig(agentId, body);

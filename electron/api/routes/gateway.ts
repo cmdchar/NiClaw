@@ -66,6 +66,25 @@ export async function handleGatewayRoutes(
     return true;
   }
 
+  if (url.pathname === '/api/gateway/rpc' && req.method === 'POST') {
+    try {
+      const body = await parseJsonBody<{
+        method: string;
+        params?: any;
+        timeoutMs?: number;
+      }>(req);
+      if (!body.method) {
+        sendJson(res, 400, { success: false, error: 'Missing method' });
+        return true;
+      }
+      const result = await ctx.gatewayManager.rpc(body.method, body.params || {}, body.timeoutMs || 30000);
+      sendJson(res, 200, { success: true, result });
+    } catch (error) {
+      sendJson(res, 500, { success: false, error: String(error) });
+    }
+    return true;
+  }
+
   if (url.pathname === '/api/gateway/control-ui' && req.method === 'GET') {
     try {
       const status = ctx.gatewayManager.getStatus();

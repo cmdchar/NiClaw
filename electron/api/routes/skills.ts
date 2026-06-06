@@ -33,6 +33,23 @@ export async function handleSkillRoutes(
     return true;
   }
 
+  if (url.pathname === '/api/skills/toggle' && req.method === 'POST') {
+    try {
+      const body = await parseJsonBody<{
+        skillKey: string;
+        enabled: boolean;
+      }>(req);
+      const result = await ctx.gatewayManager.rpc('skills.update', {
+        skillKey: body.skillKey,
+        enabled: body.enabled,
+      });
+      sendJson(res, 200, { success: true, result });
+    } catch (error) {
+      sendJson(res, 500, { success: false, error: error instanceof Error ? error.message : String(error) });
+    }
+    return true;
+  }
+
   if (url.pathname === '/api/skills/quick-access' && req.method === 'POST') {
     try {
       const body = await parseJsonBody<{

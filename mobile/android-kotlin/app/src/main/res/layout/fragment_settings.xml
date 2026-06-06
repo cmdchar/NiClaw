@@ -1,0 +1,715 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0D14">
+
+    <!-- Header bar -->
+    <RelativeLayout
+        android:id="@+id/settingsHeader"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="#131824"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="Setări Sistem"
+            android:textColor="#00E5FF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/settingsHeader"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- API Configuration Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#131824">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Conexiune Host Gateway"
+                        android:textColor="#00E5FF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Server URL Input -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="WebSocket Server URL"
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/settingsServerUrl"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:drawable/editbox_background_normal"
+                        android:backgroundTint="#1C2434"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:inputType="textUri"
+                        android:hint="ws://10.10.1.219:3000/jarvis/stream"
+                        android:textColorHint="#5E6D8C"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Token Input -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="ClawX API Gateway Token"
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/settingsGatewayToken"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:drawable/editbox_background_normal"
+                        android:backgroundTint="#1C2434"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:inputType="textPassword"
+                        android:hint="Introduceți token-ul securizat ClawX"
+                        android:textColorHint="#5E6D8C"
+                        android:layout_marginBottom="12dp" />
+
+                    <Button
+                        android:id="@+id/btnSaveSettings"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:layout_gravity="end"
+                        android:backgroundTint="#00E5FF"
+                        android:text="Salvează &amp; Conectează"
+                        android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Preferences Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#131824">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Preferințe"
+                        android:textColor="#00E5FF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- TTS toggle -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/prefTtsTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sinteză Voce (TTS)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/prefTtsTitle"
+                            android:text="Răspunde vocal în limba română"
+                            android:textColor="#8892B0"
+                            android:textSize="11sp" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchTts"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:checked="true"
+                            app:thumbTint="#00E5FF"
+                            app:trackTint="#8892B0" />
+                    </RelativeLayout>
+
+                    <!-- Dark Mode toggle -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/prefDarkTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Dark Theme (Glow Accent)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/prefDarkTitle"
+                            android:text="Interfață adaptată pentru ecrane OLED"
+                            android:textColor="#8892B0"
+                            android:textSize="11sp" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchDarkMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:checked="true"
+                            app:thumbTint="#00E5FF"
+                            app:trackTint="#8892B0" />
+                    </RelativeLayout>
+
+                    <!-- Language select -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Limbă Asistent (STT/TTS)"
+                        android:textColor="#8892B0"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp" />
+
+                    <RadioGroup
+                        android:id="@+id/radioLanguage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/radioLangRo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Română (ro-RO)"
+                            android:textColor="#FFFFFF"
+                            android:buttonTint="#00E5FF"
+                            android:checked="true"
+                            android:layout_marginEnd="16dp" />
+
+                        <RadioButton
+                            android:id="@+id/radioLangEn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="English (en-US)"
+                            android:textColor="#FFFFFF"
+                            android:buttonTint="#00E5FF" />
+                    </RadioGroup>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Gateway Health Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#131824">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Control Server local"
+                        android:textColor="#00E5FF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/lblGatewayStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Status Gateway:"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/valGatewayStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toEndOf="@id/lblGatewayStatus"
+                            android:layout_marginStart="8dp"
+                            android:text="CONECTAT"
+                            android:textColor="#00E5FF"
+                            android:textStyle="bold"
+                            android:textSize="14sp" />
+                    </RelativeLayout>
+
+                    <Button
+                        android:id="@+id/btnRestartGateway"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:backgroundTint="#FF5252"
+                        android:text="Repornește Servicii Gateway"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Proxy Settings Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#131824">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Configurare Proxy"
+                        android:textColor="#00E5FF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Proxy Enabled Switch -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:id="@+id/lblProxyEnabled"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Activează Proxy"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchProxyEnabled"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            app:thumbTint="#00E5FF"
+                            app:trackTint="#8892B0" />
+                    </RelativeLayout>
+
+                    <!-- HTTP Proxy Server -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Proxy HTTP / HTTPS"
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/editProxyServer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:drawable/editbox_background_normal"
+                        android:backgroundTint="#1C2434"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:inputType="text"
+                        android:hint="ex: http://127.0.0.1:7890"
+                        android:textColorHint="#5E6D8C"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Proxy Bypass Rules -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Reguli Bypass Proxy"
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/editProxyBypass"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:drawable/editbox_background_normal"
+                        android:backgroundTint="#1C2434"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:inputType="text"
+                        android:hint="localhost;127.0.0.1;::1"
+                        android:textColorHint="#5E6D8C"
+                        android:layout_marginBottom="12dp" />
+
+                    <Button
+                        android:id="@+id/btnSaveProxy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="38dp"
+                        android:layout_gravity="end"
+                        android:backgroundTint="#00E5FF"
+                        android:text="Salvează Proxy"
+                        android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Developer Diagnostics & Terminal Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#131824">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Diagnostic Avansat &amp; Logs"
+                        android:textColor="#00E5FF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Developer Mode toggle -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/lblDevMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mod Dezvoltator"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/lblDevMode"
+                            android:text="Activează funcții de diagnostic avansat"
+                            android:textColor="#8892B0"
+                            android:textSize="11sp" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchDevMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            app:thumbTint="#00E5FF"
+                            app:trackTint="#8892B0" />
+                    </RelativeLayout>
+
+                    <!-- Auto-Start toggle -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/lblAutoStart"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pornire Automată"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/lblAutoStart"
+                            android:text="Pornește aplicația automat la pornirea dispozitivului"
+                            android:textColor="#8892B0"
+                            android:textSize="11sp" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchAutoStart"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            app:thumbTint="#00E5FF"
+                            app:trackTint="#8892B0" />
+                    </RelativeLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Terminal Loguri Server"
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <!-- Scrollable Log Console -->
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="180dp"
+                        android:background="#0A0D14"
+                        android:padding="8dp"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/txtLogTerminal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Terminal Diagnostic neinițializat. Apasă 'Descarcă Loguri'..."
+                            android:textColor="#00FF66"
+                            android:textSize="10sp"
+                            android:fontFamily="monospace" />
+                    </ScrollView>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <Button
+                            android:id="@+id/btnFetchLogs"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#00E5FF"
+                            android:text="Descarcă Loguri"
+                            android:textColor="#0A0D14"
+                            android:textSize="11sp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+
+                        <Button
+                            android:id="@+id/btnRunDoctor"
+                            android:layout_width="0dp"
+                            android:layout_height="38dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:backgroundTint="#8B5CF6"
+                            android:text="Rulează Doctor"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Service Management Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#131824">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Administrare Servicii"
+                        android:textColor="#00E5FF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Administrează joburile programate, plugin-urile instalate și furnizorii de modele AI."
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <Button
+                        android:id="@+id/btnConfigureCron"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginBottom="8dp"
+                        android:backgroundTint="#00E5FF"
+                        android:text="Programare Cron Jobs"
+                        android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+
+                    <Button
+                        android:id="@+id/btnConfigureSkills"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginBottom="8dp"
+                        android:backgroundTint="#00E5FF"
+                        android:text="Gestionare Skills / Extensii"
+                        android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+
+                    <Button
+                        android:id="@+id/btnConfigureModels"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginBottom="8dp"
+                        android:backgroundTint="#00E5FF"
+                        android:text="Configurare Modele / Furnizori"
+                        android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+
+                    <Button
+                        android:id="@+id/btnConfigureDreams"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginBottom="8dp"
+                        android:backgroundTint="#00E5FF"
+                        android:text="Consolidare Memorie (Dreams)"
+                        android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+
+                    <Button
+                        android:id="@+id/btnConfigureObsidian"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:backgroundTint="#A78BFA"
+                        android:text="🧠 Memorie Second Brain"
+                        android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Bot Channels Configuration Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#131824">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Canale Comunicare"
+                        android:textColor="#00E5FF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Configurează Telegram, Discord, WhatsApp și alte integrări de chat."
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <Button
+                        android:id="@+id/btnConfigureChannels"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:backgroundTint="#00E5FF"
+                        android:text="Configurează Canale Bot"
+                        android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

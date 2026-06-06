@@ -46,11 +46,9 @@ function isIgnorablePostHogShutdownError(error: unknown): boolean {
  */
 export async function initTelemetry(): Promise<void> {
     try {
-        const telemetryEnabled = await getSetting('telemetryEnabled');
-        if (!telemetryEnabled) {
-            logger.info('Telemetry is disabled in settings');
-            return;
-        }
+        // Hard-disabled for privacy compliance
+        logger.info('Telemetry is hard-disabled for privacy');
+        return;
 
         // Initialize PostHog client
         posthogClient = new PostHog(POSTHOG_API_KEY, { host: POSTHOG_HOST });

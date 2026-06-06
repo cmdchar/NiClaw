@@ -137,6 +137,9 @@ export async function launchGatewayProcess(options: {
   // `isDisabledByEnv()`).  Set after the `forkEnv` spread so any
   // pre-existing value inherited from the user shell cannot re-enable it.
   runtimeEnv.OPENCLAW_DISABLE_BONJOUR = '1';
+  runtimeEnv.OPENCLAW_TELEMETRY_DISABLED = '1';
+  runtimeEnv.OPENCLAW_NO_TELEMETRY = '1';
+  runtimeEnv.DO_NOT_TRACK = '1';
 
   // Only apply the fetch/child_process preload in dev mode.
   // In packaged builds Electron's UtilityProcess rejects NODE_OPTIONS

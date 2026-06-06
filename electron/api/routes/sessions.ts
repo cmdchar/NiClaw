@@ -285,6 +285,44 @@ export async function handleSessionRoutes(
   url: URL,
   _ctx: HostApiContext,
 ): Promise<boolean> {
+  if (url.pathname === '/api/sessions/list' && req.method === 'GET') {
+    try {
+      const agentIdRaw = url.searchParams.get('agentId')?.trim();
+      const agentIds = agentIdRaw ? [agentIdRaw] : [];
+      if (agentIds.length === 0) {
+        // If no agentId specified, maybe return error or we could read all agents. 
+        // For simplicity, require agentId or default to 'default-agent'.
+        agentIds.push('default-agent');
+      }
+      
+      const allSessions: any[] = [];
+      for (const agentId of agentIds) {
+        if (!SAFE_SESSION_SEGMENT.test(agentId)) continue;
+        try {
+          const sessionsJson = await readSessionsJson(agentId);
+          if (Array.isArray(sessionsJson.sessions)) {
+            allSessions.push(...sessionsJson.sessions);
+          } else {
+            for (const [key, val] of Object.entries(sessionsJson)) {
+              if (key === 'sessions' || key === 'deleted') continue;
+              if (typeof val === 'object' && val !== null) {
+                allSessions.push({ key, ...(val as any) });
+              } else if (typeof val === 'string') {
+                allSessions.push({ key, fileName: val });
+              }
+            }
+          }
+        } catch {
+          // ignore missing
+        }
+      }
+      sendJson(res, 200, { success: true, sessions: allSessions });
+    } catch (error) {
+      sendJson(res, 500, { success: false, error: String(error) });
+    }
+    return true;
+  }
+
   if (url.pathname === '/api/sessions/summaries' && req.method === 'POST') {
     try {
       const body = await parseJsonBody<{ sessionKeys?: string[] }>(req);

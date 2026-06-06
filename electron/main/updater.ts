@@ -171,25 +171,12 @@ export class AppUpdater extends EventEmitter {
    */
   async checkForUpdates(): Promise<UpdateInfo | null> {
     try {
-      const result = await autoUpdater.checkForUpdates();
-
-      // In dev mode (app not packaged), autoUpdater silently returns null
-      // without emitting ANY events (not even checking-for-update).
-      // Detect this and force an error so the UI never stays silent.
-      if (result == null) {
-        this.updateStatus({
-          status: 'error',
-          error: 'Update check skipped (dev mode – app is not packaged)',
-        });
-        return null;
-      }
-
-      // Safety net: if events somehow didn't fire, force a final state.
-      if (this.status.status === 'checking' || this.status.status === 'idle') {
-        this.updateStatus({ status: 'not-available' });
-      }
-
-      return result.updateInfo || null;
+      // Hard-disabled to prevent pinging external servers for updates.
+      this.updateStatus({
+        status: 'error',
+        error: 'Updates are disabled in this environment for privacy/isolation.',
+      });
+      return null;
     } catch (error) {
       logger.error('[Updater] Check for updates failed:', error);
       this.updateStatus({ status: 'error', error: (error as Error).message || String(error) });

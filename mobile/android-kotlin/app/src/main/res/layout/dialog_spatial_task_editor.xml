@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#131824"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Adaugă Task Nou"
+        android:textColor="#00E5FF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Title Input -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Titlu Task"
+        android:textColor="#8892B0"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/editorTaskTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/editbox_background_normal"
+        android:backgroundTint="#1C2434"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:padding="12dp"
+        android:hint="ex: Rezolvă erorile din STT"
+        android:textColorHint="#5E6D8C"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Description Input -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Descriere Task"
+        android:textColor="#8892B0"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/editorTaskDesc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/editbox_background_normal"
+        android:backgroundTint="#1C2434"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:padding="12dp"
+        android:hint="ex: Verifică logs și optimizează tăierea audio"
+        android:textColorHint="#5E6D8C"
+        android:minLines="2"
+        android:gravity="top"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Initial Status Selection -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Stare Inițială"
+        android:textColor="#8892B0"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="6dp" />
+
+    <RadioGroup
+        android:id="@+id/editorTaskStatusGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="4dp">
+
+        <RadioButton
+            android:id="@+id/radioTodo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="De făcut"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/radioInProgress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="În lucru"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp" />
+
+        <RadioButton
+            android:id="@+id/radioDone"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Finalizat"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp" />
+    </RadioGroup>
+
+</LinearLayout>

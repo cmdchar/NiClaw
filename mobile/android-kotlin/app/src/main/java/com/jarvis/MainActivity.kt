@@ -12,17 +12,13 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.TextView
+import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.json.JSONObject
 import java.util.*
 
@@ -30,10 +26,22 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tts: TextToSpeech
     private lateinit var speechRecognizer: SpeechRecognizer
-    private lateinit var adapter: MessageAdapter
     private lateinit var jarvisClient: JarvisClient
-    private lateinit var statusText: TextView
-    private lateinit var textInput: EditText
+
+    // Fragment Instances
+    private val chatFragment = ChatFragment()
+    private val agentsFragment = AgentsFragment()
+    private val spatialFragment = SpatialFragment()
+    private val portalFragment = PortalFragment()
+    private val settingsFragment = SettingsFragment()
+    private val governanceFragment = GovernanceFragment()
+
+    // Global App States and Caches
+    private var activeAdapter: MessageAdapter? = null
+    private val messageCache = mutableListOf<Message>()
+    private var currentStatus = "Deconectat"
+    private var ttsEnabled = true
+    private var assistantLanguage = "ro-RO"
 
     private val RECORD_AUDIO_REQUEST_CODE = 101
     private var isFlashlightOn = false
@@ -42,42 +50,146 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        statusText = findViewById(R.id.statusText)
-        textInput = findViewById(R.id.textInput)
-        val sendButton: ImageButton = findViewById(R.id.sendButton)
-        val micButton: FloatingActionButton = findViewById(R.id.micButton)
-        val recyclerView: RecyclerView = findViewById(R.id.chatRecyclerView)
-        val title: TextView = findViewById(R.id.title)
-
-        adapter = MessageAdapter(mutableListOf())
-        recyclerView.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
-        recyclerView.adapter = adapter
-
         val prefs = getSharedPreferences("JarvisPrefs", Context.MODE_PRIVATE)
-        val serverUrl = prefs.getString("server_url", "ws://100.64.0.1:3000/jarvis/stream")!!
+        var serverUrl = prefs.getString("server_url", "ws://10.10.1.219:3000/jarvis/stream")!!
+        if (serverUrl.contains(":13210/jarvis/stream")) {
+            serverUrl = serverUrl.replace(":13210/jarvis/stream", ":3000/jarvis/stream")
+            prefs.edit().putString("server_url", serverUrl).apply()
+        }
+        ttsEnabled = prefs.getBoolean("tts_enabled", true)
+        assistantLanguage = prefs.getString("language", "ro-RO")!!
+
         jarvisClient = JarvisClient(serverUrl, this)
 
         setupSTT()
         setupTTS()
 
-        sendButton.setOnClickListener {
-            val text = textInput.text.toString().trim()
-            if (text.isNotEmpty()) {
-                sendMessage(text)
-                textInput.text.clear()
+        // Setup Bottom Navigation
+        val bottomNav: BottomNavigationView = findViewById(R.id.bottomNav)
+        bottomNav.setOnItemSelectedListener { item ->
+            val fragment: Fragment = when (item.itemId) {
+                R.id.navigation_chat -> chatFragment
+                R.id.navigation_agents -> agentsFragment
+                R.id.navigation_spatial -> spatialFragment
+                R.id.navigation_portal -> portalFragment
+                R.id.navigation_settings -> settingsFragment
+                R.id.navigation_governance -> governanceFragment
+                else -> chatFragment
             }
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, fragment)
+                .commit()
+            true
         }
 
-        micButton.setOnClickListener { checkPermissionAndListen() }
-        title.setOnClickListener { showSettingsDialog() }
+        // Set initial fragment
+        if (savedInstanceState == null) {
+            val startTab = intent.getStringExtra("tab")
+            val initialFragment = when (startTab) {
+                "agents" -> {
+                    bottomNav.selectedItemId = R.id.navigation_agents
+                    agentsFragment
+                }
+                "spatial" -> {
+                    bottomNav.selectedItemId = R.id.navigation_spatial
+                    spatialFragment
+                }
+                "portal" -> {
+                    bottomNav.selectedItemId = R.id.navigation_portal
+                    portalFragment
+                }
+                "settings" -> {
+                    bottomNav.selectedItemId = R.id.navigation_settings
+                    settingsFragment
+                }
+                "governance" -> {
+                    bottomNav.selectedItemId = R.id.navigation_governance
+                    governanceFragment
+                }
+                else -> chatFragment
+            }
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, initialFragment)
+                .commit()
+        }
     }
 
-    private fun sendMessage(text: String) {
-        adapter.addMessage(Message(text, true))
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val tab = intent.getStringExtra("tab")
+        if (tab != null) {
+            val bottomNav: BottomNavigationView = findViewById(R.id.bottomNav)
+            val fragment: Fragment = when (tab) {
+                "agents" -> {
+                    bottomNav.selectedItemId = R.id.navigation_agents
+                    agentsFragment
+                }
+                "spatial" -> {
+                    bottomNav.selectedItemId = R.id.navigation_spatial
+                    spatialFragment
+                }
+                "portal" -> {
+                    bottomNav.selectedItemId = R.id.navigation_portal
+                    portalFragment
+                }
+                "settings" -> {
+                    bottomNav.selectedItemId = R.id.navigation_settings
+                    settingsFragment
+                }
+                "governance" -> {
+                    bottomNav.selectedItemId = R.id.navigation_governance
+                    governanceFragment
+                }
+                else -> {
+                    bottomNav.selectedItemId = R.id.navigation_chat
+                    chatFragment
+                }
+            }
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, fragment)
+                .commit()
+        }
+    }
+
+    // Helper cache and delegation functions for fragments
+    fun getCachedMessages(): MutableList<Message> = messageCache
+
+    fun setActiveMessageAdapter(adapter: MessageAdapter?) {
+        this.activeAdapter = adapter
+    }
+
+    fun getCurrentStatus(): String = currentStatus
+
+    fun setTtsEnabled(enabled: Boolean) {
+        this.ttsEnabled = enabled
+    }
+
+    fun updateLanguage(lang: String) {
+        this.assistantLanguage = lang
+        try {
+            if (lang == "ro-RO") {
+                tts.language = Locale("ro", "RO")
+            } else {
+                tts.language = Locale("en", "US")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun reconnect(newUrl: String) {
+        jarvisClient.reconnect(newUrl)
+        onStatusUpdate("Reconectare...")
+    }
+
+    fun sendMessage(text: String) {
+        val userMsg = Message(text, true)
+        messageCache.add(userMsg)
+        activeAdapter?.notifyItemInserted(messageCache.size - 1)
         jarvisClient.sendMessage(text)
     }
 
-    private fun checkPermissionAndListen() {
+    fun checkPermissionAndListen() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_REQUEST_CODE)
         } else {
@@ -104,42 +216,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupTTS() {
-        tts = TextToSpeech(this) { s -> if (s != TextToSpeech.ERROR) tts.language = Locale("ro", "RO") }
+        tts = TextToSpeech(this) { s -> 
+            if (s != TextToSpeech.ERROR) {
+                updateLanguage(assistantLanguage)
+            }
+        }
     }
 
     private fun startListening() {
         val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ro-RO")
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, assistantLanguage)
         }
         speechRecognizer.startListening(i)
     }
 
-    private fun showSettingsDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_settings, null)
-        val urlInput = dialogView.findViewById<EditText>(R.id.urlInput)
-        val prefs = getSharedPreferences("JarvisPrefs", Context.MODE_PRIVATE)
-        urlInput.setText(prefs.getString("server_url", "ws://100.64.0.1:3000/jarvis/stream"))
-
-        AlertDialog.Builder(this)
-            .setTitle("Configurare Jarvis")
-            .setView(dialogView)
-            .setPositiveButton("Salvează") { _, _ ->
-                val newUrl = urlInput.text.toString()
-                prefs.edit().putString("server_url", newUrl).apply()
-                jarvisClient.reconnect(newUrl)
-                onStatusUpdate("Reconectare...")
-            }
-            .setNegativeButton("Anulează", null)
-            .show()
-    }
-
     fun onStreamingStart() {
-        runOnUiThread { adapter.addMessage(Message("", false)) }
+        runOnUiThread {
+            val botMsg = Message("", false)
+            messageCache.add(botMsg)
+            activeAdapter?.notifyItemInserted(messageCache.size - 1)
+        }
     }
 
     fun onStreamingChunk(chunk: String) {
-        runOnUiThread { adapter.updateLastMessage(chunk) }
+        runOnUiThread {
+            if (messageCache.isNotEmpty() && !messageCache.last().isUser) {
+                val lastMsg = messageCache.last()
+                val updatedMsg = Message(lastMsg.text + chunk, false)
+                messageCache[messageCache.size - 1] = updatedMsg
+                activeAdapter?.notifyItemChanged(messageCache.size - 1)
+            }
+        }
     }
 
     fun onJarvisResponse(response: JSONObject) {
@@ -147,18 +255,20 @@ class MainActivity : AppCompatActivity() {
             val type = response.optString("type")
             val text = response.optString("text")
 
-            // Prevenim dublarea mesajelor din stream
+            // Prevent streaming duplication
             if (type == "full") {
-                // Dacă mesajul a fost deja creat prin streaming, nu mai adăugăm altul
-                // Doar ne asigurăm că textul final este cel corect
-                if (adapter.itemCount > 0) {
-                    // Logica de update este deja în onStreamingChunk
-                } else {
-                    adapter.addMessage(Message(text, false))
+                if (messageCache.isNotEmpty() && !messageCache.last().isUser) {
+                    // Update final content if streaming message is present
+                    messageCache[messageCache.size - 1] = Message(text, false)
+                    activeAdapter?.notifyItemChanged(messageCache.size - 1)
+                } else if (text.isNotEmpty()) {
+                    val finalMsg = Message(text, false)
+                    messageCache.add(finalMsg)
+                    activeAdapter?.notifyItemInserted(messageCache.size - 1)
                 }
             }
 
-            if (text.isNotEmpty()) {
+            if (text.isNotEmpty() && ttsEnabled) {
                 tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
             }
 
@@ -172,11 +282,13 @@ class MainActivity : AppCompatActivity() {
 
     fun onStatusUpdate(msg: String) {
         runOnUiThread {
-            statusText.text = msg
-            when(msg) {
-                "Conectat" -> statusText.setTextColor(0xFF00E5FF.toInt())
-                "Deconectat", "Eroare Conexiune" -> statusText.setTextColor(0xFFFF5252.toInt())
-                else -> statusText.setTextColor(0xFFFFFFFF.toInt())
+            currentStatus = msg
+            // Inform active fragment views
+            if (chatFragment.isAdded) {
+                chatFragment.updateStatus(msg)
+            }
+            if (settingsFragment.isAdded) {
+                settingsFragment.updateStatusDisplay(msg)
             }
         }
     }
@@ -207,6 +319,13 @@ class MainActivity : AppCompatActivity() {
             cameraManager.setTorchMode(cameraId, isFlashlightOn)
         } catch (e: Exception) {
             Toast.makeText(this, "Eroare lanternă", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == RECORD_AUDIO_REQUEST_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startListening()
         }
     }
 }

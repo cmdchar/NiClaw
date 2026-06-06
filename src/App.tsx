@@ -1,3 +1,4 @@
+
 /**
  * Root Application Component
  * Handles routing and global providers
@@ -17,9 +18,11 @@ import { Skills } from './pages/Skills';
 import { Cron } from './pages/Cron';
 import { Builder } from './pages/Builder';
 import { Dreams } from './pages/Dreams';
+import Governance from './pages/Governance';
 import { Settings } from './pages/Settings';
 import { Setup } from './pages/Setup';
 import { Portal } from './pages/Portal';
+import { SpatialOS } from './pages/SpatialOS';
 import { useSettingsStore } from './stores/settings';
 import { useUpdateStore } from './stores/update';
 import { useGatewayStore } from './stores/gateway';
@@ -210,7 +213,9 @@ function App() {
             <Route path="/cron" element={<Cron />} />
             <Route path="/builder" element={<Builder />} />
             <Route path="/portal" element={<Portal />} />
+            <Route path="/spatial" element={<SpatialOS />} />
             <Route path="/dreams" element={devModeUnlocked ? <Dreams /> : <Navigate to="/" replace />} />
+            <Route path="/governance" element={devModeUnlocked ? <Governance /> : <Navigate to="/" replace />} />
             <Route path="/settings/*" element={<Settings />} />
             {extraRoutes.map((r) => (
               <Route key={r.path} path={r.path} element={<r.component />} />

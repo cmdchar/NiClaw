@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#131824"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Editor Agent"
+        android:textColor="#00E5FF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Name Input -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nume Agent"
+        android:textColor="#8892B0"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/editorAgentName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/editbox_background_normal"
+        android:backgroundTint="#1C2434"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:padding="12dp"
+        android:hint="ex: Supreme Orchestrator"
+        android:textColorHint="#5E6D8C"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Slug Input -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Slug Identificator (unic)"
+        android:textColor="#8892B0"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/editorAgentSlug"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/editbox_background_normal"
+        android:backgroundTint="#1C2434"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:padding="12dp"
+        android:hint="ex: supreme_orchestrator"
+        android:textColorHint="#5E6D8C"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Role / Prompt Input -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Rol / Prompt Sistem"
+        android:textColor="#8892B0"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/editorAgentRole"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/editbox_background_normal"
+        android:backgroundTint="#1C2434"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:padding="12dp"
+        android:hint="Descrie ce face agentul și regulile sale..."
+        android:textColorHint="#5E6D8C"
+        android:minLines="3"
+        android:gravity="top"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Model Input -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Model LLM"
+        android:textColor="#8892B0"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/editorAgentModel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/editbox_background_normal"
+        android:backgroundTint="#1C2434"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:padding="12dp"
+        android:hint="ex: gemini-1.5-pro, gpt-4o, ollama..."
+        android:textColorHint="#5E6D8C"
+        android:layout_marginBottom="4dp" />
+
+</LinearLayout>

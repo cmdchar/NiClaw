@@ -68,6 +68,7 @@ class JarvisClient(private var serverUrl: String, private val activity: MainActi
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                android.util.Log.e("JarvisClient", "WebSocket failure", t)
                 activity.onStatusUpdate("Eroare Conexiune")
             }
         })

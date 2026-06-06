@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="12dp"
+    app:cardBackgroundColor="#131824"
+    app:cardElevation="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/spatialTaskTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@id/btnDeleteTask"
+                android:text="Titlu Task"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/btnDeleteTask"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_delete"
+                app:tint="#FF5252"
+                android:contentDescription="Șterge Task" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/spatialTaskDesc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Descriere detaliată task..."
+            android:textColor="#8892B0"
+            android:textSize="12sp" />
+
+        <!-- Metadata Row (Agent, Plan, File Path) -->
+        <LinearLayout
+            android:id="@+id/spatialTaskMetaContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/spatialTaskAgent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#1E293B"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="1dp"
+                android:textColor="#A0AEC0"
+                android:textSize="10sp"
+                android:visibility="gone"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/spatialTaskPlan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#1E293B"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="1dp"
+                android:textColor="#A0AEC0"
+                android:textSize="10sp"
+                android:visibility="gone"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/spatialTaskFile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#1E293B"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="1dp"
+                android:textColor="#00E5FF"
+                android:textSize="10sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Divider line -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#1C2434"
+            android:layout_marginVertical="8dp" />
+
+        <!-- Move actions row -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/spatialTaskTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_alignParentStart="true"
+                android:text="Creat: 12:30"
+                android:textColor="#5E6D8C"
+                android:textSize="10sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnMoveLeft"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_media_previous"
+                    app:tint="#A0AEC0"
+                    android:contentDescription="Mută la stânga" />
+
+                <ImageButton
+                    android:id="@+id/btnMoveRight"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_media_next"
+                    app:tint="#00E5FF"
+                    android:contentDescription="Mută la dreapta" />
+            </LinearLayout>
+        </RelativeLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

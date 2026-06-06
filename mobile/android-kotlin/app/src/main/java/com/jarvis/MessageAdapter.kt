@@ -21,24 +21,28 @@ class MessageAdapter(private val messages: MutableList<Message>) :
         return MessageViewHolder(view)
     }
 
+    private fun formatExecutionSteps(rawText: String): String {
+        var formatted = rawText
+        formatted = formatted.replace(Regex("<thinking>.*?</thinking>", RegexOption.DOT_MATCHES_ALL), "🧠 [Thinking Process]")
+        formatted = formatted.replace(Regex("<tool_use>.*?</tool_use>", RegexOption.DOT_MATCHES_ALL), "🛠️ [Tool Executed]")
+        formatted = formatted.replace(Regex("<step>.*?</step>", RegexOption.DOT_MATCHES_ALL), "✅ [Step Completed]")
+
+        if (formatted.contains("<thinking>")) {
+            formatted = formatted.replace(Regex("<thinking>.*", RegexOption.DOT_MATCHES_ALL), "🧠 [Thinking...]")
+        }
+        if (formatted.contains("<tool_use>")) {
+            formatted = formatted.replace(Regex("<tool_use>.*", RegexOption.DOT_MATCHES_ALL), "🛠️ [Executing Tool...]")
+        }
+
+        return formatted.trim()
+    }
+
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
-        holder.messageText.text = messages[position].text
+        val msg = messages[position]
+        holder.messageText.text = if (msg.isUser) msg.text else formatExecutionSteps(msg.text)
     }
 
     override fun getItemCount() = messages.size
 
     override fun getItemViewType(position: Int) = if (messages[position].isUser) 1 else 0
-
-    fun addMessage(message: Message) {
-        messages.add(message)
-        notifyItemInserted(messages.size - 1)
-    }
-
-    fun updateLastMessage(chunk: String) {
-        if (messages.isNotEmpty() && !messages.last().isUser) {
-            val lastMsg = messages.last()
-            messages[messages.size - 1] = Message(lastMsg.text + chunk, false)
-            notifyItemChanged(messages.size - 1)
-        }
-    }
 }

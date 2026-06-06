@@ -44,7 +44,7 @@ export async function askAI(prompt: string, userId: string): Promise<string> {
         saveMemory(userId, "model", text);
 
         return text;
-    } catch (error) {
+    } catch {
         return "Eroare la procesarea cererii (Gemini).";
     }
 }
@@ -86,7 +86,7 @@ export async function* streamAI(prompt: string, userId: string) {
 
         saveMemory(userId, "user", prompt);
         saveMemory(userId, "model", fullResponse);
-    } catch (error) {
+    } catch {
         yield "Eroare streaming.";
     }
 }

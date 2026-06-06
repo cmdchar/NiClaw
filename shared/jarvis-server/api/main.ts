@@ -6,6 +6,7 @@ import { processCommand } from "../core/orchestrator";
 import { streamAI } from "../core/ai_engine";
 import { config } from "../config/env";
 import { openClawClient } from "../services/openclawClient";
+import { runSwarmDag } from "../core/dagRunner";
 
 const app = express();
 const server = http.createServer(app);
@@ -37,6 +38,30 @@ app.post("/jarvis/chat", async (req, res) => {
     }
     const response = await processCommand(text, user_id);
     res.json(response);
+});
+
+/**
+ * Run Swarm DAG visually designed on the canvas
+ */
+app.post("/api/swarm/run", async (req, res) => {
+    const { nodes, edges, initialInput } = req.body;
+    try {
+        const result = await runSwarmDag(nodes, edges, initialInput);
+        res.json(result);
+    } catch (e: any) {
+        res.status(500).json({
+            success: false,
+            error: e.message,
+            logs: [
+                {
+                    id: "err-root",
+                    time: new Date().toLocaleTimeString("ro-RO"),
+                    type: "error",
+                    text: `Eroare server DAG Runner: ${e.message}`
+                }
+            ]
+        });
+    }
 });
 
 /**

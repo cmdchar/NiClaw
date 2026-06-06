@@ -13,10 +13,22 @@ import {
   Home,
   ZoomIn,
   ZoomOut,
-  Lock
+  Lock,
+  Unlock,
+  Copy,
+  Terminal,
+  Volume2,
+  VolumeX,
+  ArrowRightCircle,
+  Code2,
+  Network,
+  CheckCircle2,
+  AlertTriangle,
+  UploadCloud
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackUiEvent } from '@/lib/telemetry';
+import { hostApiFetch } from '@/lib/host-api';
 import { toast } from 'sonner';
 import { useSettingsStore } from '@/stores/settings';
 
@@ -31,6 +43,35 @@ interface AgentPortalItem {
   themeColor: string;
 }
 
+interface BoardStatusResponse {
+  board_url?: string;
+  board_id?: string;
+  revision?: number;
+  synced_at?: string;
+  local_synced_at?: string;
+  remotePublishConfigured?: boolean;
+  publish_status?: string;
+  publish_error?: string;
+  published_at?: string;
+  snapshot?: {
+    nodeCount?: number;
+    arrowCount?: number;
+    generatedAt?: string;
+  };
+  probe?: {
+    reachable?: boolean;
+    status?: number;
+    error?: string;
+  };
+}
+
+interface BoardSyncResponse {
+  success?: boolean;
+  published?: boolean;
+  message?: string;
+  status?: BoardStatusResponse;
+}
+
 export function Portal() {
   const { remoteHostUrl } = useSettingsStore() as any;
 
@@ -43,7 +84,7 @@ export function Portal() {
       try {
         const url = new URL(remoteHostUrl);
         if (url.hostname) return url.hostname;
-      } catch (e) {
+      } catch {
         // Fallback
       }
     }
@@ -61,9 +102,19 @@ export function Portal() {
   const [canGoForward, setCanGoForward] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(0);
   const [guestUrl, setGuestUrl] = useState('');
+  const [addressInput, setAddressInput] = useState('');
+  const [isMuted, setIsMuted] = useState(false);
+  const [boardStatus, setBoardStatus] = useState<BoardStatusResponse | null>(null);
+  const [boardBusy, setBoardBusy] = useState(false);
 
   useEffect(() => {
     trackUiEvent('portal.page_viewed', { activeTab });
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'boardai') {
+      void fetchBoardStatus(false);
+    }
   }, [activeTab]);
 
   useEffect(() => {
@@ -74,8 +125,10 @@ export function Portal() {
       try {
         setCanGoBack(webview.canGoBack());
         setCanGoForward(webview.canGoForward());
-        setGuestUrl(webview.getURL());
-      } catch (e) {
+        const currentUrl = webview.getURL();
+        setGuestUrl(currentUrl);
+        setAddressInput(currentUrl);
+      } catch {
         // Webview might not be fully initialized yet
       }
     };
@@ -111,6 +164,8 @@ export function Portal() {
     const trimmed = ip.trim();
     setServerIp(trimmed);
     localStorage.setItem('clawx_portal_server_ip', trimmed);
+    setGuestUrl('');
+    setAddressInput('');
     setIframeKey((prev) => prev + 1);
     toast.success(`IP-ul portalului a fost actualizat: ${trimmed}`);
   };
@@ -152,14 +207,69 @@ export function Portal() {
       description: 'Google AI Studio Console pentru testarea și configurarea modelelor Gemini.',
       badge: 'Google Cloud',
       themeColor: 'from-orange-500 to-red-500'
+    },
+    {
+      id: 'opencode',
+      name: 'Open Code (VS Code)',
+      icon: <Code2 className="h-4 w-4" />,
+      port: 8080,
+      description: 'Server local VS Code Web (code-server) pentru editarea directă a codului sursă în agent workspace.',
+      badge: 'Code Editor',
+      themeColor: 'from-blue-600 to-indigo-600'
+    },
+    {
+      id: 'boardai',
+      name: 'BoardAI Brainmap',
+      icon: <Network className="h-4 w-4" />,
+      port: 443,
+      customUrl: 'https://board.private-driver.ro/?board=728273ef-9709-4f1c-a77e-ab7086bfeff3',
+      description: 'Whiteboard-ul publicat pentru harta vie a proiectului NiClaw / Private Driver.',
+      badge: 'Live Board',
+      themeColor: 'from-fuchsia-500 to-cyan-500'
     }
   ];
 
   const activeAgent = portalAgents.find((a) => a.id === activeTab) || portalAgents[0];
+  const isBoardAiActive = activeAgent.id === 'boardai';
 
   const getPortalUrl = (agent: AgentPortalItem) => {
     if (agent.customUrl) return agent.customUrl;
-    let url = `http://${serverIp}:${agent.port}`;
+    
+    let protocol = 'http';
+    let host = serverIp;
+    
+    // Detect if protocol is specified in serverIp
+    if (serverIp.startsWith('http://')) {
+      protocol = 'http';
+      host = serverIp.substring(7);
+    } else if (serverIp.startsWith('https://')) {
+      protocol = 'https';
+      host = serverIp.substring(8);
+    }
+    
+    // Strip trailing slash from host if present
+    if (host.endsWith('/')) {
+      host = host.substring(0, host.length - 1);
+    }
+    
+    let url: string;
+    if (protocol === 'https') {
+      // Over HTTPS (e.g. Tailscale Serve / Funnel)
+      if (agent.id === 'openclaw') {
+        url = `https://${host}`;
+      } else if (agent.id === 'openhuman') {
+        url = `https://${host}:10000`;
+      } else if (agent.id === 'hermes') {
+        url = `https://${host}:8443`;
+      } else if (agent.id === 'opencode') {
+        url = `https://${host}:8000`;
+      } else {
+        url = `https://${host}:${agent.port}`;
+      }
+    } else {
+      url = `http://${host}:${agent.port}`;
+    }
+    
     if (agent.id === 'openclaw') {
       const token = (useSettingsStore.getState() as any).remoteHostToken || '35c6ae8e7a685718dfb4a45a1f2982d5';
       url += `/?token=${token}`;
@@ -170,11 +280,96 @@ export function Portal() {
   const handleRefresh = () => {
     setLoading(true);
     setIframeKey((prev) => prev + 1);
+    if (isBoardAiActive) {
+      void fetchBoardStatus(false);
+    }
+  };
+
+  const fetchBoardStatus = async (showToast = true) => {
+    setBoardBusy(true);
+    try {
+      const status = await hostApiFetch<BoardStatusResponse>('/api/board/status');
+      setBoardStatus(status);
+      if (showToast) {
+        toast.success(status.probe?.reachable ? 'BoardAI este online' : 'Status BoardAI actualizat');
+      }
+    } catch (error: any) {
+      toast.error(`Nu pot citi statusul BoardAI: ${error.message || error}`);
+    } finally {
+      setBoardBusy(false);
+    }
+  };
+
+  const handleBoardSync = async () => {
+    setBoardBusy(true);
+    try {
+      const response = await hostApiFetch<BoardSyncResponse>('/api/board/sync', {
+        method: 'POST',
+        body: JSON.stringify({ source: 'portal' }),
+      });
+      if (response.status) {
+        setBoardStatus(response.status);
+      }
+      toast.success(response.message || 'BoardAI local sync finalizat');
+    } catch (error: any) {
+      toast.error(`Sync BoardAI esuat: ${error.message || error}`);
+    } finally {
+      setBoardBusy(false);
+    }
   };
 
   const handleOpenExternal = () => {
     const url = guestUrl || getPortalUrl(activeAgent);
     window.electron.openExternal(url);
+  };
+
+  const handleAddressSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addressInput) return;
+    
+    let targetUrl = addressInput.trim();
+    if (!/^https?:\/\//i.test(targetUrl)) {
+      targetUrl = 'http://' + targetUrl;
+    }
+    
+    if (webviewRef.current) {
+      try {
+        webviewRef.current.loadURL(targetUrl);
+        setLoading(true);
+      } catch (err: any) {
+        toast.error(`Eroare la încărcare URL: ${err.message}`);
+      }
+    }
+  };
+
+  const handleCopyUrl = () => {
+    const url = guestUrl || getPortalUrl(activeAgent);
+    navigator.clipboard.writeText(url);
+    toast.success("URL copiat în clipboard!");
+  };
+
+  const handleOpenDevTools = () => {
+    if (webviewRef.current) {
+      try {
+        webviewRef.current.openDevTools();
+        toast.success("Consola Developer deschisă pentru această filă");
+      } catch {
+        toast.error("Nu s-a putut deschide consola Developer");
+      }
+    }
+  };
+
+  const handleToggleMute = () => {
+    if (webviewRef.current) {
+      try {
+        const nextMute = !isMuted;
+        webviewRef.current.setAudioMuted(nextMute);
+        setIsMuted(nextMute);
+        toast.success(nextMute ? "Sunet oprit" : "Sunet activat");
+      } catch {
+        // ignored
+      }
+    }
   };
 
   // Navigation handlers
@@ -288,6 +483,7 @@ export function Portal() {
                   setLoading(true);
                   setZoomLevel(0);
                   setGuestUrl('');
+                  setAddressInput('');
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-semibold transition-all ${
                   isActive
@@ -318,6 +514,65 @@ export function Portal() {
             <p className="text-[10px] text-cyan-500 font-mono mt-1">Target Address: {getPortalUrl(activeAgent)}</p>
           </div>
         </div>
+
+        {isBoardAiActive && (
+          <div className="mb-4 shrink-0 border border-fuchsia-500/20 bg-fuchsia-500/5 dark:bg-cyan-500/5 rounded-2xl px-3 py-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className={`mt-0.5 h-8 w-8 rounded-xl flex items-center justify-center ${
+                boardStatus?.probe?.reachable ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/15 text-amber-500'
+              }`}>
+                {boardStatus?.probe?.reachable ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <p className="text-xs font-semibold text-foreground">BoardAI Live Brainmap</p>
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    rev {boardStatus?.revision ?? '-'} · {boardStatus?.snapshot?.nodeCount ?? 0} noduri · {boardStatus?.snapshot?.arrowCount ?? 0} legaturi
+                  </span>
+                  <span className={`text-[10px] font-mono ${boardStatus?.probe?.reachable ? 'text-emerald-500' : 'text-amber-500'}`}>
+                    {boardStatus?.probe?.reachable ? `online ${boardStatus.probe.status ?? ''}` : 'neconfirmat'}
+                  </span>
+                </div>
+                <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[72vw]">
+                  {boardStatus?.board_url || getPortalUrl(activeAgent)}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  Ultim sync local: {boardStatus?.local_synced_at || boardStatus?.synced_at || 'necunoscut'}
+                  {boardStatus?.remotePublishConfigured
+                    ? ` · publish: ${boardStatus.publish_status || 'pregatit'}`
+                    : ' · seteaza BOARD_AI_TOKEN pentru publish remote'}
+                </p>
+                {boardStatus?.publish_error && (
+                  <p className="text-[10px] text-amber-500 truncate max-w-[72vw]">
+                    {boardStatus.publish_error}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchBoardStatus(true)}
+                disabled={boardBusy}
+                className="h-8 text-xs rounded-full px-3 bg-transparent"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 mr-2 ${boardBusy ? 'animate-spin' : ''}`} />
+                Status
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBoardSync}
+                disabled={boardBusy}
+                className="h-8 text-xs rounded-full px-3 bg-transparent"
+              >
+                <UploadCloud className="h-3.5 w-3.5 mr-2" />
+                Sync + publish
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Dynamic Iframe Portal Layout */}
         <div className="flex-1 min-h-0 bg-white dark:bg-card border border-black/10 dark:border-white/10 rounded-3xl relative overflow-hidden shadow-inner flex flex-col">
@@ -359,6 +614,8 @@ export function Portal() {
                 size="icon"
                 onClick={() => {
                   setLoading(true);
+                  setGuestUrl('');
+                  setAddressInput('');
                   setIframeKey(prev => prev + 1);
                   setZoomLevel(0);
                 }}
@@ -370,13 +627,66 @@ export function Portal() {
             </div>
 
             {/* Address Bar */}
-            <div className="flex-1 max-w-2xl bg-white dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-full h-8 flex items-center px-3 gap-2 font-mono text-[10px] text-muted-foreground select-all overflow-hidden truncate">
-              <Lock className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-              <span className="truncate text-foreground/80">{guestUrl || getPortalUrl(activeAgent)}</span>
-            </div>
+            <form onSubmit={handleAddressSubmit} className="flex-1 max-w-2xl relative flex items-center">
+              <div className="absolute left-3 flex items-center pointer-events-none">
+                {addressInput.startsWith('https://') ? (
+                  <Lock className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                ) : (
+                  <Unlock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                )}
+              </div>
+              <input
+                type="text"
+                value={addressInput || guestUrl || getPortalUrl(activeAgent)}
+                onChange={(e) => setAddressInput(e.target.value)}
+                className="w-full bg-slate-100 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-full h-8 pl-9 pr-20 font-mono text-[10px] text-foreground focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"
+                placeholder="Introduceți URL sau adresa IP..."
+              />
+              <div className="absolute right-1.5 flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCopyUrl}
+                  className="h-6 w-6 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground"
+                  title="Copy URL"
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-muted-foreground hover:text-cyan-500"
+                  title="Go to URL"
+                >
+                  <ArrowRightCircle className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </form>
 
-            {/* Zoom Controls */}
+            {/* Zoom Controls & DevTools */}
             <div className="flex items-center gap-1.5 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleToggleMute}
+                className="h-8 w-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-foreground"
+                title={isMuted ? "Sunet activat" : "Sunet oprit"}
+              >
+                {isMuted ? <VolumeX className="h-4 w-4 text-red-500 animate-pulse" /> : <Volume2 className="h-4 w-4 text-emerald-500" />}
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleOpenDevTools}
+                className="h-8 w-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-foreground"
+                title="Inspect Console (DevTools)"
+              >
+                <Terminal className="h-4 w-4 text-cyan-500" />
+              </Button>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -412,7 +722,6 @@ export function Portal() {
             </div>
           )}
 
-          {/* @ts-ignore */}
           <webview
             ref={webviewRef}
             key={`${activeTab}-${iframeKey}`}

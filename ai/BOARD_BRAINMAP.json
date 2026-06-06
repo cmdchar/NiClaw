@@ -1,46 +1,32 @@
 {
-  "board_name": "app Brainmap",
-  "generated_at": "2026-05-24T20:12:12.595Z",
-  "source_brainmap": "C:\\Server\\niclaw\\app\\ai\\BRAINMAP.md",
+  "board_name": "NiClaw Spatial AI OS Brainmap",
+  "generated_at": "2026-05-31T08:44:21.788Z",
+  "source_brainmap": "/home/debian/NiClaw/ai/BRAINMAP.md",
   "data": {
     "nodes": [
       {
-        "id": "node_app",
+        "id": "node_root",
         "type": "shape",
         "shapeType": "rect",
-        "x": 40,
-        "y": 1707,
-        "w": 220,
-        "h": 62,
-        "text": "app",
-        "color": "#1f2937",
+        "x": 48,
+        "y": 48,
+        "w": 300,
+        "h": 76,
+        "text": "BRAINMAP - ClawX (niclaw)",
+        "color": "#0f172a",
         "textColor": "#f8fafc",
-        "borderColor": "#111827",
-        "fontSize": 18,
+        "borderColor": "#020617",
+        "fontSize": 20,
         "fontWeight": "bold"
-      },
-      {
-        "id": "board_title",
-        "type": "text",
-        "x": 270,
-        "y": 32,
-        "w": 620,
-        "h": 40,
-        "text": "app flow map",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 30,
-        "fontWeight": "bold",
-        "textAlign": "left"
       },
       {
         "id": "board_meta",
         "type": "sticky",
-        "x": 1290,
-        "y": 3,
-        "w": 320,
-        "h": 110,
-        "text": "Root: C:\\Server\\niclaw\\app",
+        "x": 48,
+        "y": 148,
+        "w": 300,
+        "h": 92,
+        "text": "Generated from ai/BRAINMAP.md\nRoot: /home/debian/NiClaw",
         "color": "#fef9c3",
         "textColor": "#713f12",
         "borderColor": "#f59e0b",
@@ -48,682 +34,857 @@
         "fontWeight": "normal"
       },
       {
-        "id": "lane_pnpm_run_init_installs_dependencies_and_downloads_uv_1_title",
-        "type": "text",
-        "x": 210,
-        "y": 110,
-        "w": 380,
-        "h": 28,
-        "text": "pnpm run init: Installs dependencies and downloads UV.",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_pnpm_run_init_installs_dependencies_and_downloads_uv_1_divider",
+        "id": "section_1_project_overview",
         "type": "shape",
         "shapeType": "rect",
-        "x": 200,
-        "y": 141,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
-        "fontWeight": "normal"
-      },
-      {
-        "id": "lane_pnpm_run_init_installs_dependencies_and_downloads_uv_1",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 150,
-        "w": 1980,
-        "h": 220,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
-        "fontWeight": "bold"
-      },
-      {
-        "id": "node_pnpm_run_init_installs_dependencies_and_downloads_uv_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
-        "y": 234,
-        "w": 220,
-        "h": 52,
-        "text": "pnpm run init: Installs dependencies and downloads UV.",
-        "color": "#ede9fe",
-        "textColor": "#5b21b6",
-        "borderColor": "#a78bfa",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "lane_pnpm_run_prep_win_binaries_downloads_bundled_windows_node_uv_binaries_2_title",
-        "type": "text",
-        "x": 210,
-        "y": 420,
-        "w": 380,
-        "h": 28,
-        "text": "pnpm run prep:win-binaries: Downloads bundled Windows node/uv binaries.",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_pnpm_run_prep_win_binaries_downloads_bundled_windows_node_uv_binaries_2_divider",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 200,
-        "y": 451,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
-        "fontWeight": "normal"
-      },
-      {
-        "id": "lane_pnpm_run_prep_win_binaries_downloads_bundled_windows_node_uv_binaries_2",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 460,
-        "w": 1980,
-        "h": 220,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
-        "fontWeight": "bold"
-      },
-      {
-        "id": "node_pnpm_run_prep_win_binaries_downloads_bundled_windows_node_uv_binaries_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
-        "y": 544,
-        "w": 220,
-        "h": 52,
-        "text": "pnpm run prep:win-binaries: Downloads bundled Windows node/uv binaries.",
+        "x": 430,
+        "y": 48,
+        "w": 540,
+        "h": 58,
+        "text": "1) Project Overview",
         "color": "#dbeafe",
-        "textColor": "#1d4ed8",
-        "borderColor": "#60a5fa",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "lane_pnpm_run_package_win_builds_the_vite_application_and_bundles_it_into_a_windows_executable_using_electron_builder_3_title",
-        "type": "text",
-        "x": 210,
-        "y": 730,
-        "w": 380,
-        "h": 28,
-        "text": "pnpm run package:win: Builds the Vite application and bundles it into a Windows executable using electron-builder.",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_pnpm_run_package_win_builds_the_vite_application_and_bundles_it_into_a_windows_executable_using_electron_builder_3_divider",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 200,
-        "y": 761,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
-        "fontWeight": "normal"
-      },
-      {
-        "id": "lane_pnpm_run_package_win_builds_the_vite_application_and_bundles_it_into_a_windows_executable_using_electron_builder_3",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 770,
-        "w": 1980,
-        "h": 220,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
+        "textColor": "#0f172a",
+        "borderColor": "#94a3b8",
+        "fontSize": 17,
         "fontWeight": "bold"
       },
       {
-        "id": "node_pnpm_run_package_win_builds_the_vite_application_and_bundles_it_into_a_windows_executable_using_electron_builder_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
-        "y": 854,
-        "w": 220,
-        "h": 52,
-        "text": "pnpm run package:win: Builds the Vite application and bundles it into a Windows executable using electron-builder.",
-        "color": "#dcfce7",
-        "textColor": "#166534",
-        "borderColor": "#4ade80",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "lane_electron_core_electron_main_process_files_4_title",
-        "type": "text",
-        "x": 210,
-        "y": 1040,
-        "w": 380,
-        "h": 28,
-        "text": "electron/: Core Electron main process files.",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_electron_core_electron_main_process_files_4_divider",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 200,
-        "y": 1071,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
-        "fontWeight": "normal"
-      },
-      {
-        "id": "lane_electron_core_electron_main_process_files_4",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 1080,
-        "w": 1980,
-        "h": 220,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
-        "fontWeight": "bold"
-      },
-      {
-        "id": "node_electron_core_electron_main_process_files_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
-        "y": 1164,
-        "w": 220,
-        "h": 52,
-        "text": "electron/: Core Electron main process files.",
-        "color": "#fee2e2",
-        "textColor": "#b91c1c",
-        "borderColor": "#f87171",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "lane_src_react_frontend_source_code_5_title",
-        "type": "text",
-        "x": 210,
-        "y": 1350,
-        "w": 380,
-        "h": 28,
-        "text": "src/: React frontend source code.",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_src_react_frontend_source_code_5_divider",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 200,
-        "y": 1381,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
-        "fontWeight": "normal"
-      },
-      {
-        "id": "lane_src_react_frontend_source_code_5",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 1390,
-        "w": 1980,
-        "h": 220,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
-        "fontWeight": "bold"
-      },
-      {
-        "id": "node_src_react_frontend_source_code_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
-        "y": 1474,
-        "w": 220,
-        "h": 52,
-        "text": "src/: React frontend source code.",
-        "color": "#ede9fe",
-        "textColor": "#5b21b6",
-        "borderColor": "#a78bfa",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "node_src_pages_portal_unified_in_app_agent_portal_interface_index_tsx_2_d1d5db",
+        "id": "node_clawx_is_a_react_19_typescript_vite_desktop_application_packaged_with_el",
         "type": "sticky",
-        "x": 520,
-        "y": 1476,
-        "w": 220,
-        "h": 48,
+        "x": 454,
+        "y": 132,
+        "w": 492,
+        "h": 86,
+        "text": "ClawX is a React 19 + TypeScript + Vite desktop application packaged with Electron, serving as a GUI for the OpenClaw AI agent orchestration platform.",
+        "color": "#eff6ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "section_1_1_principal_product_direction_niclaw_spatial_ai_os",
+        "type": "shape",
+        "shapeType": "rect",
+        "x": 1070,
+        "y": 48,
+        "w": 540,
+        "h": 58,
+        "text": "1.1) Principal Product Direction - NiClaw Spatial AI OS",
+        "color": "#dcfce7",
+        "textColor": "#0f172a",
+        "borderColor": "#94a3b8",
+        "fontSize": 17,
+        "fontWeight": "bold"
+      },
+      {
+        "id": "node_confirmed_direction_as_of_2026_05_31_evolve_niclaw_into_a_functional_2_5",
+        "type": "sticky",
+        "x": 1094,
+        "y": 132,
+        "w": 492,
+        "h": 72,
+        "text": "Confirmed direction as of 2026-05-31: evolve NiClaw into a functional 2.5D Spatial AI Operating System.",
+        "color": "#f0fdf4",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_target_workspace_explorer_spatial_canvas_command_palette_inspector_ai_as",
+        "type": "sticky",
+        "x": 1094,
+        "y": 222,
+        "w": 492,
+        "h": 86,
+        "text": "Target workspace: Explorer + Spatial Canvas + Command Palette + Inspector/AI Assistant + Console/Events/Agent Logs + Workspace Map + Plan Mode + Agent Harness + BoardAI + Kanban + Code Review.",
+        "color": "#f0fdf4",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_implementation_principle_real_host_api_backed_state_actions_first_visual",
+        "type": "sticky",
+        "x": 1094,
+        "y": 326,
+        "w": 492,
+        "h": 102,
+        "text": "Implementation principle: real Host API-backed state/actions first; visual 2.5D/isometric polish second. Android acts as companion control plane for status, approvals, plan execution, BoardAI sync, and voice commands.",
+        "color": "#f0fdf4",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "section_2_key_build_commands",
+        "type": "shape",
+        "shapeType": "rect",
+        "x": 1710,
+        "y": 48,
+        "w": 540,
+        "h": 58,
+        "text": "2) Key Build Commands",
+        "color": "#fef3c7",
+        "textColor": "#0f172a",
+        "borderColor": "#94a3b8",
+        "fontSize": 17,
+        "fontWeight": "bold"
+      },
+      {
+        "id": "node_pnpm_run_init_installs_dependencies_and_downloads_uv",
+        "type": "sticky",
+        "x": 1734,
+        "y": 132,
+        "w": 492,
+        "h": 72,
+        "text": "pnpm run init: Installs dependencies and downloads UV.",
+        "color": "#fffbeb",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_pnpm_run_prep_win_binaries_downloads_bundled_windows_node_uv_binaries",
+        "type": "sticky",
+        "x": 1734,
+        "y": 222,
+        "w": 492,
+        "h": 72,
+        "text": "pnpm run prep:win-binaries: Downloads bundled Windows node/uv binaries.",
+        "color": "#fffbeb",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_pnpm_run_package_win_builds_the_vite_application_and_bundles_it_into_a_w",
+        "type": "sticky",
+        "x": 1734,
+        "y": 312,
+        "w": 492,
+        "h": 72,
+        "text": "pnpm run package:win: Builds the Vite application and bundles it into a Windows executable using electron-builder.",
+        "color": "#fffbeb",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_current_validation_baseline_2026_05_30_pnpm_run_typecheck_passes_pnpm_ru",
+        "type": "sticky",
+        "x": 1734,
+        "y": 402,
+        "w": 492,
+        "h": 118,
+        "text": "Current validation baseline (2026-05-30): pnpm run typecheck passes, pnpm run lint:check passes with warnings only, pnpm run build:vite passes, pnpm run package:win generated release/NiClaw-0.4.4-win-x64.exe, and mobile/android-kotlin/gradlew.bat assembleDebug generated mobile/android-kotlin/app/build/outputs/apk/debug/app-debug.apk.",
+        "color": "#fffbeb",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "section_3_main_artifact_folders",
+        "type": "shape",
+        "shapeType": "rect",
+        "x": 430,
+        "y": 272,
+        "w": 540,
+        "h": 58,
+        "text": "3) Main Artifact Folders",
+        "color": "#fce7f3",
+        "textColor": "#0f172a",
+        "borderColor": "#94a3b8",
+        "fontSize": 17,
+        "fontWeight": "bold"
+      },
+      {
+        "id": "node_electron_core_electron_main_process_files",
+        "type": "sticky",
+        "x": 454,
+        "y": 356,
+        "w": 492,
+        "h": 72,
+        "text": "electron/: Core Electron main process files.",
+        "color": "#fdf2f8",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_src_react_frontend_source_code",
+        "type": "sticky",
+        "x": 454,
+        "y": 446,
+        "w": 492,
+        "h": 72,
+        "text": "src/: React frontend source code.",
+        "color": "#fdf2f8",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_src_pages_portal_unified_in_app_agent_portal_interface_index_tsx",
+        "type": "sticky",
+        "x": 478,
+        "y": 536,
+        "w": 468,
+        "h": 72,
         "text": "src/pages/Portal/: Unified In-App Agent Portal interface (index.tsx).",
-        "color": "#f3f4f6",
-        "textColor": "#374151",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
+        "color": "#fdf2f8",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       },
       {
-        "id": "lane_scripts_custom_build_scripts_for_downloading_runtimes_bundling_openclaw_plugins_and_running_electron_builder_6_title",
-        "type": "text",
-        "x": 210,
-        "y": 1660,
-        "w": 380,
-        "h": 28,
+        "id": "node_src_pages_spatialos_first_pass_2_5d_spatial_ai_os_shell_index_tsx_with_r",
+        "type": "sticky",
+        "x": 478,
+        "y": 626,
+        "w": 468,
+        "h": 86,
+        "text": "src/pages/SpatialOS/: First-pass 2.5D Spatial AI OS shell (index.tsx) with real Host API/stores for agents, gateway health, BoardAI status, and recent logs. Route: /spatial.",
+        "color": "#fdf2f8",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_mobile_android_kotlin_native_kotlin_android_voice_assistant_companion_ap",
+        "type": "sticky",
+        "x": 454,
+        "y": 730,
+        "w": 492,
+        "h": 118,
+        "text": "mobile/android-kotlin/: Native Kotlin Android voice assistant companion app, featuring a modular 5-tab BottomNavigationView system (ChatFragment, AgentsFragment with REST client CRUD, ChannelsFragment, PortalFragment with text-zoom/audio-mute/address HUD, and SettingsFragment with control panel restarts).",
+        "color": "#fdf2f8",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_shared_jarvis_server_lightweight_node_express_ts_server_routing_commands",
+        "type": "sticky",
+        "x": 454,
+        "y": 866,
+        "w": 492,
+        "h": 86,
+        "text": "shared/jarvis-server/: Lightweight Node/Express TS server, routing commands between Android client, Gemini, and OpenClaw, containing simple intent mapping skills.",
+        "color": "#fdf2f8",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_scripts_custom_build_scripts_for_downloading_runtimes_bundling_openclaw_",
+        "type": "sticky",
+        "x": 454,
+        "y": 970,
+        "w": 492,
+        "h": 72,
         "text": "scripts/: Custom build scripts for downloading runtimes, bundling OpenClaw plugins, and running Electron Builder.",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_scripts_custom_build_scripts_for_downloading_runtimes_bundling_openclaw_plugins_and_running_electron_builder_6_divider",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 200,
-        "y": 1691,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
+        "color": "#fdf2f8",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       },
       {
-        "id": "lane_scripts_custom_build_scripts_for_downloading_runtimes_bundling_openclaw_plugins_and_running_electron_builder_6",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 1700,
-        "w": 1980,
-        "h": 220,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
+        "id": "section_4_remote_headless_host_api_scheme",
+        "type": "shape",
+        "shapeType": "rect",
+        "x": 1070,
+        "y": 482,
+        "w": 540,
+        "h": 58,
+        "text": "4) Remote Headless Host API Scheme",
+        "color": "#e0e7ff",
+        "textColor": "#0f172a",
+        "borderColor": "#94a3b8",
+        "fontSize": 17,
         "fontWeight": "bold"
       },
       {
-        "id": "node_scripts_custom_build_scripts_for_downloading_runtimes_bundling_openclaw_plugins_and_running_electron_builder_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
-        "y": 1784,
-        "w": 220,
-        "h": 52,
-        "text": "scripts/: Custom build scripts for downloading runtimes, bundling OpenClaw plugins, and running Electron Builder.",
-        "color": "#dbeafe",
-        "textColor": "#1d4ed8",
-        "borderColor": "#60a5fa",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "lane_host_api_address_http_10_10_1_219_13210_remote_access_enabled_7_title",
-        "type": "text",
-        "x": 210,
-        "y": 1970,
-        "w": 380,
-        "h": 28,
-        "text": "Host API Address: http://10.10.1.219:13210 (Remote Access enabled)",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_host_api_address_http_10_10_1_219_13210_remote_access_enabled_7_divider",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 200,
-        "y": 2001,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
+        "id": "node_host_api_address_http_10_10_1_219_13210_remote_access_enabled_binds_auto",
+        "type": "sticky",
+        "x": 1094,
+        "y": 566,
+        "w": 492,
+        "h": 86,
+        "text": "Host API Address: http://10.10.1.219:13210 (Remote Access enabled; binds automatically to 0.0.0.0 when running headlessly via CLAWX_HEADLESS=1 or HEADLESS=true).",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       },
       {
-        "id": "lane_host_api_address_http_10_10_1_219_13210_remote_access_enabled_7",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 2010,
-        "w": 1980,
-        "h": 220,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
-        "fontWeight": "bold"
-      },
-      {
-        "id": "node_host_api_address_http_10_10_1_219_13210_remote_access_enabled_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
-        "y": 2094,
-        "w": 220,
-        "h": 52,
-        "text": "Host API Address: http://10.10.1.219:13210 (Remote Access enabled)",
-        "color": "#dcfce7",
-        "textColor": "#166534",
-        "borderColor": "#4ade80",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "lane_authentication_bearer_token_or_token_query_parameter_using_a_custom_pre_shared_key_defined_in_clawx_api_token_environment_variable_8_title",
-        "type": "text",
-        "x": 210,
-        "y": 2280,
-        "w": 380,
-        "h": 28,
-        "text": "Authentication: Bearer Token or ?token= query parameter using a custom pre-shared key defined in CLAWX_API_TOKEN environment variable.",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_authentication_bearer_token_or_token_query_parameter_using_a_custom_pre_shared_key_defined_in_clawx_api_token_environment_variable_8_divider",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 200,
-        "y": 2311,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
+        "id": "node_authentication_bearer_token_persistent_gatewaytoken_or_token_query_param",
+        "type": "sticky",
+        "x": 1094,
+        "y": 670,
+        "w": 492,
+        "h": 86,
+        "text": "Authentication: Bearer Token, persistent gatewayToken, or ?token= query parameter using a custom pre-shared key defined in CLAWX_API_TOKEN environment variable.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       },
       {
-        "id": "lane_authentication_bearer_token_or_token_query_parameter_using_a_custom_pre_shared_key_defined_in_clawx_api_token_environment_variable_8",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 2320,
-        "w": 1980,
-        "h": 220,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
-        "fontWeight": "bold"
+        "id": "node_service_deployment_managed_via_background_systemd_service_clawx_ai_os_se",
+        "type": "sticky",
+        "x": 1094,
+        "y": 774,
+        "w": 492,
+        "h": 86,
+        "text": "Service Deployment: Managed via background systemd service clawx-ai-os.service running inside virtual framebuffer xvfb-run under headless mode (CLAWX_HEADLESS=1).",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
       },
       {
-        "id": "node_authentication_bearer_token_or_token_query_parameter_using_a_custom_pre_shared_key_defined_in_clawx_api_token_environment_variable_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
+        "id": "node_dynamic_file_deployment_features_post_api_agents_write_workspace_file_to",
+        "type": "sticky",
+        "x": 1094,
+        "y": 878,
+        "w": 492,
+        "h": 86,
+        "text": "Dynamic File Deployment: Features POST /api/agents/write-workspace-file to let the Visual Builder compile and write swarm coordination rules (AGENTS.md) directly into agent workspaces on vm-niclaw dynamically.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_dynamic_visual_swarm_run_features_post_api_swarm_run_on_port_3000_to_exe",
+        "type": "sticky",
+        "x": 1094,
+        "y": 982,
+        "w": 492,
+        "h": 86,
+        "text": "Dynamic Visual Swarm Run: Features POST /api/swarm/run (on port 3000) to execute visual DAG flows (Gemini queries, custom JS sandbox scripts, logic branching routers, local CLI commands) live on the VM guest.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_agent_mcp_tool_mapping_visual_builder_agent_nodes_persist_mcpservers_nam",
+        "type": "sticky",
+        "x": 1094,
+        "y": 1086,
+        "w": 492,
+        "h": 86,
+        "text": "Agent MCP Tool Mapping: Visual Builder Agent nodes persist mcpServers (name, command, args) in node data and sync that list through /api/agents create/update into OpenClaw agent config.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_boardai_host_api",
+        "type": "sticky",
+        "x": 1094,
+        "y": 1190,
+        "w": 492,
+        "h": 72,
+        "text": "BoardAI Host API:",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_get_api_board_status_reads_local_boardai_sync_status_probes_the_public_b",
+        "type": "sticky",
+        "x": 1118,
+        "y": 1280,
+        "w": 468,
+        "h": 86,
+        "text": "GET /api/board/status: reads local BoardAI sync status, probes the public board URL, and returns snapshot counts from ai/BOARD_BRAINMAP.json.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_post_api_board_sync_regenerates_ai_board_brainmap_json_from_the_current_",
+        "type": "sticky",
+        "x": 1118,
+        "y": 1384,
+        "w": 468,
+        "h": 118,
+        "text": "POST /api/board/sync: regenerates ai/BOARD_BRAINMAP.json from the current ai/BRAINMAP.md, refreshes local metadata/revision, and publishes the new snapshot to the real BoardAI API (PUT /api/boards/:id) when BOARD_AI_TOKEN/BOARDAI_TOKEN or %USERPROFILE%\\.boardai-vault\\config.json token is available.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_generator_electron_utils_board_brainmap_ts_builds_deterministic_section_",
+        "type": "sticky",
+        "x": 1118,
+        "y": 1520,
+        "w": 468,
+        "h": 86,
+        "text": "Generator: electron/utils/board-brainmap.ts builds deterministic section/item nodes and orthogonal arrows with a balanced three-column layout.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_spatial_plan_host_api",
+        "type": "sticky",
+        "x": 1094,
+        "y": 1624,
+        "w": 492,
+        "h": 72,
+        "text": "Spatial Plan Host API:",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_get_api_plans_lists_persisted_spatial_plans",
+        "type": "sticky",
+        "x": 1118,
+        "y": 1714,
+        "w": 468,
+        "h": 72,
+        "text": "GET /api/plans: lists persisted Spatial plans.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_post_api_plans_creates_a_persisted_plan",
+        "type": "sticky",
+        "x": 1118,
+        "y": 1804,
+        "w": 468,
+        "h": 72,
+        "text": "POST /api/plans: creates a persisted plan.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_put_api_plans_id_updates_a_persisted_plan",
+        "type": "sticky",
+        "x": 1118,
+        "y": 1894,
+        "w": 468,
+        "h": 72,
+        "text": "PUT /api/plans/:id: updates a persisted plan.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_post_api_plans_id_run_creates_a_backend_run_and_run_events_executors_sup",
+        "type": "sticky",
+        "x": 1118,
+        "y": 1984,
+        "w": 468,
+        "h": 118,
+        "text": "POST /api/plans/:id/run: creates a backend run and run events. Executors support manual, note, safe real board_sync, read-only doctor_diagnose, approval-gated doctor_fix, approval-gated gateway_restart, and approval-gated build_validation; unsupported executor kinds are reported as blocked.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_get_api_plans_id_events_returns_persisted_run_events",
+        "type": "sticky",
+        "x": 1118,
+        "y": 2120,
+        "w": 468,
+        "h": 72,
+        "text": "GET /api/plans/:id/events: returns persisted run events.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_storage_host_api_user_data_spatial_plans_json_so_local_desktop_and_vm_ni",
+        "type": "sticky",
+        "x": 1118,
+        "y": 2210,
+        "w": 468,
+        "h": 72,
+        "text": "Storage: Host API user data spatial/plans.json, so local desktop and vm-niclaw host deployments can share the same contract shape.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_board_sync_calls_the_shared_syncboardsnapshot_service_also_used_by_api_b",
+        "type": "sticky",
+        "x": 1118,
+        "y": 2300,
+        "w": 468,
+        "h": 86,
+        "text": "board_sync calls the shared syncBoardSnapshot() service also used by /api/board/sync, preserving one real BoardAI regeneration and publish implementation.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_doctor_diagnose_calls_the_existing_read_only_runopenclawdoctor_service",
+        "type": "sticky",
+        "x": 1118,
         "y": 2404,
-        "w": 220,
-        "h": 52,
-        "text": "Authentication: Bearer Token or ?token= query parameter using a custom pre-shared key defined in CLAWX_API_TOKEN environment variable.",
-        "color": "#fee2e2",
-        "textColor": "#b91c1c",
-        "borderColor": "#f87171",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "lane_service_deployment_managed_via_background_systemd_service_clawx_ai_os_service_running_inside_virtual_framebuffer_xvfb_run_under_headless_mode_clawx_headless_1_9_title",
-        "type": "text",
-        "x": 210,
-        "y": 2590,
-        "w": 380,
-        "h": 28,
-        "text": "Service Deployment: Managed via background systemd service clawx-ai-os.service running inside virtual framebuffer xvfb-run under headless mode (CLAWX_HEADLESS=1).",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_service_deployment_managed_via_background_systemd_service_clawx_ai_os_service_running_inside_virtual_framebuffer_xvfb_run_under_headless_mode_clawx_headless_1_9_divider",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 200,
-        "y": 2621,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
+        "w": 468,
+        "h": 72,
+        "text": "doctor_diagnose calls the existing read-only runOpenClawDoctor() service.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       },
       {
-        "id": "lane_service_deployment_managed_via_background_systemd_service_clawx_ai_os_service_running_inside_virtual_framebuffer_xvfb_run_under_headless_mode_clawx_headless_1_9",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 2630,
-        "w": 1980,
-        "h": 220,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
+        "id": "node_post_api_plans_planid_steps_stepid_approval_persists_approve_or_reject_f",
+        "type": "sticky",
+        "x": 1118,
+        "y": 2494,
+        "w": 468,
+        "h": 72,
+        "text": "POST /api/plans/:planId/steps/:stepId/approval: persists approve or reject for risky steps and appends an audit record.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_risky_step_kinds_doctor_fix_gateway_restart_build_validation_shell_are_b",
+        "type": "sticky",
+        "x": 1118,
+        "y": 2584,
+        "w": 468,
+        "h": 102,
+        "text": "Risky step kinds (doctor_fix, gateway_restart, build_validation, shell) are blocked until approved. Connected risky executors call runOpenClawDoctorFix(), ctx.gatewayManager.restart(), and the structured build validation runner.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_build_validation_accepts_named_backend_profiles_only_current_allowlist_v",
+        "type": "sticky",
+        "x": 1118,
+        "y": 2704,
+        "w": 468,
+        "h": 86,
+        "text": "Build validation accepts named backend profiles only. Current allowlist: validationProfile: \"typecheck\" -> pnpm run typecheck, executed with spawn, shell: false, timeout, and bounded output.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_risky_approvals_are_one_shot_executor_dispatch_stores_approvalstatus_con",
+        "type": "sticky",
+        "x": 1118,
+        "y": 2808,
+        "w": 468,
+        "h": 86,
+        "text": "Risky approvals are one-shot: executor dispatch stores approvalStatus=consumed, so a second run blocks until a new explicit approval is persisted.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_deployed_and_smoke_tested_on_vm_niclaw_on_2026_05_31_persisted_doctor_di",
+        "type": "sticky",
+        "x": 1118,
+        "y": 2912,
+        "w": 468,
+        "h": 118,
+        "text": "Deployed and smoke-tested on vm-niclaw on 2026-05-31: persisted Doctor diagnose completed with exit=0; BoardAI Plan publish completed successfully; Gateway restart completed once and replay blocked; typecheck completed with exit=0 and replay blocked with approvalStatus=consumed.",
+        "color": "#eef2ff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "section_5_embedded_agent_portal_connections",
+        "type": "shape",
+        "shapeType": "rect",
+        "x": 1710,
+        "y": 574,
+        "w": 540,
+        "h": 58,
+        "text": "5) Embedded Agent Portal Connections",
+        "color": "#cffafe",
+        "textColor": "#0f172a",
+        "borderColor": "#94a3b8",
+        "fontSize": 17,
         "fontWeight": "bold"
       },
       {
-        "id": "node_service_deployment_managed_via_background_systemd_service_clawx_ai_os_service_running_inside_virtual_framebuffer_xvfb_run_under_headless_mode_clawx_headless_1_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
-        "y": 2714,
-        "w": 220,
-        "h": 52,
-        "text": "Service Deployment: Managed via background systemd service clawx-ai-os.service running inside virtual framebuffer xvfb-run under headless mode (CLAWX_HEADLESS=1).",
-        "color": "#ede9fe",
-        "textColor": "#5b21b6",
-        "borderColor": "#a78bfa",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "lane_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_10_title",
-        "type": "text",
-        "x": 210,
-        "y": 2900,
-        "w": 380,
-        "h": 28,
+        "id": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce",
+        "type": "sticky",
+        "x": 1734,
+        "y": 658,
+        "w": 492,
+        "h": 72,
         "text": "Mapped client ports and URLs rendered inside the sandboxed hardware-accelerated iframe dashboard container:",
-        "color": "#111827",
-        "textColor": "#111827",
-        "fontSize": 20,
-        "fontWeight": "bold",
-        "textAlign": "left"
-      },
-      {
-        "id": "lane_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_10_divider",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 200,
-        "y": 2931,
-        "w": 1920,
-        "h": 3,
-        "text": "",
-        "color": "#d1d5db",
-        "textColor": "#d1d5db",
-        "borderColor": "#d1d5db",
-        "fontSize": 1,
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       },
       {
-        "id": "lane_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_10",
-        "type": "lane",
-        "orientation": "h",
-        "x": 280,
-        "y": 2940,
-        "w": 1980,
-        "h": 386,
-        "text": "",
-        "color": "#fcfcfd",
-        "textColor": "#111827",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
-        "fontWeight": "bold"
-      },
-      {
-        "id": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1",
-        "type": "shape",
-        "shapeType": "rect",
-        "x": 300,
-        "y": 3107,
-        "w": 220,
-        "h": 52,
-        "text": "Mapped client ports and URLs rendered inside the sandboxed hardware-accelerated iframe dashboard container:",
-        "color": "#dbeafe",
-        "textColor": "#1d4ed8",
-        "borderColor": "#60a5fa",
-        "fontSize": 14,
-        "fontWeight": "600"
-      },
-      {
-        "id": "node_openclaw_dashboard_http_ip_18789_active_orchestration_workspace_engine_2_d1d5db",
+        "id": "node_openclaw_dashboard",
         "type": "sticky",
-        "x": 520,
-        "y": 2995,
-        "w": 220,
-        "h": 48,
-        "text": "OpenClaw Dashboard: http://<IP>:18789 (active orchestration workspace engine)",
-        "color": "#f9fafb",
-        "textColor": "#374151",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
+        "x": 1758,
+        "y": 748,
+        "w": 468,
+        "h": 72,
+        "text": "OpenClaw Dashboard:",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       },
       {
-        "id": "node_openhuman_core_http_ip_7788_cognitive_semantic_hub_2_d1d5db",
+        "id": "node_http_http_ip_18789_token_token",
         "type": "sticky",
-        "x": 520,
-        "y": 3071,
-        "w": 220,
-        "h": 48,
-        "text": "OpenHuman Core: http://<IP>:7788 (cognitive semantic hub)",
-        "color": "#f9fafb",
-        "textColor": "#374151",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
+        "x": 1782,
+        "y": 838,
+        "w": 444,
+        "h": 72,
+        "text": "HTTP: http://<IP>:18789/?token=<token>",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       },
       {
-        "id": "node_hermes_console_https_openrouter_ai_keys_api_credit_console_2_d1d5db",
+        "id": "node_https_https_host_token_token_mapped_to_port_443_via_tailscale_serve",
         "type": "sticky",
-        "x": 520,
-        "y": 3147,
-        "w": 220,
-        "h": 48,
-        "text": "Hermes Console: https://openrouter.ai/keys (API credit console)",
-        "color": "#f9fafb",
-        "textColor": "#374151",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
+        "x": 1782,
+        "y": 928,
+        "w": 444,
+        "h": 72,
+        "text": "HTTPS: https://<host>/?token=<token> (Mapped to port 443 via Tailscale Serve)",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       },
       {
-        "id": "node_gemini_console_https_aistudio_google_com_google_ai_studio_2_d1d5db",
+        "id": "node_openhuman_core",
         "type": "sticky",
-        "x": 520,
-        "y": 3223,
-        "w": 220,
-        "h": 48,
+        "x": 1758,
+        "y": 1018,
+        "w": 468,
+        "h": 72,
+        "text": "OpenHuman Core:",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_http_http_ip_7788",
+        "type": "sticky",
+        "x": 1782,
+        "y": 1108,
+        "w": 444,
+        "h": 72,
+        "text": "HTTP: http://<IP>:7788",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_https_https_host_10000_proxied_to_7788_via_tailscale_serve_serving_the_o",
+        "type": "sticky",
+        "x": 1782,
+        "y": 1198,
+        "w": 444,
+        "h": 118,
+        "text": "HTTPS: https://<host>:10000 (Proxied to 7788 via Tailscale Serve, serving the official OpenHuman Web Interface and proxying /rpc requests to the native Rust Core daemon on port 17788. Custom chat route /chat maps E2E messages directly to the OpenClaw Gateway on port 18789 under the agent:openhuman session slug).",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_hermes_console",
+        "type": "sticky",
+        "x": 1758,
+        "y": 1334,
+        "w": 468,
+        "h": 72,
+        "text": "Hermes Console:",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_http_http_ip_7789",
+        "type": "sticky",
+        "x": 1782,
+        "y": 1424,
+        "w": 444,
+        "h": 72,
+        "text": "HTTP: http://<IP>:7789",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_https_https_host_8443_proxied_to_7789_via_tailscale_serve_running_a_cust",
+        "type": "sticky",
+        "x": 1782,
+        "y": 1514,
+        "w": 444,
+        "h": 102,
+        "text": "HTTPS: https://<host>:8443 (Proxied to 7789 via Tailscale Serve, running a custom mobile-responsive Inference chat console. Custom chat route /chat maps E2E messages directly to the OpenClaw Gateway on port 18789 under the agent:hermes session slug).",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_open_code_vs_code",
+        "type": "sticky",
+        "x": 1758,
+        "y": 1634,
+        "w": 468,
+        "h": 72,
+        "text": "Open Code (VS Code):",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_http_http_ip_8080",
+        "type": "sticky",
+        "x": 1782,
+        "y": 1724,
+        "w": 444,
+        "h": 72,
+        "text": "HTTP: http://<IP>:8080",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_https_https_host_8000_proxied_to_port_8080_via_tailscale_serve_running_p",
+        "type": "sticky",
+        "x": 1782,
+        "y": 1814,
+        "w": 444,
+        "h": 86,
+        "text": "HTTPS: https://<host>:8000 (Proxied to port 8080 via Tailscale Serve, running passwordless code-server in the secure Tailnet context)",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_gemini_console_https_aistudio_google_com_google_ai_studio",
+        "type": "sticky",
+        "x": 1758,
+        "y": 1918,
+        "w": 468,
+        "h": 72,
         "text": "Gemini Console: https://aistudio.google.com (Google AI Studio)",
-        "color": "#f9fafb",
-        "textColor": "#374151",
-        "borderColor": "#d1d5db",
-        "fontSize": 11,
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
+        "fontWeight": "normal"
+      },
+      {
+        "id": "node_boardai_brainmap_https_board_private_driver_ro_board_728273ef_9709_4f1c_",
+        "type": "sticky",
+        "x": 1758,
+        "y": 2008,
+        "w": 468,
+        "h": 118,
+        "text": "BoardAI Brainmap: https://board.private-driver.ro/?board=728273ef-9709-4f1c-a77e-ab7086bfeff3 (generated project brainmap from ai/BRAINMAP.md; current revision/counts are read from ai/BOARD_SYNC_STATUS.json; Windows and Android Portal expose live status + regeneration/publish controls)",
+        "color": "#ecfeff",
+        "textColor": "#1e293b",
+        "borderColor": "#cbd5e1",
+        "fontSize": 12,
         "fontWeight": "normal"
       }
     ],
     "arrows": [
       {
-        "id": "a_node_app_node_pnpm_run_init_installs_dependencies_and_downloads_uv_1",
-        "fromId": "node_app",
-        "toId": "node_pnpm_run_init_installs_dependencies_and_downloads_uv_1",
-        "label": "",
-        "routing": "ortho",
-        "style": {
-          "stroke": "#6b7280",
-          "width": 3
-        }
-      },
-      {
-        "id": "a_node_app_node_pnpm_run_prep_win_binaries_downloads_bundled_windows_node_uv_binaries_1",
-        "fromId": "node_app",
-        "toId": "node_pnpm_run_prep_win_binaries_downloads_bundled_windows_node_uv_binaries_1",
+        "id": "arrow_node_root_section_1_project_overview",
+        "fromId": "node_root",
+        "toId": "section_1_project_overview",
         "label": "",
         "routing": "ortho",
         "style": {
@@ -732,53 +893,20 @@
         }
       },
       {
-        "id": "a_node_app_node_pnpm_run_package_win_builds_the_vite_application_and_bundles_it_into_a_windows_executable_using_electron_builder_1",
-        "fromId": "node_app",
-        "toId": "node_pnpm_run_package_win_builds_the_vite_application_and_bundles_it_into_a_windows_executable_using_electron_builder_1",
+        "id": "arrow_section_1_project_overview_node_clawx_is_a_react_19_typescript_vite_desktop_application_packaged_with_el",
+        "fromId": "section_1_project_overview",
+        "toId": "node_clawx_is_a_react_19_typescript_vite_desktop_application_packaged_with_el",
         "label": "",
         "routing": "ortho",
         "style": {
-          "stroke": "#64748b",
-          "width": 3
-        }
-      },
-      {
-        "id": "a_node_app_node_electron_core_electron_main_process_files_1",
-        "fromId": "node_app",
-        "toId": "node_electron_core_electron_main_process_files_1",
-        "label": "",
-        "routing": "ortho",
-        "style": {
-          "stroke": "#6b7280",
-          "width": 3
-        }
-      },
-      {
-        "id": "a_node_app_node_src_react_frontend_source_code_1",
-        "fromId": "node_app",
-        "toId": "node_src_react_frontend_source_code_1",
-        "label": "",
-        "routing": "ortho",
-        "style": {
-          "stroke": "#6b7280",
-          "width": 3
-        }
-      },
-      {
-        "id": "a_node_src_react_frontend_source_code_1_node_src_pages_portal_unified_in_app_agent_portal_interface_index_tsx_2_d1d5db",
-        "fromId": "node_src_react_frontend_source_code_1",
-        "toId": "node_src_pages_portal_unified_in_app_agent_portal_interface_index_tsx_2_d1d5db",
-        "label": "",
-        "routing": "ortho",
-        "style": {
-          "stroke": "#6b7280",
+          "stroke": "#94a3b8",
           "width": 2
         }
       },
       {
-        "id": "a_node_app_node_scripts_custom_build_scripts_for_downloading_runtimes_bundling_openclaw_plugins_and_running_electron_builder_1",
-        "fromId": "node_app",
-        "toId": "node_scripts_custom_build_scripts_for_downloading_runtimes_bundling_openclaw_plugins_and_running_electron_builder_1",
+        "id": "arrow_node_root_section_1_1_principal_product_direction_niclaw_spatial_ai_os",
+        "fromId": "node_root",
+        "toId": "section_1_1_principal_product_direction_niclaw_spatial_ai_os",
         "label": "",
         "routing": "ortho",
         "style": {
@@ -787,90 +915,629 @@
         }
       },
       {
-        "id": "a_node_app_node_host_api_address_http_10_10_1_219_13210_remote_access_enabled_1",
-        "fromId": "node_app",
-        "toId": "node_host_api_address_http_10_10_1_219_13210_remote_access_enabled_1",
+        "id": "arrow_section_1_1_principal_product_direction_niclaw_spatial_ai_os_node_confirmed_direction_as_of_2026_05_31_evolve_niclaw_into_a_functional_2_5",
+        "fromId": "section_1_1_principal_product_direction_niclaw_spatial_ai_os",
+        "toId": "node_confirmed_direction_as_of_2026_05_31_evolve_niclaw_into_a_functional_2_5",
         "label": "",
         "routing": "ortho",
         "style": {
-          "stroke": "#64748b",
-          "width": 3
-        }
-      },
-      {
-        "id": "a_node_app_node_authentication_bearer_token_or_token_query_parameter_using_a_custom_pre_shared_key_defined_in_clawx_api_token_environment_variable_1",
-        "fromId": "node_app",
-        "toId": "node_authentication_bearer_token_or_token_query_parameter_using_a_custom_pre_shared_key_defined_in_clawx_api_token_environment_variable_1",
-        "label": "",
-        "routing": "ortho",
-        "style": {
-          "stroke": "#6b7280",
-          "width": 3
-        }
-      },
-      {
-        "id": "a_node_app_node_service_deployment_managed_via_background_systemd_service_clawx_ai_os_service_running_inside_virtual_framebuffer_xvfb_run_under_headless_mode_clawx_headless_1_1",
-        "fromId": "node_app",
-        "toId": "node_service_deployment_managed_via_background_systemd_service_clawx_ai_os_service_running_inside_virtual_framebuffer_xvfb_run_under_headless_mode_clawx_headless_1_1",
-        "label": "",
-        "routing": "ortho",
-        "style": {
-          "stroke": "#6b7280",
-          "width": 3
-        }
-      },
-      {
-        "id": "a_node_app_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1",
-        "fromId": "node_app",
-        "toId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1",
-        "label": "",
-        "routing": "ortho",
-        "style": {
-          "stroke": "#64748b",
-          "width": 3
-        }
-      },
-      {
-        "id": "a_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1_node_openclaw_dashboard_http_ip_18789_active_orchestration_workspace_engine_2_d1d5db",
-        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1",
-        "toId": "node_openclaw_dashboard_http_ip_18789_active_orchestration_workspace_engine_2_d1d5db",
-        "label": "",
-        "routing": "ortho",
-        "style": {
-          "stroke": "#64748b",
+          "stroke": "#94a3b8",
           "width": 2
         }
       },
       {
-        "id": "a_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1_node_openhuman_core_http_ip_7788_cognitive_semantic_hub_2_d1d5db",
-        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1",
-        "toId": "node_openhuman_core_http_ip_7788_cognitive_semantic_hub_2_d1d5db",
+        "id": "arrow_section_1_1_principal_product_direction_niclaw_spatial_ai_os_node_target_workspace_explorer_spatial_canvas_command_palette_inspector_ai_as",
+        "fromId": "section_1_1_principal_product_direction_niclaw_spatial_ai_os",
+        "toId": "node_target_workspace_explorer_spatial_canvas_command_palette_inspector_ai_as",
         "label": "",
         "routing": "ortho",
         "style": {
-          "stroke": "#64748b",
+          "stroke": "#94a3b8",
           "width": 2
         }
       },
       {
-        "id": "a_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1_node_hermes_console_https_openrouter_ai_keys_api_credit_console_2_d1d5db",
-        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1",
-        "toId": "node_hermes_console_https_openrouter_ai_keys_api_credit_console_2_d1d5db",
+        "id": "arrow_section_1_1_principal_product_direction_niclaw_spatial_ai_os_node_implementation_principle_real_host_api_backed_state_actions_first_visual",
+        "fromId": "section_1_1_principal_product_direction_niclaw_spatial_ai_os",
+        "toId": "node_implementation_principle_real_host_api_backed_state_actions_first_visual",
         "label": "",
         "routing": "ortho",
         "style": {
-          "stroke": "#64748b",
+          "stroke": "#94a3b8",
           "width": 2
         }
       },
       {
-        "id": "a_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1_node_gemini_console_https_aistudio_google_com_google_ai_studio_2_d1d5db",
-        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_accelerated_iframe_dashboard_container_1",
-        "toId": "node_gemini_console_https_aistudio_google_com_google_ai_studio_2_d1d5db",
+        "id": "arrow_node_root_section_2_key_build_commands",
+        "fromId": "node_root",
+        "toId": "section_2_key_build_commands",
         "label": "",
         "routing": "ortho",
         "style": {
           "stroke": "#64748b",
+          "width": 3
+        }
+      },
+      {
+        "id": "arrow_section_2_key_build_commands_node_pnpm_run_init_installs_dependencies_and_downloads_uv",
+        "fromId": "section_2_key_build_commands",
+        "toId": "node_pnpm_run_init_installs_dependencies_and_downloads_uv",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_2_key_build_commands_node_pnpm_run_prep_win_binaries_downloads_bundled_windows_node_uv_binaries",
+        "fromId": "section_2_key_build_commands",
+        "toId": "node_pnpm_run_prep_win_binaries_downloads_bundled_windows_node_uv_binaries",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_2_key_build_commands_node_pnpm_run_package_win_builds_the_vite_application_and_bundles_it_into_a_w",
+        "fromId": "section_2_key_build_commands",
+        "toId": "node_pnpm_run_package_win_builds_the_vite_application_and_bundles_it_into_a_w",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_2_key_build_commands_node_current_validation_baseline_2026_05_30_pnpm_run_typecheck_passes_pnpm_ru",
+        "fromId": "section_2_key_build_commands",
+        "toId": "node_current_validation_baseline_2026_05_30_pnpm_run_typecheck_passes_pnpm_ru",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_root_section_3_main_artifact_folders",
+        "fromId": "node_root",
+        "toId": "section_3_main_artifact_folders",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#64748b",
+          "width": 3
+        }
+      },
+      {
+        "id": "arrow_section_3_main_artifact_folders_node_electron_core_electron_main_process_files",
+        "fromId": "section_3_main_artifact_folders",
+        "toId": "node_electron_core_electron_main_process_files",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_3_main_artifact_folders_node_src_react_frontend_source_code",
+        "fromId": "section_3_main_artifact_folders",
+        "toId": "node_src_react_frontend_source_code",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_src_react_frontend_source_code_node_src_pages_portal_unified_in_app_agent_portal_interface_index_tsx",
+        "fromId": "node_src_react_frontend_source_code",
+        "toId": "node_src_pages_portal_unified_in_app_agent_portal_interface_index_tsx",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_src_react_frontend_source_code_node_src_pages_spatialos_first_pass_2_5d_spatial_ai_os_shell_index_tsx_with_r",
+        "fromId": "node_src_react_frontend_source_code",
+        "toId": "node_src_pages_spatialos_first_pass_2_5d_spatial_ai_os_shell_index_tsx_with_r",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_3_main_artifact_folders_node_mobile_android_kotlin_native_kotlin_android_voice_assistant_companion_ap",
+        "fromId": "section_3_main_artifact_folders",
+        "toId": "node_mobile_android_kotlin_native_kotlin_android_voice_assistant_companion_ap",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_3_main_artifact_folders_node_shared_jarvis_server_lightweight_node_express_ts_server_routing_commands",
+        "fromId": "section_3_main_artifact_folders",
+        "toId": "node_shared_jarvis_server_lightweight_node_express_ts_server_routing_commands",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_3_main_artifact_folders_node_scripts_custom_build_scripts_for_downloading_runtimes_bundling_openclaw_",
+        "fromId": "section_3_main_artifact_folders",
+        "toId": "node_scripts_custom_build_scripts_for_downloading_runtimes_bundling_openclaw_",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_root_section_4_remote_headless_host_api_scheme",
+        "fromId": "node_root",
+        "toId": "section_4_remote_headless_host_api_scheme",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#64748b",
+          "width": 3
+        }
+      },
+      {
+        "id": "arrow_section_4_remote_headless_host_api_scheme_node_host_api_address_http_10_10_1_219_13210_remote_access_enabled_binds_auto",
+        "fromId": "section_4_remote_headless_host_api_scheme",
+        "toId": "node_host_api_address_http_10_10_1_219_13210_remote_access_enabled_binds_auto",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_4_remote_headless_host_api_scheme_node_authentication_bearer_token_persistent_gatewaytoken_or_token_query_param",
+        "fromId": "section_4_remote_headless_host_api_scheme",
+        "toId": "node_authentication_bearer_token_persistent_gatewaytoken_or_token_query_param",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_4_remote_headless_host_api_scheme_node_service_deployment_managed_via_background_systemd_service_clawx_ai_os_se",
+        "fromId": "section_4_remote_headless_host_api_scheme",
+        "toId": "node_service_deployment_managed_via_background_systemd_service_clawx_ai_os_se",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_4_remote_headless_host_api_scheme_node_dynamic_file_deployment_features_post_api_agents_write_workspace_file_to",
+        "fromId": "section_4_remote_headless_host_api_scheme",
+        "toId": "node_dynamic_file_deployment_features_post_api_agents_write_workspace_file_to",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_4_remote_headless_host_api_scheme_node_dynamic_visual_swarm_run_features_post_api_swarm_run_on_port_3000_to_exe",
+        "fromId": "section_4_remote_headless_host_api_scheme",
+        "toId": "node_dynamic_visual_swarm_run_features_post_api_swarm_run_on_port_3000_to_exe",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_4_remote_headless_host_api_scheme_node_agent_mcp_tool_mapping_visual_builder_agent_nodes_persist_mcpservers_nam",
+        "fromId": "section_4_remote_headless_host_api_scheme",
+        "toId": "node_agent_mcp_tool_mapping_visual_builder_agent_nodes_persist_mcpservers_nam",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_4_remote_headless_host_api_scheme_node_boardai_host_api",
+        "fromId": "section_4_remote_headless_host_api_scheme",
+        "toId": "node_boardai_host_api",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_boardai_host_api_node_get_api_board_status_reads_local_boardai_sync_status_probes_the_public_b",
+        "fromId": "node_boardai_host_api",
+        "toId": "node_get_api_board_status_reads_local_boardai_sync_status_probes_the_public_b",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_boardai_host_api_node_post_api_board_sync_regenerates_ai_board_brainmap_json_from_the_current_",
+        "fromId": "node_boardai_host_api",
+        "toId": "node_post_api_board_sync_regenerates_ai_board_brainmap_json_from_the_current_",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_boardai_host_api_node_generator_electron_utils_board_brainmap_ts_builds_deterministic_section_",
+        "fromId": "node_boardai_host_api",
+        "toId": "node_generator_electron_utils_board_brainmap_ts_builds_deterministic_section_",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_section_4_remote_headless_host_api_scheme_node_spatial_plan_host_api",
+        "fromId": "section_4_remote_headless_host_api_scheme",
+        "toId": "node_spatial_plan_host_api",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_get_api_plans_lists_persisted_spatial_plans",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_get_api_plans_lists_persisted_spatial_plans",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_post_api_plans_creates_a_persisted_plan",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_post_api_plans_creates_a_persisted_plan",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_put_api_plans_id_updates_a_persisted_plan",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_put_api_plans_id_updates_a_persisted_plan",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_post_api_plans_id_run_creates_a_backend_run_and_run_events_executors_sup",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_post_api_plans_id_run_creates_a_backend_run_and_run_events_executors_sup",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_get_api_plans_id_events_returns_persisted_run_events",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_get_api_plans_id_events_returns_persisted_run_events",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_storage_host_api_user_data_spatial_plans_json_so_local_desktop_and_vm_ni",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_storage_host_api_user_data_spatial_plans_json_so_local_desktop_and_vm_ni",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_board_sync_calls_the_shared_syncboardsnapshot_service_also_used_by_api_b",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_board_sync_calls_the_shared_syncboardsnapshot_service_also_used_by_api_b",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_doctor_diagnose_calls_the_existing_read_only_runopenclawdoctor_service",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_doctor_diagnose_calls_the_existing_read_only_runopenclawdoctor_service",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_post_api_plans_planid_steps_stepid_approval_persists_approve_or_reject_f",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_post_api_plans_planid_steps_stepid_approval_persists_approve_or_reject_f",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_risky_step_kinds_doctor_fix_gateway_restart_build_validation_shell_are_b",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_risky_step_kinds_doctor_fix_gateway_restart_build_validation_shell_are_b",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_build_validation_accepts_named_backend_profiles_only_current_allowlist_v",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_build_validation_accepts_named_backend_profiles_only_current_allowlist_v",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_risky_approvals_are_one_shot_executor_dispatch_stores_approvalstatus_con",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_risky_approvals_are_one_shot_executor_dispatch_stores_approvalstatus_con",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_spatial_plan_host_api_node_deployed_and_smoke_tested_on_vm_niclaw_on_2026_05_31_persisted_doctor_di",
+        "fromId": "node_spatial_plan_host_api",
+        "toId": "node_deployed_and_smoke_tested_on_vm_niclaw_on_2026_05_31_persisted_doctor_di",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_root_section_5_embedded_agent_portal_connections",
+        "fromId": "node_root",
+        "toId": "section_5_embedded_agent_portal_connections",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#64748b",
+          "width": 3
+        }
+      },
+      {
+        "id": "arrow_section_5_embedded_agent_portal_connections_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce",
+        "fromId": "section_5_embedded_agent_portal_connections",
+        "toId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce_node_openclaw_dashboard",
+        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce",
+        "toId": "node_openclaw_dashboard",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_openclaw_dashboard_node_http_http_ip_18789_token_token",
+        "fromId": "node_openclaw_dashboard",
+        "toId": "node_http_http_ip_18789_token_token",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_openclaw_dashboard_node_https_https_host_token_token_mapped_to_port_443_via_tailscale_serve",
+        "fromId": "node_openclaw_dashboard",
+        "toId": "node_https_https_host_token_token_mapped_to_port_443_via_tailscale_serve",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce_node_openhuman_core",
+        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce",
+        "toId": "node_openhuman_core",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_openhuman_core_node_http_http_ip_7788",
+        "fromId": "node_openhuman_core",
+        "toId": "node_http_http_ip_7788",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_openhuman_core_node_https_https_host_10000_proxied_to_7788_via_tailscale_serve_serving_the_o",
+        "fromId": "node_openhuman_core",
+        "toId": "node_https_https_host_10000_proxied_to_7788_via_tailscale_serve_serving_the_o",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce_node_hermes_console",
+        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce",
+        "toId": "node_hermes_console",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_hermes_console_node_http_http_ip_7789",
+        "fromId": "node_hermes_console",
+        "toId": "node_http_http_ip_7789",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_hermes_console_node_https_https_host_8443_proxied_to_7789_via_tailscale_serve_running_a_cust",
+        "fromId": "node_hermes_console",
+        "toId": "node_https_https_host_8443_proxied_to_7789_via_tailscale_serve_running_a_cust",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce_node_open_code_vs_code",
+        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce",
+        "toId": "node_open_code_vs_code",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_open_code_vs_code_node_http_http_ip_8080",
+        "fromId": "node_open_code_vs_code",
+        "toId": "node_http_http_ip_8080",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_open_code_vs_code_node_https_https_host_8000_proxied_to_port_8080_via_tailscale_serve_running_p",
+        "fromId": "node_open_code_vs_code",
+        "toId": "node_https_https_host_8000_proxied_to_port_8080_via_tailscale_serve_running_p",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce_node_gemini_console_https_aistudio_google_com_google_ai_studio",
+        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce",
+        "toId": "node_gemini_console_https_aistudio_google_com_google_ai_studio",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
+          "width": 2
+        }
+      },
+      {
+        "id": "arrow_node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce_node_boardai_brainmap_https_board_private_driver_ro_board_728273ef_9709_4f1c_",
+        "fromId": "node_mapped_client_ports_and_urls_rendered_inside_the_sandboxed_hardware_acce",
+        "toId": "node_boardai_brainmap_https_board_private_driver_ro_board_728273ef_9709_4f1c_",
+        "label": "",
+        "routing": "ortho",
+        "style": {
+          "stroke": "#94a3b8",
           "width": 2
         }
       }

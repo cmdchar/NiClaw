@@ -86,7 +86,7 @@ const gatewayRpcBackpressure = new GatewayRpcBackpressure();
 export function registerIpcHandlers(
   gatewayManager: GatewayManager,
   clawHubService: ClawHubService,
-  mainWindow: BrowserWindow
+  mainWindow: BrowserWindow | null
 ): void {
   // Unified request protocol (non-breaking: legacy channels remain available)
   registerUnifiedRequestHandlers(gatewayManager);
@@ -1414,55 +1414,55 @@ function registerGatewayHandlers(
 
   // Forward Gateway events to renderer
   gatewayManager.on('status', (status) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('gateway:status-changed', status);
     }
   });
 
   gatewayManager.on('message', (message) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('gateway:message', message);
     }
   });
 
   gatewayManager.on('notification', (notification) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('gateway:notification', notification);
     }
   });
 
   gatewayManager.on('gateway:health', (data) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('gateway:health-changed', data);
     }
   });
 
   gatewayManager.on('gateway:presence', (data) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('gateway:presence-changed', data);
     }
   });
 
   gatewayManager.on('channel:status', (data) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('gateway:channel-status', data);
     }
   });
 
   gatewayManager.on('chat:message', (data) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('gateway:chat-message', data);
     }
   });
 
   gatewayManager.on('exit', (code) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('gateway:exit', code);
     }
   });
 
   gatewayManager.on('error', (error) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('gateway:error', error.message);
     }
   });
@@ -1695,7 +1695,7 @@ function registerOpenClawHandlers(gatewayManager: GatewayManager): void {
 /**
  * WhatsApp Login Handlers
  */
-function registerWhatsAppHandlers(mainWindow: BrowserWindow): void {
+function registerWhatsAppHandlers(mainWindow: BrowserWindow | null): void {
   // Request WhatsApp QR code
   ipcMain.handle('channel:requestWhatsAppQr', async (_, accountId: string) => {
     try {
@@ -1724,20 +1724,20 @@ function registerWhatsAppHandlers(mainWindow: BrowserWindow): void {
 
   // Forward events to renderer
   whatsAppLoginManager.on('qr', (data) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('channel:whatsapp-qr', data);
     }
   });
 
   whatsAppLoginManager.on('success', (data) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       logger.info('whatsapp:login-success', data);
       mainWindow.webContents.send('channel:whatsapp-success', data);
     }
   });
 
   whatsAppLoginManager.on('error', (error) => {
-    if (!mainWindow.isDestroyed()) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       logger.error('whatsapp:login-error', error);
       mainWindow.webContents.send('channel:whatsapp-error', error);
     }
@@ -1747,9 +1747,11 @@ function registerWhatsAppHandlers(mainWindow: BrowserWindow): void {
 /**
  * Device OAuth Handlers (Code Plan)
  */
-function registerDeviceOAuthHandlers(mainWindow: BrowserWindow): void {
-  deviceOAuthManager.setWindow(mainWindow);
-  browserOAuthManager.setWindow(mainWindow);
+function registerDeviceOAuthHandlers(mainWindow: BrowserWindow | null): void {
+  if (mainWindow) {
+    deviceOAuthManager.setWindow(mainWindow);
+    browserOAuthManager.setWindow(mainWindow);
+  }
 
   // Request Provider OAuth initialization
   ipcMain.handle(
@@ -2314,25 +2316,27 @@ function registerUsageHandlers(): void {
 /**
  * Window control handlers (for custom title bar on Windows)
  */
-function registerWindowHandlers(mainWindow: BrowserWindow): void {
+function registerWindowHandlers(mainWindow: BrowserWindow | null): void {
   ipcMain.handle('window:minimize', () => {
-    mainWindow.minimize();
+    mainWindow?.minimize();
   });
 
   ipcMain.handle('window:maximize', () => {
-    if (mainWindow.isMaximized()) {
-      mainWindow.unmaximize();
-    } else {
-      mainWindow.maximize();
+    if (mainWindow) {
+      if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+      } else {
+        mainWindow.maximize();
+      }
     }
   });
 
   ipcMain.handle('window:close', () => {
-    mainWindow.close();
+    mainWindow?.close();
   });
 
   ipcMain.handle('window:isMaximized', () => {
-    return mainWindow.isMaximized();
+    return mainWindow ? mainWindow.isMaximized() : false;
   });
 }
 

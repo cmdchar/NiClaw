@@ -52,6 +52,14 @@ interface AgentListEntry extends Record<string, unknown> {
   tags?: string[];
   brainPath?: string;
   mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
+  paused?: boolean;
+  currentTask?: string;
+  permissions?: {
+    fileWrite?: boolean;
+    cmdExecute?: 'always' | 'ask' | 'never';
+    webSearch?: boolean;
+    sandbox?: boolean;
+  };
 }
 
 interface AgentsConfig extends Record<string, unknown> {
@@ -548,6 +556,9 @@ async function buildSnapshotFromConfig(config: AgentConfigDocument, preloadedCha
       tags: entry.tags,
       brainPath: entry.brainPath,
       mcpServers: entry.mcpServers,
+      paused: entry.paused,
+      currentTask: entry.currentTask,
+      permissions: entry.permissions,
     };
   });
 
@@ -647,6 +658,14 @@ export interface UpdateAgentOptions {
   tags?: string[];
   brainPath?: string;
   mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
+  paused?: boolean;
+  currentTask?: string;
+  permissions?: {
+    fileWrite?: boolean;
+    cmdExecute?: 'always' | 'ask' | 'never';
+    webSearch?: boolean;
+    sandbox?: boolean;
+  };
 }
 
 export async function updateAgentConfig(agentId: string, options: UpdateAgentOptions): Promise<AgentsSnapshot> {
@@ -668,6 +687,9 @@ export async function updateAgentConfig(agentId: string, options: UpdateAgentOpt
     if (options.tags !== undefined) nextEntry.tags = options.tags;
     if (options.brainPath !== undefined) nextEntry.brainPath = options.brainPath;
     if (options.mcpServers !== undefined) nextEntry.mcpServers = options.mcpServers;
+    if (options.paused !== undefined) nextEntry.paused = options.paused;
+    if (options.currentTask !== undefined) nextEntry.currentTask = options.currentTask;
+    if (options.permissions !== undefined) nextEntry.permissions = options.permissions;
 
     entries[index] = nextEntry;
 

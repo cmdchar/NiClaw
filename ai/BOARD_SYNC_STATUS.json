@@ -1,13 +1,16 @@
-﻿{
-    "whiteboard":  "published",
-    "note":  "not_run",
-    "secrets":  "not_run",
-    "board_url":  "https://board.private-driver.ro/?board=728273ef-9709-4f1c-a77e-ab7086bfeff3",
-    "snapshot_path":  "C:\\Server\\niclaw\\app\\ai\\BOARD_BRAINMAP.json",
-    "board_name":  "app Brainmap",
-    "board_id":  "728273ef-9709-4f1c-a77e-ab7086bfeff3",
-    "revision":  4,
-    "project_root":  "C:\\Server\\niclaw\\app",
-    "source_brainmap":  "C:\\Server\\niclaw\\app\\ai\\BRAINMAP.md",
-    "synced_at":  "2026-05-24T20:12:14.2936632Z"
+{
+  "whiteboard": "published",
+  "note": "not_run",
+  "secrets": "not_run",
+  "board_url": "https://board.private-driver.ro/?board=728273ef-9709-4f1c-a77e-ab7086bfeff3",
+  "snapshot_path": "/home/debian/NiClaw/ai/BOARD_BRAINMAP.json",
+  "board_name": "app Brainmap",
+  "board_id": "728273ef-9709-4f1c-a77e-ab7086bfeff3",
+  "revision": 10,
+  "project_root": "/home/debian/NiClaw",
+  "source_brainmap": "/home/debian/NiClaw/ai/BRAINMAP.md",
+  "synced_at": "2026-05-31T08:44:22.794Z",
+  "local_synced_at": "2026-05-31T08:44:22.794Z",
+  "published_at": "2026-05-31T08:44:22.794Z",
+  "publish_status": "published"
 }

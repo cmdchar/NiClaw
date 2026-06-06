@@ -12,6 +12,9 @@ import {
   RotateCcw,
   Sparkles,
   Wrench,
+  CheckCircle,
+  XCircle,
+  Play
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -88,6 +91,11 @@ interface DreamDiaryEntry {
 interface ConfigSnapshot {
   hash?: string;
 }
+
+interface QueueItem { id: string; type: string; title: string; content: string; status: string; }
+interface GraphData { nodes: any[]; edges: any[]; }
+interface PromotionItem { id: string; type: string; level: string; title: string; content: string; status: string; }
+
 
 type DreamActionKey = 'backfill' | 'dedupe' | 'repair' | 'resetDiary' | 'resetGrounded';
 type DreamToggleKey = 'enable' | 'disable';
@@ -237,6 +245,10 @@ export function Dreams() {
   const [openingFullUi, setOpeningFullUi] = useState(false);
   const refreshInFlightRef = useRef<Promise<void> | null>(null);
 
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [graph, setGraph] = useState<GraphData | null>(null);
+  const [promotions, setPromotions] = useState<PromotionItem[]>([]);
+
   const gatewayRunning = gatewayStatus.state === 'running';
   const gatewayReady = gatewayStatus.gatewayReady !== false;
   const dreamsReady = gatewayRunning && gatewayReady;
@@ -272,6 +284,17 @@ export function Dreams() {
         ]);
         setDreaming(normalizeDreamingStatus(statusResponse));
         setDiary(diaryResponse);
+
+        // Fetch REST endpoints for V3
+        const [qRes, gRes, pRes] = await Promise.all([
+          hostApiFetch<{ success: boolean; result: QueueItem[] }>('/api/dreams/queue').catch(() => null),
+          hostApiFetch<{ success: boolean; result: GraphData }>('/api/dreams/graph').catch(() => null),
+          hostApiFetch<{ success: boolean; result: { items: PromotionItem[] } }>('/api/dreams/promotions').catch(() => null),
+        ]);
+        if (qRes?.success) setQueue(qRes.result || []);
+        if (gRes?.success) setGraph(gRes.result);
+        if (pRes?.success && pRes.result?.items) setPromotions(pRes.result.items);
+
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setError(isMemoryDoctorStartupError(message) ? t('errors.memoryInitializing') : message);
@@ -387,6 +410,21 @@ export function Dreams() {
       setOpeningFullUi(false);
     }
   }, [t]);
+
+  const runRestAction = useCallback(async (path: string, method: string = 'POST') => {
+    setLoading(true);
+    try {
+      const res = await hostApiFetch<{ success: boolean; error?: string }>(path, { method });
+      if (!res.success) throw new Error(res.error || 'Failed');
+      toast.success('Success');
+      await refreshAll({ force: true });
+    } catch (e) {
+      toast.error(String(e));
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshAll]);
+
 
   const metrics = [
     { label: t('metrics.shortTerm'), value: dreaming?.shortTermCount ?? 0, icon: Archive },
@@ -567,19 +605,39 @@ export function Dreams() {
                   {t('actions.resetGrounded')}
                 </Button>
               </div>
-              <Button
-                data-testid="dreams-action-reset-diary"
-                variant="outline"
-                className="w-full justify-start border-destructive/30 bg-destructive/5 text-destructive shadow-none hover:bg-destructive/10 hover:text-destructive dark:border-destructive/40"
-                onClick={() => requestConfirmation('resetDiary')}
-                disabled={actionsDisabled}
-              >
-                <Archive className="mr-2 h-4 w-4" />
-                {t('actions.resetDiary')}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+                <Button
+                  data-testid="dreams-action-reset-diary"
+                  variant="outline"
+                  className="w-full justify-start border-destructive/30 bg-destructive/5 text-destructive shadow-none hover:bg-destructive/10 hover:text-destructive dark:border-destructive/40"
+                  onClick={() => requestConfirmation('resetDiary')}
+                  disabled={actionsDisabled}
+                >
+                  <Archive className="mr-2 h-4 w-4" />
+                  {t('actions.resetDiary')}
+                </Button>
+                <div className="pt-2 border-t mt-2 flex flex-col gap-2">
+                  <Button
+                    variant="default"
+                    className="w-full justify-start bg-purple-600 hover:bg-purple-700"
+                    onClick={() => void runRestAction('/api/dreams/run', 'POST')}
+                    disabled={loading}
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    Run Dream Cycle
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="w-full justify-start bg-indigo-600 hover:bg-indigo-700"
+                    onClick={() => void runRestAction('/api/dreams/promotions/run', 'POST')}
+                    disabled={loading}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Run Memory Promotion
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
         <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.2fr)]">
           <Card className={PANEL_CLASS}>
@@ -643,6 +701,82 @@ export function Dreams() {
                   </div>
                 ))
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* V3 Additions */}
+        <div className="mt-4 grid gap-4 xl:grid-cols-2">
+          {/* Review Queue */}
+          <Card className={PANEL_CLASS}>
+            <CardHeader className="p-4">
+              <CardTitle className="text-base">Review Queue (Pending)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 p-4 pt-0">
+              {queue.filter(q => q.status === 'pending').map(q => (
+                <div key={q.id} className={cn('border p-3 flex flex-col gap-2', INSET_CLASS)}>
+                  <div className="font-semibold text-sm">{q.title}</div>
+                  <div className="text-xs text-muted-foreground">{q.content}</div>
+                  <div className="flex gap-2 mt-1">
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => void runRestAction(`/api/dreams/queue/${q.id}/approve`, 'POST')}><CheckCircle className="w-3 h-3 mr-1"/>Approve</Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => void runRestAction(`/api/dreams/queue/${q.id}/reject`, 'POST')}><XCircle className="w-3 h-3 mr-1"/>Reject</Button>
+                  </div>
+                </div>
+              ))}
+              {queue.filter(q => q.status === 'pending').length === 0 && <div className="text-xs text-muted-foreground">No pending items.</div>}
+            </CardContent>
+          </Card>
+
+          {/* Memory Promotions */}
+          <Card className={PANEL_CLASS}>
+            <CardHeader className="p-4">
+              <CardTitle className="text-base">Memory Promotions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 p-4 pt-0">
+              {promotions.filter(p => p.status === 'promoted').map(p => (
+                <div key={p.id} className={cn('border p-3 flex flex-col gap-2', INSET_CLASS)}>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-sm">{p.title}</span>
+                    <Badge variant="outline">{p.level}</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{p.content}</div>
+                  <div className="flex gap-2 mt-1">
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => void runRestAction(`/api/dreams/promotions/${p.id}/accept`, 'POST')}><CheckCircle className="w-3 h-3 mr-1"/>Accept</Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => void runRestAction(`/api/dreams/promotions/${p.id}/reject`, 'POST')}><XCircle className="w-3 h-3 mr-1"/>Reject</Button>
+                  </div>
+                </div>
+              ))}
+              {promotions.filter(p => p.status === 'promoted').length === 0 && <div className="text-xs text-muted-foreground">No active promotions.</div>}
+            </CardContent>
+          </Card>
+
+          {/* Graph Stats & Permanent Candidates */}
+          <Card className={cn(PANEL_CLASS, "xl:col-span-2")}>
+            <CardHeader className="p-4">
+              <CardTitle className="text-base">Knowledge Graph & Candidates</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 p-4 pt-0">
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Recurring Connections</h4>
+                <div className="flex flex-wrap gap-2">
+                  {graph?.edges.filter(e => e.timesReinforced && e.timesReinforced > 0).map((e, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs">{e.source} -&gt; {e.target} (Strength: {e.strength?.toFixed(2)})</Badge>
+                  ))}
+                  {(!graph?.edges || graph.edges.filter(e => e.timesReinforced && e.timesReinforced > 0).length === 0) && <span className="text-xs text-muted-foreground">None</span>}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Permanent Memory Candidates</h4>
+                <div className="grid gap-2 grid-cols-2">
+                  {promotions.filter(p => p.level === 'L4' || p.status === 'accepted_for_future_write').map(p => (
+                    <div key={p.id} className={cn('border p-2 rounded text-xs flex justify-between items-center', INSET_CLASS)}>
+                      <span className="truncate">{p.title}</span>
+                      <CheckCircle className="w-3 h-3 text-green-500 shrink-0 ml-2" />
+                    </div>
+                  ))}
+                  {promotions.filter(p => p.level === 'L4' || p.status === 'accepted_for_future_write').length === 0 && <span className="text-xs text-muted-foreground">No candidates yet.</span>}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

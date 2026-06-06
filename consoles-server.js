@@ -279,325 +279,74 @@ const openhumanHtml = `<!DOCTYPE html>
 </body>
 </html>`;
 
-// Hermes Server (7789)
-const hermesApp = express();
-hermesApp.use(cors());
-hermesApp.use(express.json());
+const path = require('path');
+const openhumanWebPath = '/home/debian/openhuman/app/dist-web';
 
-const hermesHtml = `<!DOCTYPE html>
-<html lang="ro">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hermes Playground Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style>
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(139, 92, 246, 0.2);
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(139, 92, 246, 0.4);
-        }
-        .glass {
-            background: rgba(9, 5, 20, 0.65);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(139, 92, 246, 0.15);
-        }
-        .glow-purple {
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
-        }
-        .bubble-user {
-            background: rgba(139, 92, 246, 0.15);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-bottom-right-radius: 4px;
-        }
-        .bubble-bot {
-            background: rgba(15, 10, 32, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-bottom-left-radius: 4px;
-        }
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(0.95); }
-        }
-        .pulse-active {
-            animation: pulse-slow 2s infinite ease-in-out;
-        }
-    </style>
-</head>
-<body class="bg-[#05020c] text-slate-100 min-h-screen flex flex-col font-sans overflow-hidden">
-    
-    {/* Background elements */}
-    <div class="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-violet-600/5 blur-[120px] pointer-events-none"></div>
-    <div class="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-fuchsia-600/5 blur-[120px] pointer-events-none"></div>
+// Serve the compiled official OpenHuman SPA files
+openhumanApp.use(express.static(openhumanWebPath));
 
-    <div class="flex-1 flex overflow-hidden p-4 md:p-6 z-10 relative">
-        <div class="max-w-7xl w-full mx-auto flex flex-col md:flex-row gap-6">
-            
-            {/* Left Sidebar / Playground Parameters */}
-            <aside class="w-full md:w-80 shrink-0 flex flex-col gap-4">
-                {/* Brand card */}
-                <div class="glass rounded-3xl p-5 flex flex-col gap-4 shadow-xl">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-violet-500/20">
-                            HM
-                        </div>
-                        <div>
-                            <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                                Hermes Console
-                                <span class="w-2.5 h-2.5 rounded-full bg-violet-500 glow-purple pulse-active"></span>
-                            </h1>
-                            <p class="text-[10px] text-violet-400 font-mono tracking-wider uppercase">Inference Playground</p>
-                        </div>
-                    </div>
-                    
-                    <div class="h-px bg-violet-500/10"></div>
-                    
-                    <div class="space-y-4">
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">System Prompt</label>
-                            <textarea 
-                                class="w-full bg-black/40 border border-white/5 rounded-xl p-2.5 text-xs outline-none focus:border-violet-500/30 text-slate-300 resize-none h-20 font-mono"
-                                readonly
-                            >Esti Hermes, un model AI de inalta performanta via OpenRouter. Raspunzi in romana, concis si logic.</textarea>
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
-                                <span>Temperature</span>
-                                <span class="text-violet-400">0.7</span>
-                            </div>
-                            <div class="w-full h-1 bg-white/5 rounded-full relative overflow-hidden">
-                                <div class="w-[70%] h-full bg-violet-500 rounded-full"></div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
-                                <span>Max Tokens</span>
-                                <span class="text-violet-400">2048</span>
-                            </div>
-                            <div class="w-full h-1 bg-white/5 rounded-full relative overflow-hidden">
-                                <div class="w-[50%] h-full bg-violet-500 rounded-full"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Model Info */}
-                <div class="glass rounded-3xl p-5 flex-1 flex flex-col gap-3 shadow-xl hidden md:flex">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">Engine Status</h2>
-                    <div class="flex-1 flex flex-col justify-center items-center text-center p-4 border border-white/[0.03] rounded-2xl bg-black/10">
-                        <div class="w-16 h-16 rounded-full border border-violet-500/20 flex items-center justify-center mb-3">
-                            <svg class="w-8 h-8 text-violet-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        </div>
-                        <span class="text-xs font-semibold text-white">Nous Research Hermes</span>
-                        <p class="text-[10px] text-slate-400 mt-1">Conectat via OpenRouter / DeepSeek API</p>
-                    </div>
-                </div>
-            </aside>
-
-            {/* Chat Container */}
-            <main class="flex-1 glass rounded-3xl flex flex-col overflow-hidden shadow-2xl relative">
-                {/* Chat Header */}
-                <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-black/10 shrink-0">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2.5 h-2.5 rounded-full bg-violet-500 glow-purple"></div>
-                        <span class="text-sm font-semibold text-white">Hermes Inference Playground</span>
-                    </div>
-                    <button onclick="clearChat()" class="text-xs text-slate-400 hover:text-violet-400 transition-colors font-mono uppercase">Curata Chat</button>
-                </div>
-
-                {/* Messages Panel */}
-                <div class="flex-1 overflow-y-auto p-6 space-y-4" id="chatHistory">
-                    
-                    {/* Welcome message */}
-                    <div class="flex items-start gap-3 bubble-bot p-4 rounded-2xl max-w-[85%] animate-fadeIn">
-                        <div class="w-8 h-8 rounded-xl bg-violet-500/20 text-violet-400 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">HM</div>
-                        <div class="space-y-1">
-                            <p class="text-xs font-mono font-bold text-violet-400">Hermes v4 70B</p>
-                            <p class="text-sm text-slate-200 leading-relaxed">
-                                Bun venit la playground-ul **Hermes Console**. Endpoint-ul de inferență este activ și configurat cu cheile de rețea. Trimite un prompt pentru a testa logica și răspunsurile modelului.
-                            </p>
-                        </div>
-                    </div>
-
-                </div>
-
-                {/* Chat Input */}
-                <div class="p-4 border-t border-white/5 bg-black/10 shrink-0">
-                    <form onsubmit="handleSend(event)" class="relative flex items-center">
-                        <input 
-                            type="text" 
-                            id="messageInput"
-                            placeholder="Scrie o solicitare pentru modelul Hermes..."
-                            class="w-full bg-slate-900/60 border border-white/10 rounded-2xl pl-4 pr-16 py-3.5 text-sm outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all text-slate-200 placeholder-slate-500"
-                        />
-                        <button 
-                            type="submit"
-                            class="absolute right-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-600 hover:from-violet-600 hover:to-fuchsia-700 text-white font-semibold text-xs shadow-lg shadow-violet-500/10 active:scale-95 transition-all"
-                        >
-                            Execută
-                        </button>
-                    </form>
-                </div>
-            </main>
-
-        </div>
-    </div>
-
-    <script>
-        const chatHistory = document.getElementById('chatHistory');
-        const messageInput = document.getElementById('messageInput');
-
-        function appendMessage(sender, text, isUser) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'flex items-start gap-3 ' + (isUser ? 'justify-end' : '') + ' animate-fadeIn';
-            
-            const card = document.createElement('div');
-            card.className = (isUser ? 'bubble-user' : 'bubble-bot') + ' p-4 rounded-2xl max-w-[85%]';
-            
-            const avatar = document.createElement('div');
-            avatar.className = 'w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ' + 
-                (isUser ? 'bg-violet-500 text-white order-2' : 'bg-violet-500/20 text-violet-400');
-            avatar.innerText = isUser ? 'US' : 'HM';
-            
-            const content = document.createElement('div');
-            content.className = 'space-y-1 ' + (isUser ? 'text-right' : '');
-            
-            const title = document.createElement('p');
-            title.className = 'text-xs font-mono font-bold ' + (isUser ? 'text-violet-400' : 'text-violet-400');
-            title.innerText = sender;
-            
-            const textPara = document.createElement('p');
-            textPara.className = 'text-sm text-slate-200 leading-relaxed';
-            textPara.innerText = text;
-            
-            content.appendChild(title);
-            content.appendChild(textPara);
-            
-            if (isUser) {
-                card.appendChild(content);
-                wrapper.appendChild(card);
-                wrapper.appendChild(avatar);
-            } else {
-                wrapper.appendChild(avatar);
-                card.appendChild(content);
-                wrapper.appendChild(card);
-            }
-            
-            chatHistory.appendChild(wrapper);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-        }
-
-        function clearChat() {
-            chatHistory.innerHTML = '';
-            appendMessage('Hermes Console', 'Chat resetat.', false);
-        }
-
-        async function handleSend(e) {
-            e.preventDefault();
-            const text = messageInput.value.trim();
-            if (!text) return;
-            
-            messageInput.value = '';
-            appendMessage('Tu (Prompt)', text, true);
-            
-            // Add thinking indicator
-            const thinking = document.createElement('div');
-            thinking.className = 'flex items-center gap-2 p-3 text-xs text-violet-400 font-mono animate-pulse';
-            thinking.id = 'thinking';
-            thinking.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping"></span> Hermes rulează raționamentul...';
-            chatHistory.appendChild(thinking);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
-                });
-                const data = await response.json();
-                
-                // Remove thinking
-                const thinkEl = document.getElementById('thinking');
-                if (thinkEl) thinkEl.remove();
-                
-                appendMessage('Hermes v4 70B', data.text || 'Niciun răspuns returnat de agent.', false);
-            } catch (err) {
-                const thinkEl = document.getElementById('thinking');
-                if (thinkEl) thinkEl.remove();
-                appendMessage('Hermes Console', 'Eroare la comunicarea cu serverul: ' + err.message, false);
-            }
-        }
-    </script>
-</body>
-</html>`;
-
-openhumanApp.get('/', (req, res) => {
-    res.send(openhumanHtml);
+openhumanApp.post('/rpc', async (req, res) => {
+    try {
+        const headers = { ...req.headers };
+        delete headers['content-length'];
+        delete headers['host'];
+        
+        const response = await fetch('http://127.0.0.1:17788/rpc', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...headers
+            },
+            body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        res.json(data);
+    } catch (err) {
+        console.error('Error forwarding RPC:', err.message);
+        res.status(500).json({
+            jsonrpc: "2.0",
+            error: {
+                code: -32603,
+                message: `Failed to connect to OpenHuman Rust Core daemon: ${err.message}`
+            },
+            id: req.body?.id || null
+        });
+    }
 });
 
+// Legacy chat endpoint
 openhumanApp.post('/chat', async (req, res) => {
     const { text } = req.body;
     try {
-        const response = await fetch('http://127.0.0.1:3000/jarvis/agents/openhuman/chat', {
+        const response = await fetch('http://127.0.0.1:18789/api/chat/send-with-media', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text, user_id: 'portal-client' }),
-            signal: AbortSignal.timeout(60000)
+            body: JSON.stringify({
+                sessionKey: 'agent:openhuman:user:portal-client',
+                message: text,
+                deliver: true,
+                idempotencyKey: Date.now().toString()
+            })
         });
         const data = await response.json();
-        res.json(data);
+        if (data && data.success) {
+            res.json({ text: data.result?.content || data.result?.message || 'Niciun răspuns de la agent.' });
+        } else {
+            res.json({ text: `Eroare de la OpenClaw: ${data?.error || 'Necunoscută'}` });
+        }
     } catch (err) {
-        res.status(500).json({ text: `Eroare la conectare la serverul Jarvis: ${err.message}` });
+        res.status(500).json({ text: `Eroare la conectare la OpenClaw: ${err.message}` });
     }
 });
 
-hermesApp.get('/', (req, res) => {
-    res.send(hermesHtml);
-});
-
-hermesApp.post('/chat', async (req, res) => {
-    const { text } = req.body;
-    try {
-        const response = await fetch('http://127.0.0.1:3000/jarvis/agents/hermes/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text, user_id: 'portal-client' }),
-            signal: AbortSignal.timeout(60000)
-        });
-        const data = await response.json();
-        res.json(data);
-    } catch (err) {
-        res.status(500).json({ text: `Eroare la conectare la serverul Jarvis: ${err.message}` });
+// Fallback for single-page React app (router paths like /chat, /settings, etc.)
+openhumanApp.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/rpc') || req.path.includes('.')) {
+        return next();
     }
+    res.sendFile(path.join(openhumanWebPath, 'index.html'));
 });
 
 openhumanApp.listen(7788, '0.0.0.0', () => {
     console.log('OpenHuman UI Console running on port 7788');
-});
-
-hermesApp.listen(7789, '0.0.0.0', () => {
-    console.log('Hermes UI Console running on port 7789');
 });

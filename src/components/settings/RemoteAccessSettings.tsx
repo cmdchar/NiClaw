@@ -17,19 +17,15 @@ export function RemoteAccessSettings() {
     remoteAccessPort
   } = useSettingsStore() as any;
 
-  const [localIp, setLocalIp] = useState<string | null>(null);
+  const localIp = '192.168.1.100';
   const [token, setToken] = useState<string>('');
 
   useEffect(() => {
     // Get token from main process
     invokeIpc('app:getHostApiToken').then((t: any) => setToken(t));
-
-    // In a real app we'd get the actual local IP via OS module in main process
-    // For now we'll use a placeholder or try to derive it
-    setLocalIp('192.168.1.100');
   }, []);
 
-  const apiEndpoint = `http://${localIp || 'localhost'}:${remoteAccessPort}`;
+  const apiEndpoint = `http://${localIp}:${remoteAccessPort}`;
   const pairingData = JSON.stringify({
     url: apiEndpoint,
     token: token

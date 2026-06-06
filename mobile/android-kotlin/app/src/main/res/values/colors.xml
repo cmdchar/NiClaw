@@ -3,5 +3,15 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="jarvis_cyan">#00E5FF</color>
-    <color name="dark_bg">#121212</color>
+    <color name="dark_bg">#0A0D14</color>
+    <color name="dark_card">#131824</color>
+    <color name="dark_nav">#1A2030</color>
+    <color name="text_muted">#8892B0</color>
+    <color name="chip_openclaw">#00B0FF</color>
+    <color name="chip_openhuman">#00E676</color>
+    <color name="chip_hermes">#D500F9</color>
+    <color name="chip_opencode">#2979FF</color>
+    <color name="chip_gemini">#FF9100</color>
+    <color name="status_error">#FF5252</color>
+    <color name="status_online">#00E676</color>
 </resources>

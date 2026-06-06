@@ -21,6 +21,18 @@ interface AgentsState {
     tags?: string[];
     brainPath?: string;
     mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
+    paused?: boolean;
+    currentTask?: string;
+    permissions?: {
+      fileWrite?: boolean;
+      cmdExecute?: 'always' | 'ask' | 'never';
+      webSearch?: boolean;
+      sandbox?: boolean;
+      fileWriteApproval?: boolean;
+      webSearchApproval?: boolean;
+      sandboxApproval?: boolean;
+      shellApproval?: boolean;
+    };
   }) => Promise<void>;
   updateAgent: (agentId: string, updates: {
     name?: string;
@@ -30,6 +42,18 @@ interface AgentsState {
     tags?: string[];
     brainPath?: string;
     mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
+    paused?: boolean;
+    currentTask?: string;
+    permissions?: {
+      fileWrite?: boolean;
+      cmdExecute?: 'always' | 'ask' | 'never';
+      webSearch?: boolean;
+      sandbox?: boolean;
+      fileWriteApproval?: boolean;
+      webSearchApproval?: boolean;
+      sandboxApproval?: boolean;
+      shellApproval?: boolean;
+    };
   }) => Promise<void>;
   updateAgentModel: (agentId: string, modelRef: string | null) => Promise<void>;
   deleteAgent: (agentId: string) => Promise<void>;

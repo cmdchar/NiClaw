@@ -16,15 +16,27 @@ import {
   PanelLeft,
   Plus,
   Terminal,
-  ExternalLink,
-  Trash2,
-  Pencil,
-  Check,
-  X,
+  LayoutDashboard,
+  Users,
+  Search,
+  MessageSquare,
+  BrainCircuit,
+  Database,
+  Plug,
+  FolderOpen,
+  Calendar,
+  Activity,
   Cpu,
   Moon,
   ChevronRight,
   Globe,
+  Boxes,
+  Shield,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rendererExtensionRegistry } from '@/extensions/registry';
@@ -310,8 +322,12 @@ export function Sidebar() {
     { to: '/cron', icon: <Clock className="h-4 w-4" strokeWidth={2} />, label: t('sidebar.cronTasks'), testId: 'sidebar-nav-cron' },
     { to: '/builder', icon: <Workflow className="h-4 w-4" strokeWidth={2} />, label: 'Visual Builder', testId: 'sidebar-nav-builder' },
     { to: '/portal', icon: <Globe className="h-4 w-4" strokeWidth={2} />, label: 'Agent Portal', testId: 'sidebar-nav-portal' },
+    { to: '/spatial', icon: <Boxes className="h-4 w-4" strokeWidth={2} />, label: 'Spatial OS', testId: 'sidebar-nav-spatial' },
     ...(devModeUnlocked
-      ? [{ to: '/dreams', icon: <Moon className="h-4 w-4" strokeWidth={2} />, label: t('common:sidebar.openClawDreams'), testId: 'sidebar-nav-dreams' }]
+      ? [
+          { to: '/dreams', icon: <Moon className="h-4 w-4" strokeWidth={2} />, label: t('common:sidebar.openClawDreams', 'Dreams'), testId: 'sidebar-nav-dreams' },
+          { to: '/governance', icon: <Shield className="h-4 w-4" strokeWidth={2} />, label: 'Governance', testId: 'sidebar-nav-governance' }
+        ]
       : []),
   ];
 
@@ -430,7 +446,7 @@ export function Sidebar() {
                   const isEditing = editingSessionKey === s.key;
                   const sessionLabel = getSessionLabel(s.key, s.displayName, s.label);
                   return (
-                    <div key={s.key} className="group relative flex items-center">
+                     <div key={s.key} className="group relative flex items-center">
                       {isEditing ? (
                         <div className="flex w-full items-center gap-1 px-1.5 py-1">
                           <Input

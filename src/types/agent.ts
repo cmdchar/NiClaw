@@ -17,6 +17,18 @@ export interface AgentSummary {
   tags?: string[];
   brainPath?: string;
   mcpServers?: Array<{ name: string; command: string; args?: string[] }>;
+  paused?: boolean;
+  currentTask?: string;
+  permissions?: {
+    fileWrite?: boolean;
+    cmdExecute?: 'always' | 'ask' | 'never';
+    webSearch?: boolean;
+    sandbox?: boolean;
+    fileWriteApproval?: boolean;
+    webSearchApproval?: boolean;
+    sandboxApproval?: boolean;
+    shellApproval?: boolean;
+  };
 }
 
 export interface AgentsSnapshot {
