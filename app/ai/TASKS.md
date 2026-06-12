@@ -1,0 +1,180 @@
+- [x] (2026-06-12) Codex P1 Real Agent Mesh backend: implemented SuperHermes `/api/mesh/status`, `/api/mesh/events`, `/api/mesh/brain`, `/api/mesh/hermes-dashboard`, and `/api/mesh/smoke-tests`; verified HTTPS mesh status and real smoke event.
+- [x] (2026-06-12) Codex P1 Telegram alignment: updated Telegram ecosystem context to consume mesh endpoints and restarted `SERVER Telegram Command Watcher`.
+- [x] (2026-06-12) Codex P1 Antigravity handoff: wrote `Agent Mesh API Contract - Real Endpoints.md` in SecondBrain.
+- [ ] (2026-06-12) Antigravity P1: finish Windows Agent Mesh UI against real `/api/mesh/*` endpoints with no mock fallback.
+- [ ] (2026-06-12) Follow-up: decide secure client path for NiClaw Host API auth so `niclaw-host-api` moves from `auth_required` to online without exposing tokens.
+- [x] SuperHermes Council Integration - Phase 1 (2026-06-12)
+  - [x] Migrate `CouncilEngine` orchestration natively to Node (Strategist, Architect, Reviewer, QA).
+  - [x] Integrate `superhermes-state.json` via `CouncilMemory` separate from plans.
+  - [x] Expose REST APIs under `/api/council/*`.
+  - [x] Build `CouncilHarness.tsx` into SpatialOS module for visual feedback and review.
+  - [x] Verify complete local compile and Vite build with no TS errors.
+- [x] Upstream AI OS Merge & UI Conflicts Resolution (2026-06-06)
+  - [x] Fetched and merged `upstream/feature/ai-os-transformation-2031423738236411694` into local `feature/jarvis-mobile-integration` branch.
+  - [x] Resolved 8 critical merge conflicts in UI, layout, routing, pages, and types/stores.
+  - [x] Preserved existing JARVIS Android integration, Spatial OS, Portal, and Governance routes while incorporating new OS Analytics and Execution Trace capabilities.
+  - [x] Cleaned up TS errors. `tsc --noEmit` and `pnpm run build:vite` pass.
+  - [x] Pushed the merged commit to self-hosted repository `https://forgejo.dracarys.ro/ai-operator/NiClaw`.
+- [x] Full Android Feature Parity: Dreams, Cron, Skills, Models & Headless Fixes (2026-06-05)
+  - [x] Obsidian Second Brain Vault Browser: `obsidian.ts` (6 endpoints) + `ObsidianFragment.kt` + layouts + ApiClient methods + Settings button. Deployed to `vm-niclaw`. APK installed on phone `3650f58e`.
+  - [x] Add `POST /api/gateway/rpc` proxy endpoint in `electron/api/routes/gateway.ts` and deploy to `vm-niclaw`.
+  - [x] Patch `electron/main/ipc-handlers.ts` with null-safe `mainWindow` guards for headless VM stability.
+  - [x] Add `POST /api/skills/toggle` in `electron/api/routes/skills.ts` dispatching `skills.update` RPC.
+  - [x] Fix `ChatFragment.kt` status indicator to use `backgroundTintList` (preserve circle shape).
+  - [x] Create `DreamsFragment.kt` + `fragment_dreams.xml` + item layouts for Memory Dreaming sub-screen.
+  - [x] Create `CronFragment.kt` + `fragment_cron.xml` + `item_cron.xml` for Cron Jobs sub-screen.
+  - [x] Create `SkillsFragment.kt` + `fragment_skills.xml` + `item_skill.xml` for Skills sub-screen.
+  - [x] Create `ModelsFragment.kt` + `fragment_models.xml` + `item_model.xml` for Models/Providers sub-screen.
+  - [x] Add "Administrare Servicii" + "Consolidare Memorie (Dreams)" cards in `fragment_settings.xml`.
+  - [x] Wire all new buttons in `SettingsFragment.kt` with back-stack fragment transactions.
+  - [x] Add `getCronJobs`, `toggleCronJob`, `triggerCronJob`, `getSkillsQuickAccess`, `toggleSkill`, `getProviderAccounts`, `getProviderVendors`, `getDefaultProviderAccount`, `setDefaultProviderAccount`, `toggleProviderAccount`, `gatewayRpc` in `ApiClient.kt`.
+  - [x] Desktop `pnpm run typecheck` passes (0 errors). Android `gradlew assembleDebug` BUILD SUCCESSFUL.
+  - [x] APK installed on phone `3650f58e` via ADB. Archived to OneDrive `NiClaw-Companion.apk`.
+- [x] BoardAI Windows + Android Live Controls (2026-05-29)
+  - [x] Add Host API routes for BoardAI status and local sync.
+  - [x] Add Windows Portal status/revision/snapshot controls for BoardAI.
+  - [x] Add Android Portal BoardAI tab plus status and sync controls.
+  - [x] Validate desktop typecheck, lint, Vite build, and Android debug build.
+  - [x] Configure real BoardAI remote publish API/token and replace local-only sync with true remote publishing. (2026-05-30)
+  - [x] Add automatic BRAINMAP.md -> BOARD_BRAINMAP.json regeneration before remote publish. (2026-05-31)
+- [x] Remote VM Second Brain Mirror Sync (2026-05-26)
+  - [x] Create PowerShell script `C:\Server\AI\sync-secondbrain-to-vm.ps1` to sync the Obsidian Second Brain vault recursively to `/home/debian/secondBrain` on the remote VM guest using scp.
+  - [x] Integrate the VMSyncScript parameter and process invoke step into the core knowledge refresh script `C:\Server\AI\refresh-server-obsidian-knowledge.ps1`.
+  - [x] Inline the recursive sync logic directly inside the main `refresh-server-obsidian-knowledge.ps1` compiler for high availability and offline robustness.
+  - [x] Verify successful push and list modeled directory structure on the remote VM Debian guest.
+- [x] Visual Swarm Builder V2 (Advanced Visual AI IDE & Server-Side DAG Runner) (2026-05-26)
+  - [x] Re-engineer `src/pages/Builder/index.tsx` with custom interactive V2 nodes: Triggers Node, Agents Node with temperature sliders and LLM model selection, logical Router Node (If/Else with custom conditional matches), and Code Node (custom JavaScript text area script).
+  - [x] Implement a premium Retractable Swarm Debug Console in the React 19 visual builder client.
+  - [x] Build an asynchronous Directed Acyclic Graph (DAG) executor `dagRunner.ts` in the server core to topologically sort and execute node paths natively.
+  - [x] Integrate safe sandboxed custom JavaScript execution inside Node's native `vm` module.
+  - [x] Register `/api/swarm/run` Express REST endpoint to execute canvas flows live on the VM guest.
+  - [x] Connect the client-side run button to perform live visual highlights and show actual execution server logs, falling back to local simulation when offline.
+  - [x] Clear all TypeScript compiler types (100% type-safe compilation checks with 0 errors/warnings).
+- [x] Official OpenHuman Integration, VS Code Web (Open Code) & Fully-Functional Browser Console (2026-05-25)
+  - [x] Clone the real, official **OpenHuman** repository (`https://github.com/tinyhumansai/openhuman.git`) under `/home/debian/openhuman` on `vm-niclaw`.
+  - [x] Build the official frontend React SPA to static web assets (`dist-web/`).
+  - [x] Compile the native Rust core daemon `openhuman-core` in release mode.
+  - [x] Set up permanent systemd service `/etc/systemd/system/openhuman-core.service` on port `17788`.
+  - [x] Refactor and deploy `consoles-server.js` to serve OpenHuman statically on port `7788` and transparently proxy `POST /rpc` to port `17788`.
+  - [x] Deploy passwordless VS Code Web (`code-server`) on internal port `8080`.
+  - [x] Configure background Tailscale Serve HTTPS proxies:
+    * `https://vm-niclaw.tail7a9097.ts.net:10000/` -> OpenHuman console (port 7788)
+    * `https://vm-niclaw.tail7a9097.ts.net:8000/` -> Open Code VS Code (port 8080)
+  - [x] Overhaul the Agent Portal browser (`Portal/index.tsx`) with dynamic editable URL Address Bar (Enter to navigate), lock status icons, quick copy URL button, DevTools inspector console (`openDevTools`), and audio mute/unmute toggle (`setAudioMuted`).
+  - [x] Pass all TypeScript compilation checks cleanly.
+- [x] Secure HTTPS Agent Portal & NousResearch Hermes Dashboard (2026-05-25)
+  - [x] Configure Tailscale Serve proxies in the background on the VM for all services:
+    * `https://vm-niclaw.tail7a9097.ts.net/` -> OpenClaw Gateway (port 18789)
+    * `https://vm-niclaw.tail7a9097.ts.net:8443/` -> NousResearch Hermes Agent Dashboard (port 7789)
+    * `https://vm-niclaw.tail7a9097.ts.net:10000/` -> OpenHuman Core (port 7788)
+  - [x] Set up a permanent systemd service `/etc/systemd/system/hermes-dashboard.service` on `vm-niclaw` to start and manage the official NousResearch Hermes Agent Web UI cleanly on boot.
+  - [x] Update the React 19 Client Agent Portal (`Portal/index.tsx`) to dynamically map the corresponding SSL ports (`443`, `8443`, `10000`) when HTTPS protocol is detected, enabling fully encrypted remote desktop control.
+  - [x] Pass all TypeScript compiler checks (`tsc --noEmit`) with 0 errors and 0 warnings.
+  - [x] Verify perfect SSL handshakes with all three services.
+- [x] Comparative Codebase Analysis & Mobile Integration Roadmap (2026-05-25)
+  - [x] Clone the `silver-parakeet` (Jarvis AI) repository into `C:\Server\niclaw\niclawjules`.
+  - [x] Perform detailed analysis of the two codebases: `niclawjules` (new) vs `app` (active).
+  - [x] Compare AI engine control, native Android voices and intent executions, Visual Builder, and file diagnostics side-by-side.
+  - [x] Create a premium comparison report artifact `codebase_comparison_report.md` with comparison table, architecture diagrams, and strategic recommendations.
+  - [x] Draft a roadmap to merge/import the native Kotlin voice loops and OS actions directly into ClawX/NiClaw.
+- [x] Unified Browser Consoles & Pre-Authenticated Portal (2026-05-25)
+  - [x] Create and deploy standalone Web UI Consoles for OpenHuman (`7788`) and Hermes (`7789`) on `vm-niclaw` linked to local agent APIs.
+  - [x] Configure automatic pre-authentication for the OpenClaw dashboard by appending the pre-shared key token query parameter dynamically (`/?token=<token>`).
+  - [x] Integrate high-fidelity navigation HUD controls in `Portal/index.tsx` (Back, Forward, Refresh, Home, Zoom, dynamic secure Address Bar).
+  - [x] Implement dynamic dropdown select mapping for active cluster agents in Visual Builder `NodeSettingsModal`.
+  - [x] Pass all TypeScript compilation checks (`tsc --noEmit` is 100% clean) and reload VM services.
+- [x] Premium In-App Agent Portal on Desktop (Electron)
+  - [x] Create React 19 portal page `src/pages/Portal/index.tsx`
+  - [x] Add sandboxed hardware-accelerated iframes for OpenClaw, OpenHuman, Hermes, Gemini
+  - [x] Implement dynamic portal host/IP configuration panel (stored in `localStorage`)
+  - [x] Register `/portal` route inside `App.tsx`
+  - [x] Add neon-highlighted sidebar link inside `Sidebar.tsx` utilizing Lucide `Globe` icon
+  - [x] Verify clean compile and zero TypeScript errors on the new portal component
+- [x] Deployment & Device Installation
+  - [x] Compress and transfer backend code to `vm-niclaw` `/opt/jarvis-command-center`
+  - [x] Build and compile server dependencies remotely and restart `jarvis-command-center.service`
+  - [x] Verify complete health check (`/health` endpoint reports all integrations active/True)
+  - [x] Directly install debug APK onto physical phone `SM_S938B` (`R3CY70CRZCH`) via ADB stream
+- [x] Windows Desktop App Packaging (NiClaw Isolation)
+  - [x] Resolve strict TypeScript errors/warnings on RemoteAccessSettings, Agents, and Builder pages
+  - [x] Refactor preinstalled skills sparse cloning script to run git safely in isolated directories
+  - [x] Verify full typecheck compatibility (`tsc --noEmit` compiles successfully with zero warnings)
+  - [x] Run Windows production package pipeline (`pnpm run package:win`)
+  - [x] Bundle all assets, 7 external communication platforms, and 4 preinstalled skills packages
+  - [x] Generate isolated installer target `release/NiClaw-0.4.4-win-x64.exe` (~351 MB)
+  - [x] Complete app renaming (appId, product name, model ID, shortcuts, registry, single-instance file locks) for absolute co-existence with existing ClawX installation
+- [x] Visual Builder & Swarm Coordination
+  - [x] 100% canvas nodes/edges persistence saved in localStorage (`clawx_builder_graph`)
+  - [x] Gold glowing, pulsing Supreme Orchestrator selector node inside `Builder/index.tsx`
+  - [x] Validate and fetch cluster agents list to auto-create missing agents in the cluster
+  - [x] Compile swarm coordination protocol rules (`AGENTS.md`) detailing slugs and commands
+  - [x] Add dynamic workspace file writing route `/api/agents/write-workspace-file` on VM
+  - [x] Deploy live `AGENTS.md` directly into the agent workspace on `vm-niclaw`
+## Faza 5: Compilare, Validare & Sincronizare Memorie AI (COMPLETED)
+- [x] Validarea TypeScript fără erori (`tsc --noEmit`) pentru aplicația desktop (0 erori)
+- [x] Recompilarea APK-ului Android (`gradlew assembleDebug`) cu fix-ul de media pause (COMPLETED)
+- [x] Instalarea automată a APK-ului pe telefon (`SM_S938B`) via ADB stream (Performing Streamed Install -> Success!)
+- [x] E2E Voice verification pe mobil și desktop cu limba română (TTS, STT, stop flow)
+- [x] Sincronizarea cunoștințelor Obsidian și actualizarea jurnalului AI (`refresh-server-obsidian-knowledge.ps1`)
+- [x] Integrare Hermes cu Obsidian Second Brain: Configurarea `OBSIDIAN_VAULT_PATH=/home/debian/secondBrain` în fișierele `.env` ale VM și repornirea serviciului `hermes-gateway.service` pentru activarea skill-ului nativ `obsidian`.
+- [x] Integrare DeepSeek în Hermes: Configurarea modelului principal ca `deepseek/deepseek-chat` pe OpenRouter în `/home/debian/.hermes/config.yaml` și actualizarea cheilor Gemini Auxiliare (V2).
+- [x] Setaer Direct DeepSeek API: Reconfigurarea provider-ului în `config.yaml` sub schema `custom` la endpoint-ul direct `https://api.deepseek.com/v1` folosind cheia nativă `sk-da37b1e1...`.
+- [x] Recuperare Sync VM: Excluderea folderele blocate (`obsidian-nextcloud-stage` și `imports`) în pipeline-ul `sync-server-folder-to-vm.ps1` și repornirea sincronizării streaming.
+- [x] Integrare Modal API & GLM-5.1 în Hermes & OpenClaw: Configurarea custom provider `modal` (endpoint `https://api.us-west-2.modal.direct/v1`) și modelul default `zai-org/GLM-5.1-FP8` în `config.yaml`, `.env`, `openclaw.json` și `auth-profiles.json` pe `vm-niclaw`, repornirea serviciilor systemd și verificarea cu succes a statusului `openclaw models status` gata de rulare.
+- [x] Verificare conectivitate Tailscale & Routing OpenClaw: Verificarea integrării OpenClaw în Tailscale pe `vm-niclaw` (`100.78.81.89`), validarea binding-ului pe `0.0.0.0:18789`, auditarea proxy-urilor active HTTPS/TLS Serve și testarea cu succes a handshake-ului E2E pe `https://vm-niclaw.tail7a9097.ts.net/?token=clawx-770a755f899751f446c3e7859443bc33`.
+
+## Roadmap
+- [ ] **MAIN TRACK: NiClaw Spatial AI OS 2.5D** (confirmed 2026-05-31)
+  - [x] Scaffold desktop route `src/pages/SpatialOS/index.tsx` and register `/spatial` in routing/sidebar. (2026-05-31)
+  - [x] Build the first 2.5D shell: Workspace Explorer, Spatial Canvas, Command Palette shell, Inspector, Console/Events/Agent Logs, and Workspace Map. (2026-05-31)
+  - [x] Connect first real Host API data for health, agents, BoardAI, recent logs, and gateway workspace status. (2026-05-31)
+  - [x] Implement first Interactive Plan Mode contract: create/list/run persisted plans with backend events through Host API. (2026-05-31)
+  - [x] Add first safe real Plan executor: `board_sync` through the shared BoardAI publish service. (2026-05-31)
+  - [x] Add safe real Plan executor: OpenClaw Doctor diagnose. (2026-05-31)
+  - [x] Add persistent approval gate contract and approval-gated Doctor fix executor. (2026-05-31)
+  - [x] Add dedicated approval-gated `gateway_restart` Plan executor through the existing GatewayManager backend path; consume approval after one dispatch and verify replay blocking on `vm-niclaw`. (2026-05-31)
+  - [x] Add dedicated approval-gated validation/build Plan executor with strict backend allowlist; first named profile is `typecheck`. (2026-05-31)
+  - [x] Review runtime cost and add further named validation/build profiles deliberately where useful. (2026-06-02)
+  - [x] Design and implement a constrained approval-gated shell execution policy; unrestricted shell remains blocked. (2026-06-02)
+  - [x] Deploy/smoke `/api/plans` on `vm-niclaw` so remote desktop/Android clients use the same contract. (2026-05-31)
+  - [x] Implement Agent Harness cards: model, MCP servers, task, status, permissions, logs, pause/resume, approval gates. (2026-06-02)
+  - [x] Add native Kanban/Board/Code Review panels tied to project tasks, files, agents, plans, and BoardAI nodes. (2026-06-02)
+  - [x] Add Android `Spatial` companion tab for status, approvals, run/pause plan, BoardAI sync, and voice commands. (2026-06-02)
+  - [x] Polish 2.5D/isometric visual layer and implement missing plan step executors (host_api and browser). (2026-06-02)
+- [x] Map customizable MCP tools configurations directly inside AgentNodeV2 parameter controls and sync them to OpenClaw agent config. (2026-05-29)
+- [x] Integrate `board.private-driver.ro` as a BoardAI Brainmap tab inside Agent Portal. (2026-05-29)
+- [x] Add live BoardAI publish/sync action from BRAINMAP/BOARD_BRAINMAP into the Portal and Android companion Host API controls. (2026-05-30)
+- [x] Build current Windows installer and Android debug APK after BoardAI integration. (2026-05-30)
+- [x] Install/run the generated Windows installer and Android APK on target devices for live runtime smoke testing. (2026-06-02)
+- [x] Add automatic BRAINMAP.md -> BOARD_BRAINMAP.json regeneration before BoardAI publish. (2026-05-31)
+- [x] Connect and expand Visual Builder intents to stream custom intent notifications directly to the Android listener.
+
+## Completed Tasks (Recent)
+- [x] (2026-06-11) Repaired Hermes MCP startup without reducing functionality: kept Modal as provider config, removed only the invalid MCP server entry, added Dracarys MCP wrapper for correct working directory, and verified GBrain/BoardAI/Dracarys handshakes after Hermes restart.
+- [x] (2026-06-11) Verified full local build baseline after SecondBrain/Hermes/OpenClaw repairs: `pnpm run typecheck`, `pnpm run build:vite`, Android `assembleDebug`, and `pnpm run package:win` all pass. Current installer artifact is `release/NiClaw-0.4.4-win-x64.exe`.
+- [ ] (2026-06-11) Final live runtime acceptance: install/smoke the latest Windows installer, install/smoke the Android APK on target phone, and run E2E checks across Portal, Spatial OS, Plan Mode, BoardAI publish, Hermes/GBrain recall, OpenClaw memory search, and Obsidian note round-trip.
+- [ ] (2026-06-11) Audit old interactive Hermes/dashboard processes on `vm-niclaw` and decide which should remain user sessions versus which should be retired under systemd-only supervision.
+- [x] (2026-06-02) Aligned the phone's gateway token with the VM's active token via ADB. Modified `ApiClient.kt` to force HTTPS on Host API port `13210` for `.ts.net` domains (Tailscale) and increased OkHttpClient's read timeout to 60 seconds. Rebuilt, archived to OneDrive, and E2E verified plan execution on the physical phone over Tailscale HTTPS.
+- [x] (2026-06-02) Added full implementation logic for `'host_api'` and `'browser'` plan step executors, connected to internal HTTP requests and native Electron Chromium headless BrowserWindow instances. Redesigned canvas zone controls into glassmorphic cards with isometric hover transforms and neon status indicators. Deployed updated backend/frontend to `vm-niclaw` and restarted `clawx-ai-os.service`.
+- [x] (2026-05-31) Added deterministic backend BRAINMAP.md -> BOARD_BRAINMAP.json generation before every BoardAI publish. Deployed to `vm-niclaw`; direct sync published revision `8`, Plan Mode `board_sync` published revision `9`, and final canonical memory sync published revision `10` with `62` nodes and `60` arrows.
+- [x] (2026-05-31) Added approval-gated `build_validation` with allowlisted `typecheck` profile, no-shell backend runner, timeout, bounded output, Spatial OS quick action, E2E assertion, and one-shot replay blocking. Repaired VM dependency/source drift and verified passing remote execution.
+- [x] (2026-05-31) Added real approval-gated `gateway_restart` through `GatewayManager.restart()`, exposed its Spatial OS quick action, consumed risky approvals after one dispatch, deployed to `vm-niclaw`, and verified blocked-before-approval, one healthy restart, and blocked replay.
+- [x] (2026-05-31) Added persisted Spatial Plan approval gates plus real `doctor_fix`; VM smoke verified pending runs block, approvals audit, rejection cleanup, and rejected runs remain blocked. Added targeted Electron E2E navigation coverage.
+- [x] (2026-05-31) Deployed Spatial Host API routes to `/home/debian/NiClaw` on `vm-niclaw`, restarted `clawx-ai-os.service`, verified persisted Doctor diagnose (`exit=0`), and verified real BoardAI Plan publish at revision `7` with `48` nodes and `15` arrows.
+- [x] (2026-05-31) Added safe read-only `doctor_diagnose` Spatial Plan executor through the existing `runOpenClawDoctor()` backend service and exposed a Spatial OS quick action; Doctor `--fix` remains pending approval gates.
+- [x] (2026-05-31) Added the first safe real Spatial Plan executor: `board_sync` calls the shared BoardAI publish service, persists run events, and can be created from the Spatial OS quick action.
+- [x] (2026-05-31) Added real Spatial Plan Mode Host API backend (`/api/plans`) with persisted JSON storage, run events, and UI create/run wiring; unsupported executors are blocked rather than simulated.
+- [x] (2026-05-31) Implemented first desktop `/spatial` route and 2.5D Spatial OS shell backed by real Host API/stores for agents, gateway health, BoardAI status, and logs; marked missing Plan/Kanban/Review APIs honestly.
+- [x] (2026-05-30) Built the current NiClaw Windows production installer at `release/NiClaw-0.4.4-win-x64.exe` and Android debug APK at `mobile/android-kotlin/app/build/outputs/apk/debug/app-debug.apk`; both builds passed with warnings only.
+- [x] (2026-05-30) Activated real BoardAI remote publish through Host API and verified remote board revision `5` with `48` nodes and `15` arrows.
+- [x] (2026-05-25) Achieved 100% E2E feature parity and remote diagnostic systems on the Android companion app, implementing advanced Proxy, Auto-Start, Developer Diagnostics Terminal with server-side logs / OpenClaw Doctor triggers, E2E consoles chat routing to OpenClaw agents, and dynamic VM channel toggles.
+- [x] (2026-05-25) Achieved complete feature parity on the Android Kotlin companion app, implementing a modular 5-tab BottomNavigationView (Chat, Agents, Channels, Portal, Settings) with fully functional REST API client (ApiClient.kt) for active agent CRUD and remote gateway restarts.
+- [x] (2026-05-25) Integrated full Telegram Triggers and Actions support into AI OS Visual Builder, enabling users to orchestrate workflows connected to Telegram chat streams with live CLI command compiler in AGENTS.md.
+- [x] (2026-05-25) Resolved OpenClaw Gateway remote connectivity over Tailscale on port 18789, enabling "lan" binding, local mode, and allowing insecure plain-HTTP browser authentication safely.
+- [x] (2026-05-25) Implemented unified browser consoles, pre-authenticated OpenClaw token routes, webview navigation HUD, and Visual Builder dropdown active agent selectors.
+- [x] (2026-05-24) Overhauled Visual Builder with full canvas persistence, Gold Pulsing Supreme Orchestrators, and SSH-less VM dynamic file deployments.
+- [x] (2026-05-24) Refactored native Android Jarvis client with ROM Voice synthesis progress listeners, volume toggle ImageButtons, and dynamic send button stop-action.
+- [x] (2026-05-24) Built, compiled, and packaged the fully isolated Windows desktop application under name "NiClaw" (release/NiClaw-0.4.4-win-x64.exe) alongside resolving strict TS compilation warnings.
+- [x] (2026-05-24) Deployed backend server to `vm-niclaw` and successfully installed the custom APK onto the physical device over ADB.
+- [x] (2026-05-24) Built and fully integrated the Premium In-App Agent Portal in the ClawX Desktop client.
+- [x] (2026-05-20) Successfully deployed ClawX in headless mode as an active background systemd service.

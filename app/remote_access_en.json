@@ -1,0 +1,12 @@
+  "remoteAccess": {
+    "title": "Mobile Companion",
+    "description": "Securely connect your Android or iOS device to control ClawX AI OS remotely.",
+    "enable": "Enable Remote Access",
+    "enableDesc": "Exposes the Host API to your local network",
+    "securePairing": "Secure Pairing",
+    "securePairingDesc": "Scan this QR code from the mobile app to link your device.",
+    "apiEndpoint": "Host API Endpoint",
+    "pairingToken": "Pairing Token",
+    "qrNote": "Make sure both devices are on the same WiFi network.",
+    "warning": "Warning: Enabling remote access allows other devices on your local network to communicate with your AI OS."
+  },

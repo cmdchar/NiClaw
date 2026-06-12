@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_chat"
+        android:icon="@android:drawable/stat_notify_chat"
+        android:title="Chat" />
+    <item
+        android:id="@+id/navigation_agents"
+        android:icon="@android:drawable/ic_menu_compass"
+        android:title="Agenți" />
+    <item
+        android:id="@+id/navigation_spatial"
+        android:icon="@android:drawable/ic_menu_today"
+        android:title="Spatial" />
+    <item
+        android:id="@+id/navigation_portal"
+        android:icon="@android:drawable/ic_menu_view"
+        android:title="Portal" />
+    <item
+        android:id="@+id/navigation_settings"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="Setări" />
+    <item
+        android:id="@+id/navigation_governance"
+        android:icon="@android:drawable/ic_secure"
+        android:title="Governance" />
+</menu>
