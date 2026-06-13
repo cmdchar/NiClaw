@@ -12,7 +12,7 @@ ClawX is a React 19 + TypeScript + Vite desktop application packaged with Electr
 - `pnpm run init`: Installs dependencies and downloads UV.
 - `pnpm run prep:win-binaries`: Downloads bundled Windows node/uv binaries.
 - `pnpm run package:win`: Builds the Vite application and bundles it into a Windows executable using electron-builder.
-- Current validation baseline (2026-05-30): `pnpm run typecheck` passes, `pnpm run lint:check` passes with warnings only, `pnpm run build:vite` passes, `pnpm run package:win` generated `release/NiClaw-0.4.4-win-x64.exe`, and `mobile/android-kotlin/gradlew.bat assembleDebug` generated `mobile/android-kotlin/app/build/outputs/apk/debug/app-debug.apk`.
+- Current validation baseline (2026-06-13): `pnpm run typecheck` and `pnpm run build:vite` pass after the native Dev Command Center integration. Previous full baseline also had Android `assembleDebug` and Windows `pnpm run package:win` passing with installer `release/NiClaw-0.4.4-win-x64.exe`.
 
 ## 3) Main Artifact Folders
 - `electron/`: Core Electron main process files.
@@ -20,6 +20,7 @@ ClawX is a React 19 + TypeScript + Vite desktop application packaged with Electr
 - `src/`: React frontend source code.
   - `src/pages/Portal/`: Unified In-App Agent Portal interface (`index.tsx`).
   - `src/pages/SpatialOS/`: First-pass 2.5D Spatial AI OS shell (`index.tsx`) with real Host API/stores for agents, gateway health, BoardAI status, and recent logs. Route: `/spatial`. Includes `CouncilHarness` for decision reviews.
+  - `src/pages/CommandCenter/`: Native Dev Command Center route (`/command-center`) for real Host API status, workspace scans, git state, tasks, logs, agent rules, and reports.
 - `mobile/android-kotlin/`: Native Kotlin Android voice assistant companion app, featuring a modular 5-tab `BottomNavigationView` system (`ChatFragment`, `AgentsFragment` with REST client CRUD, `SpatialFragment` for plan details and approval controls, `PortalFragment` with text-zoom/audio-mute/address HUD, and `SettingsFragment` with control panel restarts and nested bot channels configuration).
 - `shared/jarvis-server/`: Lightweight Node/Express TS server, routing commands between Android client, Gemini, and OpenClaw, containing simple intent mapping skills.
 - `scripts/`: Custom build scripts for downloading runtimes, bundling OpenClaw plugins, and running Electron Builder.
@@ -80,6 +81,23 @@ ClawX is a React 19 + TypeScript + Vite desktop application packaged with Electr
 - Current live verification (2026-06-13): SuperHermes API, Hermes Dashboard, OpenClaw Bridge, OpenHuman Core, NiClaw Host API, and SecondBrain/OpenClaw memory are all `online`.
 - NiClaw Host API auth is handled server-side by SuperHermes through `SUPERHERMES_NICLAW_HOST_API_TOKEN` in `/etc/superhermes-api.env`; the token is not returned by `/api/mesh/status` and must not be used in renderer/mobile code.
 - Systemd note: `superhermes-api.service` has a drop-in binding uvicorn to `127.0.0.1:8002`; Tailscale Serve exposes it at HTTPS `:8002`.
+
+## 4.3) Dev Command Center Host API
+- Native route: `/command-center` in the NiClaw desktop app.
+- Host API endpoints:
+  - `GET /api/command-center/status`: Host, gateway, OpenClaw, vault, and logs directory status.
+  - `GET /api/command-center/projects`: Scans configured development roots, including `C:\Server`, for real projects.
+  - `GET /api/command-center/git`: Returns detected git repositories from the project scan.
+  - `GET /api/command-center/tasks`: Parses `dev-vault/inbox/tasks.md`.
+  - `GET /api/command-center/logs`: Reads recent Host API log previews with token/password/API-key redaction.
+  - `GET /api/command-center/reports`: Lists generated Markdown reports.
+  - `POST /api/command-center/inbox`: Writes a durable inbox note.
+  - `POST /api/command-center/report`: Generates a real Markdown Command Center status report.
+- Storage lives under the app data directory, separated from Spatial plans and BoardAI state:
+  - `command-center-state.json`
+  - `dev-vault/{raw,inbox,projects,wiki,ops,agents,reports,output}`
+- Agent rule files are created defensively under `dev-vault/agents/{CODEX.md,CLAUDE.md,ANTIGRAVITY.md}`.
+- Design rule: no mock or simulated operational state. Missing data is surfaced as empty/error state.
 
 ## 5) Embedded Agent Portal Connections
 - Mapped client ports and URLs rendered inside the sandboxed hardware-accelerated iframe dashboard container:

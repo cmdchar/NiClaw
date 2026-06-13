@@ -1,5 +1,17 @@
 # BRAIN - CURRENT AI STATE
 
+## Latest update (2026-06-13) - Dev Command Center Phase 1 Native in NiClaw
+- **Current State**:
+  - Codex added the native NiClaw `/command-center` route and sidebar entry.
+  - Host API now exposes real Command Center endpoints under `/api/command-center/*`: status, projects, git, tasks, logs, reports, inbox, and report generation.
+  - New backend services create and inspect a local `dev-vault` under the NiClaw app data directory, scan real development workspaces, read actual git status, parse `inbox/tasks.md`, redact sensitive log previews, and generate Markdown reports.
+  - The Command Center UI consumes only Host API data; empty/error states are shown honestly instead of using mock data.
+  - Removed the previous renderer-side Agent Mesh status patch that forced `niclaw-host-api` online. Mesh status now remains whatever SuperHermes reports.
+  - Validation passed locally on Windows: `pnpm run typecheck` and `pnpm run build:vite`.
+- **Next Exact Steps**:
+  - Antigravity should avoid the files touched by this phase and focus on Android sync hooks, deeper project health scoring, and any UI refinements requested after testing the page.
+  - Codex can take Phase 2 next: richer logs filtering, report detail/open actions, bug/deployment lanes, and optional deployment to `vm-niclaw` Host API after user approval.
+
 ## Latest update (2026-06-12) - Real Agent Mesh Backend Live
 - **Current State**:
   - Codex implemented the real SuperHermes mesh gateway on `vm-niclaw` with `/api/mesh/status`, `/api/mesh/events`, `/api/mesh/brain`, `/api/mesh/hermes-dashboard`, and `/api/mesh/smoke-tests`.

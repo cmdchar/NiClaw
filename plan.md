@@ -207,3 +207,37 @@ Important:
 Do not create a separate repository.
 Do not build a generic dashboard.
 This must be a native NiClaw module.
+
+---
+
+## Codex execution status - 2026-06-13
+
+Branch: `codex/dev-command-center-20260613`
+
+Completed by Codex:
+- Created native NiClaw `/command-center` route and sidebar entry.
+- Added real Host API route group `/api/command-center/*`.
+- Added services for dev-vault creation, workspace scanning, git status, server health, tasks parsing, logs preview redaction, and report generation.
+- Added dashboard page consuming real Host API data only.
+- Removed the local Agent Mesh status patch that forced `niclaw-host-api` online.
+- Validated:
+  - `pnpm run typecheck`
+  - `pnpm run build:vite`
+
+Files Antigravity should avoid unless explicitly coordinated:
+- `app/src/pages/CommandCenter/index.tsx`
+- `app/src/App.tsx`
+- `app/src/components/layout/Sidebar.tsx`
+- `app/electron/api/server.ts`
+- `app/electron/api/routes/command-center.ts`
+- `app/electron/api/routes/agent-mesh.ts`
+- `app/electron/services/dev-vault-service.ts`
+- `app/electron/services/dev-workspace-scanner.ts`
+- `app/electron/services/git-monitor.ts`
+- `app/electron/services/server-health.ts`
+- `app/electron/services/command-center-reporting.ts`
+
+Recommended Antigravity follow-up:
+- Android sync hooks for Command Center status/tasks/reports using the real Host API endpoints.
+- Project health scoring that reads the real scan result and does not invent repo state.
+- UI polish only after testing the existing `/command-center` page against live Host API data.

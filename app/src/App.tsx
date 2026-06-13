@@ -26,6 +26,7 @@ import { Setup } from './pages/Setup';
 import { Portal } from './pages/Portal';
 import { SpatialOS } from './pages/SpatialOS';
 import { AgentMesh } from './pages/AgentMesh';
+import { CommandCenter } from './pages/CommandCenter';
 import { useSettingsStore } from './stores/settings';
 import { useUpdateStore } from './stores/update';
 import { useGatewayStore } from './stores/gateway';
@@ -218,6 +219,7 @@ function App() {
             <Route path="/portal" element={<Portal />} />
             <Route path="/spatial" element={<SpatialOS />} />
             <Route path="/mesh" element={<AgentMesh />} />
+            <Route path="/command-center" element={<CommandCenter />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/trace" element={<Trace />} />
             <Route path="/dreams" element={devModeUnlocked ? <Dreams /> : <Navigate to="/" replace />} />

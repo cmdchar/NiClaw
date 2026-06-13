@@ -1,3 +1,7 @@
+- [x] (2026-06-13) Codex Dev Command Center Phase 1: added native `/command-center` route, sidebar entry, Host API command-center endpoints, dev-vault creation, workspace scan, git monitor, tasks parser, logs preview, and report generation.
+- [x] (2026-06-13) Codex validation: `pnpm run typecheck` and `pnpm run build:vite` pass after Command Center integration.
+- [x] (2026-06-13) Codex no-mock cleanup: removed the local Agent Mesh status patch that forced `niclaw-host-api` online in the renderer route proxy.
+- [ ] (2026-06-13) Antigravity follow-up: avoid Codex-touched Command Center backend/routing files; focus on Android sync hooks, project health scoring, and UI polish against real Host API contracts.
 - [x] (2026-06-12) Codex P1 Real Agent Mesh backend: implemented SuperHermes `/api/mesh/status`, `/api/mesh/events`, `/api/mesh/brain`, `/api/mesh/hermes-dashboard`, and `/api/mesh/smoke-tests`; verified HTTPS mesh status and real smoke event.
 - [x] (2026-06-12) Codex P1 Telegram alignment: updated Telegram ecosystem context to consume mesh endpoints and restarted `SERVER Telegram Command Watcher`.
 - [x] (2026-06-12) Codex P1 Antigravity handoff: wrote `Agent Mesh API Contract - Real Endpoints.md` in SecondBrain.

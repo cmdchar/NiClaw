@@ -1,5 +1,11 @@
 # DECISIONS - ClawX Architectural Decisions
 
+## (2026-06-13) - Dev Command Center Is Host API Native and Mock-Free
+- Dev Command Center belongs inside NiClaw Desktop as `/command-center`, not as a separate app.
+- Command Center operational state is backend-authoritative through `/api/command-center/*`; renderer UI must not synthesize fake server, git, task, log, or report data.
+- Local command-center state uses a separate app data lane (`command-center-state.json` and `dev-vault/`) and must not be mixed with Spatial plans, BoardAI sync state, or chat sessions.
+- Agent Mesh status must stay backend-authoritative. Renderer/proxy code must not patch specific nodes to `online` to hide a missing or broken integration.
+
 ## (2026-06-12) - Real Agent Mesh Contract and Secret Boundary
 - SuperHermes API is the canonical real agent mesh gateway for Windows, Android, Telegram, and Antigravity UI work. Clients should consume `https://vm-niclaw.tail7a9097.ts.net:8002/api/mesh/*`.
 - Hermes Dashboard protected APIs are called server-side only inside SuperHermes mesh adapters. Session tokens must never be returned to renderer/mobile clients, Telegram output, logs, or SecondBrain.

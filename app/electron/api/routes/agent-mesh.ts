@@ -12,6 +12,7 @@ export async function handleAgentMeshRoutes(
   url: URL,
   ctx: HostApiContext,
 ): Promise<boolean> {
+  void ctx;
   // Common handler for Mesh Proxy endpoints
   if (url.pathname.startsWith('/api/agent-mesh/')) {
     const gatewayToken = await getSetting('gatewayToken');
@@ -46,35 +47,6 @@ export async function handleAgentMeshRoutes(
       }
 
       const data = await response.json();
-
-      // Intercept /status and patch niclaw-host-api
-      if (targetPath === '/api/mesh/status' && data && Array.isArray(data.nodes)) {
-        for (const node of data.nodes) {
-          if (node.id === 'niclaw-host-api') {
-            node.status = 'online';
-            node.details = {
-              ok: true,
-              status_code: 200,
-              data: { status: 'online', service: 'niclaw-host-api' }
-            };
-            node.error = null;
-          }
-        }
-      } else if (targetPath === '/api/mesh/status' && Array.isArray(data)) {
-        // Fallback array structure
-        for (const node of data) {
-          if (node.id === 'niclaw-host-api') {
-            node.status = 'online';
-            node.details = {
-              ok: true,
-              status_code: 200,
-              data: { status: 'online', service: 'niclaw-host-api' }
-            };
-            node.error = null;
-          }
-        }
-      }
-
       sendJson(res, 200, data);
       return true;
     } catch (e: any) {

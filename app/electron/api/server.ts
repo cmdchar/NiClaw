@@ -26,6 +26,7 @@ import { handleDreamsRoutes } from './routes/dreams';
 import { handleGovernanceRoutes } from './routes/governance';
 import { handleCouncilRoutes } from './routes/council';
 import { handleAgentMeshRoutes } from './routes/agent-mesh';
+import { handleCommandCenterRoutes } from './routes/command-center';
 import { sendJson, setCorsHeaders, requireJsonContentType } from './route-utils';
 import { hermesDreamEngine } from '../services/dream-engine';
 
@@ -58,6 +59,7 @@ const coreRouteHandlers: RouteHandler[] = [
   handleUsageRoutes,
   handleCouncilRoutes,
   handleAgentMeshRoutes,
+  handleCommandCenterRoutes,
 ];
 
 function buildRouteHandlers(): RouteHandler[] {

@@ -316,6 +316,7 @@ export function Sidebar() {
     { to: '/portal', icon: <Globe className="h-4 w-4" strokeWidth={2} />, label: 'Agent Portal', testId: 'sidebar-nav-portal' },
     { to: '/spatial', icon: <Boxes className="h-4 w-4" strokeWidth={2} />, label: 'Spatial OS', testId: 'sidebar-nav-spatial' },
     { to: '/mesh', icon: <Network className="h-4 w-4" strokeWidth={2} />, label: 'Agent Mesh', testId: 'sidebar-nav-mesh' },
+    { to: '/command-center', icon: <Terminal className="h-4 w-4" strokeWidth={2} />, label: 'Dev Command Center', testId: 'sidebar-nav-command-center' },
     { to: '/analytics', icon: <BarChart3 className="h-4 w-4" strokeWidth={2} />, label: 'OS Analytics', testId: 'sidebar-nav-analytics' },
     { to: '/trace', icon: <Activity className="h-4 w-4" strokeWidth={2} />, label: 'Execution Trace', testId: 'sidebar-nav-trace' },
     ...(devModeUnlocked

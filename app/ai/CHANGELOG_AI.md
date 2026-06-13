@@ -1,5 +1,13 @@
 # CHANGELOG - ClawX AI Updates
 
+## (2026-06-13) - Dev Command Center Phase 1 Native Module
+- Added native `/command-center` route and sidebar entry inside NiClaw Desktop.
+- Added Host API route handler `electron/api/routes/command-center.ts` with real endpoints for status, projects, git repositories, tasks, logs, reports, inbox entry creation, and report generation.
+- Added defensive services for workspace scanning, git monitoring, server health, local dev-vault management, and command-center report generation.
+- Added `src/pages/CommandCenter/index.tsx` dashboard that consumes real Host API data only and shows honest empty/error states.
+- Removed the local Agent Mesh fake status patch that forced `niclaw-host-api` to `online`; mesh status now remains backend-authoritative.
+- Verified `pnpm run typecheck` and `pnpm run build:vite` successfully on Windows.
+
 ## (2026-06-12) - SuperHermes Council Integration
 - **Council Session & Decision Engine (Completed)**:
   - Migrated the SuperHermes decision engine natively to TypeScript/React inside NiClaw, eliminating the need for an external Python backend.
