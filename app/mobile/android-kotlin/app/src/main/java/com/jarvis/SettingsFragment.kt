@@ -46,6 +46,7 @@ class SettingsFragment : Fragment() {
     private lateinit var btnConfigureDreams: Button
     private lateinit var btnConfigureObsidian: Button
     private lateinit var btnAgentMesh: Button
+    private lateinit var btnDevCommandCenter: Button
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -85,6 +86,7 @@ class SettingsFragment : Fragment() {
         btnConfigureDreams = view.findViewById(R.id.btnConfigureDreams)
         btnConfigureObsidian = view.findViewById(R.id.btnConfigureObsidian)
         btnAgentMesh = view.findViewById(R.id.btnAgentMesh)
+        btnDevCommandCenter = view.findViewById(R.id.btnDevCommandCenter)
 
         val mainActivity = activity as? MainActivity
 
@@ -174,6 +176,13 @@ class SettingsFragment : Fragment() {
         btnAgentMesh.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, AgentMeshFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
+        btnDevCommandCenter.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, CommandCenterFragment())
                 .addToBackStack(null)
                 .commit()
         }

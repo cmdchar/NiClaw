@@ -667,9 +667,22 @@
                         android:id="@+id/btnAgentMesh"
                         android:layout_width="match_parent"
                         android:layout_height="40dp"
+                        android:layout_marginBottom="8dp"
                         android:backgroundTint="#F59E0B"
                         android:text="🌐 Agent Mesh (Real-Time)"
                         android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+
+                    <Button
+                        android:id="@+id/btnDevCommandCenter"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:backgroundTint="#2563EB"
+                        android:text="Dev Command Center"
+                        android:textColor="#FFFFFF"
                         android:textSize="12sp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp"

@@ -1383,4 +1383,61 @@ object ApiClient {
             }
         })
     }
+
+    // Dev Command Center Hooks (Routed natively via Host API)
+    fun getCommandCenterStatus(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        val request = buildRequest(context, "/api/command-center/status")
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) { callback(null, e) }
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val s = response.body?.string() ?: "{}"
+                    if (!response.isSuccessful) { callback(null, Exception("${response.code}: $s")); return }
+                    callback(JSONObject(s), null)
+                } catch (e: Exception) { callback(null, e) }
+            }
+        })
+    }
+
+    fun getCommandCenterProjects(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        val request = buildRequest(context, "/api/command-center/projects")
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) { callback(null, e) }
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val s = response.body?.string() ?: "{}"
+                    if (!response.isSuccessful) { callback(null, Exception("${response.code}: $s")); return }
+                    callback(JSONObject(s), null)
+                } catch (e: Exception) { callback(null, e) }
+            }
+        })
+    }
+
+    fun getCommandCenterTasks(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        val request = buildRequest(context, "/api/command-center/tasks")
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) { callback(null, e) }
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val s = response.body?.string() ?: "{}"
+                    if (!response.isSuccessful) { callback(null, Exception("${response.code}: $s")); return }
+                    callback(JSONObject(s), null)
+                } catch (e: Exception) { callback(null, e) }
+            }
+        })
+    }
+
+    fun getCommandCenterReports(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        val request = buildRequest(context, "/api/command-center/reports")
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) { callback(null, e) }
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val s = response.body?.string() ?: "{}"
+                    if (!response.isSuccessful) { callback(null, Exception("${response.code}: $s")); return }
+                    callback(JSONObject(s), null)
+                } catch (e: Exception) { callback(null, e) }
+            }
+        })
+    }
 }

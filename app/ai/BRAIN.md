@@ -1,5 +1,19 @@
 # BRAIN - CURRENT AI STATE
 
+## Latest update (2026-06-13) - OpenHuman Runtime Repair on vm-niclaw
+- **Current State**:
+  - Codex repaired the OpenHuman console on `vm-niclaw` without adding mocks.
+  - `jarvis-consoles.service` now injects the OpenHuman Rust Core bearer token server-side when proxying `POST /rpc`; renderer/mobile clients never receive the core token.
+  - `POST /chat` in `app/consoles-server.js` supports the secure Host API/OpenClaw path, polls real `chat.history`, surfaces real assistant/provider errors, and has a real local Ollama fallback.
+  - The deployed service is intentionally set to `OPENHUMAN_CHAT_MODE=ollama-direct` with `OPENHUMAN_OLLAMA_MODEL=qwen2.5:3b` because the external providers are currently unavailable for this agent (`modal` rate/timeout, `deepseek` billing, `openrouter` key limit).
+  - OpenClaw config on `vm-niclaw` now has a valid `openhuman` agent and a local `ollama-vmniclaw` provider entry; `openclaw config validate` and `openclaw agents list --bindings` pass.
+  - OpenHuman workspace memory now has the shared memory core copied into `/home/debian/.openclaw/workspace-openhuman/memory`; both `main` and `openhuman` memory indexes report `26/26 files`, `68 chunks`, `Dirty: no`.
+  - Validation on `vm-niclaw`: `POST http://127.0.0.1:7788/chat` returns real Ollama text in about 12s, `POST /rpc core.ping` returns ok, and OpenHuman UI returns HTTP 200 locally and through `https://vm-niclaw.tail7a9097.ts.net:10000/`.
+- **Next Exact Steps**:
+  - Keep OpenHuman on local Ollama direct mode until a cloud provider is credited/healthy or OpenClaw local-model context is optimized.
+  - Later, re-enable Host API/OpenClaw chat mode only after a real smoke test proves `agent:openhuman` can complete through OpenClaw without long Ollama runner stalls.
+  - Antigravity Android Command Center work remains separate; Codex did not touch Antigravity Android files.
+
 ## Latest update (2026-06-13) - Dev Command Center Phase 1 Native in NiClaw
 - **Current State**:
   - Codex added the native NiClaw `/command-center` route and sidebar entry.

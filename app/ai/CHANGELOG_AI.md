@@ -1,5 +1,14 @@
 # CHANGELOG - ClawX AI Updates
 
+## (2026-06-13) - OpenHuman Runtime Repair on vm-niclaw
+- Repaired the OpenHuman console served by `jarvis-consoles.service` on `vm-niclaw`.
+- Added server-side OpenHuman Rust Core token bridging for `POST /rpc`, so the browser/client can call the console without seeing protected bearer tokens.
+- Reworked the legacy `POST /chat` route in `app/consoles-server.js` to use the real NiClaw Host API/OpenClaw `chat.send` path when enabled, poll real `chat.history`, and surface real provider errors instead of returning a fake empty response.
+- Added a real local Ollama direct chat mode using `qwen2.5:3b` through the native Ollama API with `keep_alive: "0"` so the model unloads after each response.
+- Configured `OPENHUMAN_CHAT_MODE=ollama-direct` on `vm-niclaw` because current external providers are not reliable for this agent: Modal rate/timeout, DeepSeek insufficient balance, and OpenRouter key limit.
+- Restored valid OpenClaw runtime config for `agent:openhuman` and added local provider `ollama-vmniclaw`; verified `openclaw config validate` and `openclaw agents list --bindings`.
+- Verified real runtime behavior: `/chat` returns real text, `/rpc core.ping` returns ok, and OpenHuman UI returns HTTP 200 locally and through Tailscale `:10000`.
+
 ## (2026-06-13) - Dev Command Center Phase 1 Native Module
 - Added native `/command-center` route and sidebar entry inside NiClaw Desktop.
 - Added Host API route handler `electron/api/routes/command-center.ts` with real endpoints for status, projects, git repositories, tasks, logs, reports, inbox entry creation, and report generation.
@@ -629,3 +638,4 @@
 ## (2026-05-20) - Initial Setup
 - Created mandatory AI workspace folder and workflow files.
 - Documented project-specific building routes and configurations.
+- **2026-06-13**: Antigravity: Added Dev Command Center Android Companion UI with real data hooks inside SettingsFragment. No mocks, native buildRequest usage.

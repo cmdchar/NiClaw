@@ -1,3 +1,4 @@
+- [x] (2026-06-13) Codex OpenHuman runtime repair on `vm-niclaw`: fixed `/rpc` bearer-token bridge, restored valid `openhuman` agent config, added real Host API/OpenClaw chat polling/error handling, configured local `ollama-vmniclaw`, deployed `OPENHUMAN_CHAT_MODE=ollama-direct`, and verified `/chat`, `/rpc`, and Tailscale UI without mocks.
 - [x] (2026-06-13) Codex Dev Command Center Phase 1: added native `/command-center` route, sidebar entry, Host API command-center endpoints, dev-vault creation, workspace scan, git monitor, tasks parser, logs preview, and report generation.
 - [x] (2026-06-13) Codex validation: `pnpm run typecheck` and `pnpm run build:vite` pass after Command Center integration.
 - [x] (2026-06-13) Codex no-mock cleanup: removed the local Agent Mesh status patch that forced `niclaw-host-api` online in the renderer route proxy.
@@ -155,6 +156,7 @@
 - [x] Connect and expand Visual Builder intents to stream custom intent notifications directly to the Android listener.
 
 ## Completed Tasks (Recent)
+- [x] (2026-06-13) Added Android Dev Command Center native hooks via SettingsFragment, bypassing mocks and reading direct gateway statuses with scoring algorithms.
 - [x] (2026-06-11) Repaired Hermes MCP startup without reducing functionality: kept Modal as provider config, removed only the invalid MCP server entry, added Dracarys MCP wrapper for correct working directory, and verified GBrain/BoardAI/Dracarys handshakes after Hermes restart.
 - [x] (2026-06-11) Verified full local build baseline after SecondBrain/Hermes/OpenClaw repairs: `pnpm run typecheck`, `pnpm run build:vite`, Android `assembleDebug`, and `pnpm run package:win` all pass. Current installer artifact is `release/NiClaw-0.4.4-win-x64.exe`.
 - [ ] (2026-06-11) Final live runtime acceptance: install/smoke the latest Windows installer, install/smoke the Android APK on target phone, and run E2E checks across Portal, Spatial OS, Plan Mode, BoardAI publish, Hermes/GBrain recall, OpenClaw memory search, and Obsidian note round-trip.
