@@ -3,8 +3,13 @@
 ## (2026-06-12) - Real Agent Mesh Contract and Secret Boundary
 - SuperHermes API is the canonical real agent mesh gateway for Windows, Android, Telegram, and Antigravity UI work. Clients should consume `https://vm-niclaw.tail7a9097.ts.net:8002/api/mesh/*`.
 - Hermes Dashboard protected APIs are called server-side only inside SuperHermes mesh adapters. Session tokens must never be returned to renderer/mobile clients, Telegram output, logs, or SecondBrain.
-- `auth_required` is a valid real state, not a failure to hide. NiClaw Host API remains visible as `auth_required` until a safe gateway/token flow is wired.
+- `auth_required` is a valid real state, not a failure to hide. NiClaw Host API now uses a server-side SuperHermes token bridge and should report `online`; if the token is missing or rejected it must honestly return `auth_required`.
 - SuperHermes binds to `127.0.0.1:8002` because Tailscale Serve already owns the tailnet `:8002` listener and proxies to localhost; binding uvicorn to `0.0.0.0` conflicts after restart.
+
+## (2026-06-13) - NiClaw Host API Token Is Server-Side Only
+- The Host API token lives in VM service configuration and `/etc/superhermes-api.env`, not in Windows renderer code, Android code, Telegram output, or SecondBrain.
+- SuperHermes may use the token for safe health/status probes and future curated backend adapters, but must not proxy arbitrary Host API calls without a narrowed allowlist.
+- Agent Mesh consumers should call `/api/mesh/status`, `/api/mesh/events`, `/api/mesh/brain`, and `/api/mesh/smoke-tests`; they should not call `:13210` directly unless they already use the existing app auth flow.
 
 ## (2026-06-11) - Shared Brain Architecture for Obsidian, Hermes, and OpenClaw
 - The canonical full shared vault remains `D:\Onedrive\SecondBrain\secondBrain` locally and `/home/debian/secondBrain` on `vm-niclaw`.

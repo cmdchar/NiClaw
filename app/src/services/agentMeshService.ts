@@ -1,5 +1,6 @@
 import { AgentEvent, AgentMeshStatus } from '../types/agentMesh';
-import { hostApiFetch } from '@/lib/host-api';
+
+const MESH_BASE_URL = 'https://vm-niclaw.tail7a9097.ts.net:8002';
 
 export const AgentMeshService = {
   /**
@@ -7,17 +8,19 @@ export const AgentMeshService = {
    */
   async fetchMeshStatus(): Promise<AgentMeshStatus> {
     try {
-      const statusRes = await hostApiFetch<any>('/api/agent-mesh/status').catch(() => null);
+      const statusRes = await fetch(`${MESH_BASE_URL}/api/mesh/status`).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }).catch(err => {
+        throw err;
+      });
       
-      const eventsRes = await hostApiFetch<any>('/api/agent-mesh/events?limit=20').catch(() => null);
-
-      if (!statusRes) {
-        return {
-          nodes: [],
-          latestEvents: [],
-          error: 'api_pending'
-        };
-      }
+      const eventsRes = await fetch(`${MESH_BASE_URL}/api/mesh/events?limit=20`).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }).catch(err => {
+        throw err;
+      });
 
       const statusData = statusRes;
       let realNodes = [];
@@ -41,12 +44,12 @@ export const AgentMeshService = {
         nodes: realNodes,
         latestEvents: realEvents
       };
-    } catch (error) {
+    } catch (error: any) {
       console.warn('[AgentMeshService] Falling back to error state due to fetch failure:', error);
       return {
         nodes: [],
         latestEvents: [],
-        error: 'unavailable'
+        error: error.message || 'unavailable'
       };
     }
   },
@@ -54,15 +57,18 @@ export const AgentMeshService = {
   /**
    * Run a real smoke test to verify connectivity.
    */
-  async runSmokeTest(agentId: string): Promise<boolean> {
+  async runSmokeTest(target: string): Promise<boolean> {
     try {
-      const res = await hostApiFetch<any>('/api/agent-mesh/smoke-tests', {
+      const res = await fetch(`${MESH_BASE_URL}/api/mesh/smoke-tests`, {
         method: 'POST',
-        body: JSON.stringify({ agentId })
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ target })
       });
-      return !!res;
+      return res.ok;
     } catch (e) {
-      console.error(`[AgentMeshService] Smoke test failed to reach API for ${agentId}`);
+      console.error(`[AgentMeshService] Smoke test failed to reach API for ${target}`, e);
       return false;
     }
   }

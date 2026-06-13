@@ -77,7 +77,8 @@ ClawX is a React 19 + TypeScript + Vite desktop application packaged with Electr
   - `GET /api/mesh/brain`: returns SecondBrain/OpenClaw memory sync/index status.
   - `GET /api/mesh/hermes-dashboard`: returns server-side safe Hermes Dashboard status, memory/session/log/MCP summaries without exposing the session token.
   - `POST /api/mesh/smoke-tests`: runs a real mesh smoke check and writes a real `agent.health` event.
-- Current live verification (2026-06-12): SuperHermes API, Hermes Dashboard, OpenClaw Bridge, OpenHuman Core, and SecondBrain/OpenClaw memory are `online`; NiClaw Host API is real but `auth_required`.
+- Current live verification (2026-06-13): SuperHermes API, Hermes Dashboard, OpenClaw Bridge, OpenHuman Core, NiClaw Host API, and SecondBrain/OpenClaw memory are all `online`.
+- NiClaw Host API auth is handled server-side by SuperHermes through `SUPERHERMES_NICLAW_HOST_API_TOKEN` in `/etc/superhermes-api.env`; the token is not returned by `/api/mesh/status` and must not be used in renderer/mobile code.
 - Systemd note: `superhermes-api.service` has a drop-in binding uvicorn to `127.0.0.1:8002`; Tailscale Serve exposes it at HTTPS `:8002`.
 
 ## 5) Embedded Agent Portal Connections

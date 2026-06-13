@@ -529,6 +529,13 @@
   - Fixed strict type errors on React Flow state variables by shifting persistent loading structures into dedicated typed initializers.
   - Passed all TypeScript strict typechecks (`tsc --noEmit`) with 0 errors and 0 warnings.
 
+## (2026-06-13) - Secure NiClaw Host API Bridge Completed
+- Updated SuperHermes mesh config on VM to support `SUPERHERMES_NICLAW_HOST_API_TOKEN`/`CLAWX_API_TOKEN` server-side for authenticated Host API health checks.
+- Patched `/home/debian/hermes-agent/SuperHermes-OS/apps/api/app/mesh.py` so the `niclaw-host-api` node uses an Authorization header internally, while `/api/mesh/status` returns only safe status/details.
+- Added `SUPERHERMES_NICLAW_HOST_API_TOKEN` to `/etc/superhermes-api.env` from the existing VM Host API token source; file is permissioned `600` and output/logs redact token values.
+- Verified `https://vm-niclaw.tail7a9097.ts.net:8002/api/mesh/status`: all mesh nodes report `online`, with `offline=0` and `degraded=0`; no token/header markers are exposed.
+- Ran SuperHermes API tests successfully (`30 passed`) and a real `/api/mesh/smoke-tests` target `mesh-full-online` event completed.
+
 ## (2026-06-12) - Real Agent Mesh Backend Contract for Hermes/SuperHermes/NiClaw
 - Added real SuperHermes mesh API on `vm-niclaw`: `/api/mesh/status`, `/api/mesh/events`, `/api/mesh/brain`, `/api/mesh/hermes-dashboard`, and `/api/mesh/smoke-tests` in `/home/debian/hermes-agent/SuperHermes-OS/apps/api/app/mesh.py`.
 - Updated SuperHermes API config/router on VM (`app/config.py`, `app/main.py`) and added `tests/test_mesh_api.py`; API test suite passes: `30 passed`.

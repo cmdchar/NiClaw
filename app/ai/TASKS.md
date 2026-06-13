@@ -1,8 +1,9 @@
 - [x] (2026-06-12) Codex P1 Real Agent Mesh backend: implemented SuperHermes `/api/mesh/status`, `/api/mesh/events`, `/api/mesh/brain`, `/api/mesh/hermes-dashboard`, and `/api/mesh/smoke-tests`; verified HTTPS mesh status and real smoke event.
 - [x] (2026-06-12) Codex P1 Telegram alignment: updated Telegram ecosystem context to consume mesh endpoints and restarted `SERVER Telegram Command Watcher`.
 - [x] (2026-06-12) Codex P1 Antigravity handoff: wrote `Agent Mesh API Contract - Real Endpoints.md` in SecondBrain.
+- [x] (2026-06-13) Codex follow-up: wired secure server-side NiClaw Host API token into SuperHermes mesh so `niclaw-host-api` reports `online` without exposing secrets to renderer/mobile clients.
 - [ ] (2026-06-12) Antigravity P1: finish Windows Agent Mesh UI against real `/api/mesh/*` endpoints with no mock fallback.
-- [ ] (2026-06-12) Follow-up: decide secure client path for NiClaw Host API auth so `niclaw-host-api` moves from `auth_required` to online without exposing tokens.
+- [x] (2026-06-12) Follow-up: decide secure client path for NiClaw Host API auth so `niclaw-host-api` moves from `auth_required` to online without exposing tokens.
 - [x] SuperHermes Council Integration - Phase 1 (2026-06-12)
   - [x] Migrate `CouncilEngine` orchestration natively to Node (Strategist, Architect, Reviewer, QA).
   - [x] Integrate `superhermes-state.json` via `CouncilMemory` separate from plans.

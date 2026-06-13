@@ -1328,8 +1328,13 @@ object ApiClient {
     }
 
     // --- Agent Mesh Real API Methods ---
+    private const val MESH_BASE_URL = "https://vm-niclaw.tail7a9097.ts.net:8002"
+
     fun getMeshStatus(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
-        val request = buildRequest(context, "/api/agent-mesh/status", "GET")
+        val request = Request.Builder()
+            .url("$MESH_BASE_URL/api/mesh/status")
+            .get()
+            .build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { callback(null, e) }
             override fun onResponse(call: Call, response: Response) {
@@ -1343,7 +1348,10 @@ object ApiClient {
     }
 
     fun getMeshEvents(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
-        val request = buildRequest(context, "/api/agent-mesh/events?limit=20", "GET")
+        val request = Request.Builder()
+            .url("$MESH_BASE_URL/api/mesh/events?limit=20")
+            .get()
+            .build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { callback(null, e) }
             override fun onResponse(call: Call, response: Response) {
@@ -1359,7 +1367,10 @@ object ApiClient {
     fun runMeshSmokeTest(context: Context, target: String, callback: (JSONObject?, Exception?) -> Unit) {
         val payload = JSONObject().apply { put("target", target) }.toString()
         val body = payload.toRequestBody(JSON_MEDIA_TYPE)
-        val request = buildRequest(context, "/api/agent-mesh/smoke-tests", "POST", body)
+        val request = Request.Builder()
+            .url("$MESH_BASE_URL/api/mesh/smoke-tests")
+            .post(body)
+            .build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { callback(null, e) }

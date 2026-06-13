@@ -13,6 +13,17 @@
   - Codex can add a secure NiClaw Host API auth bridge next so `niclaw-host-api` can move from `auth_required` to `online` without exposing tokens.
   - After Antigravity finishes, run Windows typecheck/build and Android native build, then write final implementation log and re-index memory.
 
+## Latest update (2026-06-13) - NiClaw Host API Bridge Secured
+- **Current State**:
+  - Codex finished the remaining secure Host API bridge work for the real mesh.
+  - SuperHermes now reads `SUPERHERMES_NICLAW_HOST_API_TOKEN` server-side from `/etc/superhermes-api.env` and uses it only to probe `http://127.0.0.1:13210/api/gateway/health`.
+  - Public `/api/mesh/status` responses do not expose Authorization headers, Bearer tokens, or token env names.
+  - Verified local and Tailscale mesh: all nodes are `online`, `offline=0`, `degraded=0`, including `niclaw-host-api`.
+  - Real mesh smoke test target `mesh-full-online` completed and wrote a real `agent.health` event.
+- **Next Exact Steps**:
+  - Antigravity should finish Windows Agent Mesh UI and Android UI/client wiring against `https://vm-niclaw.tail7a9097.ts.net:8002/api/mesh/*`.
+  - Codex should not touch Antigravity UI files unless explicitly asked; after Antigravity finishes, run final Windows/Android builds and memory sync.
+
 ## Principal Project Direction (2026-05-31) - NiClaw Spatial AI OS
 - **Confirmed Direction**: Build NiClaw toward a 2.5D functional **Spatial AI Operating System**, inspired by the provided AXIAL STUDIO/SAMS references, without jumping prematurely into heavy full-3D visuals.
 - **Product North Star**: One coherent workspace where Explorer, Spatial Canvas, Command Palette, Agent Harness, Plan Mode, BoardAI, Kanban, Code Review, Terminal, Logs, and Android companion controls operate as one model-agnostic AI OS.
