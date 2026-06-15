@@ -569,11 +569,14 @@ openhumanApp.post('/chat', async (req, res) => {
 });
 
 // Fallback for single-page React app (router paths like /chat, /settings, etc.)
-openhumanApp.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/rpc') || req.path.includes('.')) {
-        return next();
-    }
-    res.sendFile(path.join(openhumanWebPath, 'index.html'));
+openhumanApp.get('(.*)', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  const indexFile = path.join(__dirname, '../niclaw-openhuman/dist/index.html');
+  if (fs.existsSync(indexFile)) {
+    res.sendFile(indexFile);
+  } else {
+    res.status(404).send('OpenHuman UI not built.');
+  }
 });
 
 openhumanApp.listen(7788, '0.0.0.0', () => {
