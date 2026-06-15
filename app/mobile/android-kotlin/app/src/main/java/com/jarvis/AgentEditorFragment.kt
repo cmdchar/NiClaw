@@ -44,7 +44,7 @@ class AgentEditorFragment : Fragment() {
         val editAgentSlug = view.findViewById<EditText>(R.id.editAgentSlug)
         val editAgentRole = view.findViewById<EditText>(R.id.editAgentRole)
         
-        val editProvider = view.findViewById<EditText>(R.id.editProvider)
+        val spinnerProvider = view.findViewById<Spinner>(R.id.spinnerProvider)
         val editEndpoint = view.findViewById<EditText>(R.id.editEndpoint)
         val spinnerModel = view.findViewById<Spinner>(R.id.spinnerModel)
         val editFallbackModel = view.findViewById<EditText>(R.id.editFallbackModel)
@@ -59,10 +59,45 @@ class AgentEditorFragment : Fragment() {
         val editMemory = view.findViewById<EditText>(R.id.editMemory)
         val editPermissions = view.findViewById<EditText>(R.id.editPermissions)
 
+        // Load providers into spinner
+        val providersList = mutableListOf("openai", "deepseek", "hermes", "openclaw/local", "custom")
+        val providersAdapter = ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, providersList)
+        providersAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerProvider.adapter = providersAdapter
+
         // Load models into spinner
         val modelsAdapter = ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, mutableListOf("Loading..."))
         modelsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerModel.adapter = modelsAdapter
+
+        spinnerProvider.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedProvider = providersAdapter.getItem(position)
+                if (selectedProvider == "deepseek") {
+                    modelsAdapter.clear()
+                    modelsAdapter.addAll("deepseek-chat", "deepseek-reasoner")
+                    modelsAdapter.notifyDataSetChanged()
+                } else {
+                    // Triggers load again if provider changes
+                    ApiClient.getModels(requireContext()) { modelsList, err ->
+                        activity?.runOnUiThread {
+                            if (err != null || modelsList == null) {
+                                modelsAdapter.clear()
+                                modelsAdapter.add("Error loading")
+                            } else {
+                                modelsAdapter.clear()
+                                val mList = mutableListOf<String>()
+                                for (i in 0 until modelsList.length()) mList.add(modelsList.optString(i))
+                                if (mList.isEmpty()) mList.add("No models")
+                                modelsAdapter.addAll(mList)
+                            }
+                            modelsAdapter.notifyDataSetChanged()
+                        }
+                    }
+                }
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+        }
 
         ApiClient.getModels(requireContext()) { modelsList, err ->
             activity?.runOnUiThread {
@@ -102,7 +137,11 @@ class AgentEditorFragment : Fragment() {
                 editAgentName.setText(agent.optString("name"))
                 editAgentSlug.setText(agent.optString("id"))
                 editAgentRole.setText(agent.optString("role"))
-                editProvider.setText(agent.optString("provider"))
+                
+                val p = agent.optString("provider")
+                val pIdx = providersList.indexOf(p)
+                if (pIdx >= 0) spinnerProvider.setSelection(pIdx)
+                
                 editEndpoint.setText(agent.optString("endpoint"))
                 editFallbackModel.setText(agent.optString("fallback_model"))
                 
@@ -132,7 +171,7 @@ class AgentEditorFragment : Fragment() {
             updated.put("name", editAgentName.text.toString().trim())
             updated.put("id", editAgentSlug.text.toString().trim())
             updated.put("role", editAgentRole.text.toString().trim())
-            updated.put("provider", editProvider.text.toString().trim())
+            updated.put("provider", spinnerProvider.selectedItem?.toString() ?: "")
             updated.put("endpoint", editEndpoint.text.toString().trim())
             updated.put("model", spinnerModel.selectedItem?.toString() ?: "")
             updated.put("fallback_model", editFallbackModel.text.toString().trim())

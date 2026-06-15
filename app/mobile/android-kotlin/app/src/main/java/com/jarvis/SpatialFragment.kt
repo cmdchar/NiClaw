@@ -3,6 +3,8 @@ package com.jarvis
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import android.view.LayoutInflater
@@ -48,6 +50,9 @@ class SpatialFragment : Fragment() {
     private lateinit var txtGatewayState: TextView
     private lateinit var txtGatewayTransport: TextView
     private lateinit var txtGatewayRpc: TextView
+    private lateinit var txtDeepseekStatus: TextView
+    private lateinit var txtRemoteClaudeStatus: TextView
+    private lateinit var txtRemoteClaudeDetails: TextView
     private lateinit var txtBoardaiStatus: TextView
 
     // Agent Harness views
@@ -64,6 +69,10 @@ class SpatialFragment : Fragment() {
     private val agentsList = mutableListOf<JSONObject>()
     private val tasksList = mutableListOf<JSONObject>()
     private var currentKanbanStatus = "todo" // "todo" | "in_progress" | "done"
+    
+    private val handler = Handler(Looper.getMainLooper())
+    private var healthPollRunnable: Runnable? = null
+    private var isPolling = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -104,6 +113,9 @@ class SpatialFragment : Fragment() {
         txtGatewayState = view.findViewById(R.id.txtGatewayState)
         txtGatewayTransport = view.findViewById(R.id.txtGatewayTransport)
         txtGatewayRpc = view.findViewById(R.id.txtGatewayRpc)
+        txtDeepseekStatus = view.findViewById(R.id.txtDeepseekStatus)
+        txtRemoteClaudeStatus = view.findViewById(R.id.txtRemoteClaudeStatus)
+        txtRemoteClaudeDetails = view.findViewById(R.id.txtRemoteClaudeDetails)
         txtBoardaiStatus = view.findViewById(R.id.txtBoardaiStatus)
 
         // Agent Harness bindings
@@ -199,6 +211,7 @@ class SpatialFragment : Fragment() {
 
         loadPlansData(ctx)
         loadGatewayHealth(ctx)
+        loadOrchestratorHealth(ctx)
         loadBoardStatus(ctx)
         loadAgents(ctx)
         loadTasks(ctx)
@@ -267,6 +280,65 @@ class SpatialFragment : Fragment() {
                         txtGatewayRpc.setTextColor(Color.parseColor("#10B981"))
                     } else {
                         txtGatewayRpc.setTextColor(Color.parseColor("#8892B0"))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun loadOrchestratorHealth(ctx: Context) {
+        ApiClient.getOrchestratorHealth(ctx) { response, error ->
+            activity?.runOnUiThread {
+                if (error != null) {
+                    txtDeepseekStatus.text = "ERROR"
+                    txtDeepseekStatus.setTextColor(Color.parseColor("#EF5350"))
+                    txtRemoteClaudeStatus.text = "ERROR"
+                    txtRemoteClaudeStatus.setTextColor(Color.parseColor("#EF5350"))
+                    txtRemoteClaudeDetails.text = ""
+                    return@runOnUiThread
+                }
+                
+                txtDeepseekStatus.text = "UNKNOWN"
+                txtDeepseekStatus.setTextColor(Color.parseColor("#8892B0"))
+                txtRemoteClaudeStatus.text = "UNKNOWN"
+                txtRemoteClaudeStatus.setTextColor(Color.parseColor("#8892B0"))
+                txtRemoteClaudeDetails.text = "Version: - | Mode: -"
+
+                if (response != null) {
+                    val healthArray = response.optJSONArray("health")
+                    if (healthArray != null) {
+                        for (i in 0 until healthArray.length()) {
+                            val service = healthArray.optJSONObject(i)
+                            if (service?.optString("service") == "DeepSeek") {
+                                val status = service.optString("status")
+                                txtDeepseekStatus.text = status.toUpperCase()
+                                when (status) {
+                                    "ONLINE" -> txtDeepseekStatus.setTextColor(Color.parseColor("#10B981"))
+                                    "ERROR" -> txtDeepseekStatus.setTextColor(Color.parseColor("#EF5350"))
+                                    "NOT_CONFIGURED" -> txtDeepseekStatus.setTextColor(Color.parseColor("#F59E0B"))
+                                    else -> txtDeepseekStatus.setTextColor(Color.parseColor("#8892B0"))
+                                }
+                            } else if (service?.optString("service") == "Remote Claude Code Agent") {
+                                val status = service.optString("status")
+                                txtRemoteClaudeStatus.text = status.toUpperCase()
+                                when (status) {
+                                    "ONLINE" -> txtRemoteClaudeStatus.setTextColor(Color.parseColor("#10B981"))
+                                    "ERROR" -> txtRemoteClaudeStatus.setTextColor(Color.parseColor("#EF5350"))
+                                    "NOT_CONFIGURED", "PROXY_INCOMPATIBLE", "AUTH_FAILED" -> txtRemoteClaudeStatus.setTextColor(Color.parseColor("#F59E0B"))
+                                    else -> txtRemoteClaudeStatus.setTextColor(Color.parseColor("#8892B0"))
+                                }
+                                
+                                val host = service.optString("host", "-")
+                                val version = service.optString("version", "-")
+                                val mode = service.optString("providerMode", "-")
+                                val model = service.optString("model", "-")
+                                val err = service.optString("lastError", "")
+                                
+                                var detailsText = "Host: $host | v: $version\nMode: $mode | $model"
+                                if (err.isNotEmpty()) detailsText += "\nErr: $err"
+                                txtRemoteClaudeDetails.text = detailsText
+                            }
+                        }
                     }
                 }
             }

@@ -237,7 +237,7 @@ export async function handleOrchestratorRoutes(
   }
 
   // Task specific routes
-  const taskMatch = url.pathname.match(/^\/api\/orchestrator\/tasks\/([^/]+)(\/(events|approve|cancel|retry|rollback|stop|diff|approve-patch|reject-patch))?$/);
+  const taskMatch = url.pathname.match(/^\/api\/orchestrator\/tasks\/([^/]+)(\/(events|approve|cancel|retry|retry-execution|rollback|stop|diff|approve-patch|reject-patch))?$/);
   if (taskMatch) {
     const taskId = taskMatch[1];
     const action = taskMatch[3];
@@ -311,7 +311,7 @@ export async function handleOrchestratorRoutes(
       return true;
     }
 
-    if (action === 'retry' && req.method === 'POST') {
+    if ((action === 'retry' || action === 'retry-execution') && req.method === 'POST') {
       await taskOrchestrator.retryTask(taskId);
       sendJson(res, 200, { success: true });
       return true;

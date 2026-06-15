@@ -3,9 +3,12 @@ export type TaskStatus =
   | 'planning' 
   | 'running' 
   | 'waiting_approval' 
+  | 'waiting_patch_approval'
   | 'verifying' 
   | 'completed' 
   | 'failed' 
+  | 'provider_quota_exceeded'
+  | 'blocked_policy_violation'
   | 'cancelled';
 
 export interface TaskEvent {
@@ -32,6 +35,7 @@ export interface Task {
   title: string;
   userPrompt: string;
   targetProject: string;
+  executor?: string;
   status: TaskStatus;
   assignedAgents: string[];
   createdAt: number;

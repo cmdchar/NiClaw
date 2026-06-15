@@ -126,6 +126,57 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:layout_columnWeight="1"
+                        android:layout_margin="4dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DeepSeek LLM"
+                            android:textColor="#8892B0"
+                            android:textSize="10sp" />
+                        <TextView
+                            android:id="@+id/txtDeepseekStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="unknown"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="4dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Remote Claude Code Agent"
+                            android:textColor="#8892B0"
+                            android:textSize="10sp" />
+                        <TextView
+                            android:id="@+id/txtRemoteClaudeStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="unknown"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/txtRemoteClaudeDetails"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Version: - | Mode: -"
+                            android:textColor="#8892B0"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_columnWeight="1"
                         android:layout_margin="4dp"
                         android:layout_marginTop="8dp">
                         <TextView

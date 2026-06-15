@@ -99,13 +99,14 @@ export class TaskEventStore extends EventEmitter {
     }
   }
 
-  createTask(title: string, userPrompt: string, targetProject: string): Task {
+  createTask(title: string, userPrompt: string, targetProject: string, executor?: string): Task {
     const id = randomUUID();
     const task: Task = {
       id,
       title,
       userPrompt,
       targetProject,
+      executor,
       status: 'queued',
       assignedAgents: [],
       createdAt: Date.now(),

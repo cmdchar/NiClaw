@@ -674,6 +674,32 @@ object ApiClient {
         })
     }
 
+    fun getOrchestratorHealth(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        val request = buildRequest(context, "/api/orchestrator/health")
+        Log.d("ApiClient", "getOrchestratorHealth: requesting GET /api/orchestrator/health")
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("ApiClient", "getOrchestratorHealth failure: ${e.message}", e)
+                callback(null, e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val responseStr = response.body?.string() ?: "{}"
+                    Log.d("ApiClient", "getOrchestratorHealth response code=${response.code}")
+                    if (!response.isSuccessful) {
+                        callback(null, Exception("Error code: ${response.code}, msg: $responseStr"))
+                        return
+                    }
+                    callback(JSONObject(responseStr), null)
+                } catch (e: Exception) {
+                    Log.e("ApiClient", "getOrchestratorHealth parsing exception: ${e.message}", e)
+                    callback(null, e)
+                }
+            }
+        })
+    }
+
     fun getTasks(context: Context, callback: (List<JSONObject>?, Exception?) -> Unit) {
         val request = buildRequest(context, "/api/tasks")
         Log.d("ApiClient", "getTasks: requesting GET /api/tasks")

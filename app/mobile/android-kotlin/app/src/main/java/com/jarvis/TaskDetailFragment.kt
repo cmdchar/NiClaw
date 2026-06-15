@@ -27,6 +27,8 @@ class TaskDetailFragment : Fragment() {
     private lateinit var detailLogs: TextView
     private lateinit var btnCancelTask: Button
     private lateinit var btnApproveTask: Button
+    private lateinit var btnRetryTask: Button
+    private lateinit var btnRejectPatch: Button
     private lateinit var btnDetailBack: ImageButton
 
     private val handler = Handler(Looper.getMainLooper())
@@ -54,6 +56,8 @@ class TaskDetailFragment : Fragment() {
         detailLogs = view.findViewById(R.id.detailLogs)
         btnCancelTask = view.findViewById(R.id.btnCancelTask)
         btnApproveTask = view.findViewById(R.id.btnApproveTask)
+        btnRetryTask = view.findViewById(R.id.btnRetryTask)
+        btnRejectPatch = view.findViewById(R.id.btnRejectPatch)
         btnDetailBack = view.findViewById(R.id.btnDetailBack)
 
         btnDetailBack.setOnClickListener {
@@ -61,7 +65,15 @@ class TaskDetailFragment : Fragment() {
         }
 
         btnApproveTask.setOnClickListener {
-            sendAction("approve")
+            sendAction("approve-patch")
+        }
+
+        btnRejectPatch.setOnClickListener {
+            sendAction("reject-patch")
+        }
+
+        btnRetryTask.setOnClickListener {
+            sendAction("retry-execution")
         }
 
         btnCancelTask.setOnClickListener {
@@ -113,16 +125,45 @@ class TaskDetailFragment : Fragment() {
                         detailStatus.text = status
                         detailLogs.text = logsBuilder.toString()
                         
-                        if (status == "waiting_approval") {
+                        if (status == "waiting_patch_approval") {
                             btnApproveTask.visibility = View.VISIBLE
+                            btnRejectPatch.visibility = View.VISIBLE
+                            detailStatus.setTextColor(android.graphics.Color.parseColor("#FFCA28")) // Amber
                         } else {
                             btnApproveTask.visibility = View.GONE
+                            btnRejectPatch.visibility = View.GONE
                         }
                         
-                        if (status == "completed" || status == "failed" || status == "cancelled") {
+                        if (status == "provider_quota_exceeded" || status == "failed" || status == "cancelled") {
+                            if (status == "provider_quota_exceeded") {
+                                btnRetryTask.visibility = View.VISIBLE
+                                detailStatus.setTextColor(android.graphics.Color.parseColor("#FF9800")) // Orange
+                            } else {
+                                btnRetryTask.visibility = View.GONE
+                                detailStatus.setTextColor(android.graphics.Color.parseColor("#EF5350")) // Red
+                            }
                             btnCancelTask.visibility = View.GONE
                         } else {
+                            btnRetryTask.visibility = View.GONE
                             btnCancelTask.visibility = View.VISIBLE
+                            if (status == "completed") {
+                                btnCancelTask.visibility = View.GONE
+                                detailStatus.setTextColor(android.graphics.Color.parseColor("#66BB6A")) // Green
+                            } else if (status != "waiting_patch_approval") {
+                                detailStatus.setTextColor(android.graphics.Color.parseColor("#00E5FF")) // Cyan (Default)
+                            }
+                        }
+
+                        if (status == "blocked_policy_violation") {
+                            detailStatus.setTextColor(android.graphics.Color.parseColor("#EF5350")) // Red
+                        }
+
+                        // Also support `waiting_approval` (execution approval vs patch approval)
+                        if (status == "waiting_approval") {
+                            btnApproveTask.visibility = View.VISIBLE
+                            btnApproveTask.setOnClickListener { sendAction("approve") }
+                        } else if (status == "waiting_patch_approval") {
+                            btnApproveTask.setOnClickListener { sendAction("approve-patch") }
                         }
                     }
                 } catch (e: Exception) {}

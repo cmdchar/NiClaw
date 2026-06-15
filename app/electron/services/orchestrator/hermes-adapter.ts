@@ -1,5 +1,12 @@
+import { promises as fs } from 'fs';
 import { getSetting } from '../../utils/store';
 import { ProjectIndex } from './types';
+import { logger } from '../../utils/logger';
+
+function onLog(msg: string) {
+  logger.info(msg);
+  console.log(msg);
+}
 
 export interface HermesPlan {
   steps: string[];
@@ -70,6 +77,50 @@ export class HermesAdapter {
         }
       } catch (err) {
         console.error('[Hermes] Planning failed, falling back', err);
+      }
+    }
+
+    const deepseekKey = process.env.DEEPSEEK_API_KEY;
+    if (deepseekKey) {
+      onLog(`[Phase 2.7] Using DeepSeek fallback for planning`);
+      try {
+        const baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
+        const model = process.env.DEEPSEEK_DEFAULT_MODEL || 'deepseek-chat';
+        
+        const systemPrompt = `You are NiClaw's Hermes Planner. You must respond with a strict JSON object representing a task plan.
+Do not output markdown code blocks. Just output raw JSON.
+Required schema: { "steps": ["string"], "estimatedComplexity": "low|medium|high", "requiresHumanApproval": boolean, "notes": "string" }`;
+        
+        const res = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${deepseekKey}`
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: `Prompt: ${prompt}\nProject Context: ${project ? project.name : 'None'}\nContext: ${JSON.stringify(context)}` }
+            ],
+            response_format: { type: 'json_object' }
+          })
+        });
+
+        if (res.ok) {
+          const completion = await res.json();
+          let parsedPlan;
+          try {
+            parsedPlan = JSON.parse(completion.choices[0].message.content);
+            return { plan: parsedPlan, isFallback: true };
+          } catch (e) {
+            console.error('[Hermes] DeepSeek fallback returned invalid JSON', e);
+          }
+        } else {
+          console.error(`[Hermes] DeepSeek fallback failed with status ${res.status}`);
+        }
+      } catch (err) {
+        console.error('[Hermes] DeepSeek fallback completely failed', err);
       }
     }
 

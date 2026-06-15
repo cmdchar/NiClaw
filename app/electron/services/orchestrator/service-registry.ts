@@ -6,15 +6,17 @@ import { getDataDir } from '../../utils/paths';
 import { hermesAdapter } from './hermes-adapter';
 import { openClawAdapter } from './openclaw-adapter';
 import { obsidianMemoryService } from '../obsidian-memory';
+import { remoteClaudeCodeAgent } from './remote-claude-code-agent';
 
 const execAsync = promisify(exec);
 
 export interface ServiceHealth {
   service: string;
-  status: 'ONLINE' | 'OFFLINE' | 'NOT_CONFIGURED' | 'ERROR';
+  status: 'ONLINE' | 'OFFLINE' | 'NOT_CONFIGURED' | 'ERROR' | 'PROXY_INCOMPATIBLE' | 'AUTH_FAILED';
   details?: string;
   latency?: number;
   lastChecked: number;
+  [key: string]: any; // Allow arbitrary extra fields
 }
 
 export class ServiceRegistry {
@@ -26,7 +28,9 @@ export class ServiceRegistry {
       this.checkHermes(),
       this.checkOpenClaw(),
       this.checkOpenHuman(),
-      this.checkSecondBrain()
+      this.checkSecondBrain(),
+      this.checkDeepSeek(),
+      this.checkRemoteClaudeCode()
     ]);
 
     const statusArray = Array.from(this.healthCache.values());
@@ -96,6 +100,59 @@ export class ServiceRegistry {
       }
     } catch (e: any) {
       this.updateCache('SecondBrain', 'ERROR', e.message);
+    }
+  }
+
+  private async checkDeepSeek() {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    const baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
+    const defaultModel = process.env.DEEPSEEK_DEFAULT_MODEL || 'deepseek-chat';
+
+    if (!apiKey) {
+      this.updateCache('DeepSeek', 'NOT_CONFIGURED', 'DEEPSEEK_API_KEY env var not set');
+      return;
+    }
+
+    const start = Date.now();
+    try {
+      const res = await fetch(`${baseUrl}/models`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json'
+        }
+      });
+      const latency = Date.now() - start;
+
+      if (!res.ok) {
+        this.updateCache('DeepSeek', 'ERROR', `HTTP ${res.status} from API`, latency);
+        return;
+      }
+
+      this.updateCache('DeepSeek', 'ONLINE', `Ready. Default: ${defaultModel}`, latency);
+    } catch (e: any) {
+      this.updateCache('DeepSeek', 'ERROR', e.message);
+    }
+  }
+
+  private async checkRemoteClaudeCode() {
+    try {
+      const health = await remoteClaudeCodeAgent.checkHealth();
+      this.healthCache.set(health.name, {
+        service: health.name,
+        status: health.status as ServiceHealth['status'],
+        lastChecked: Date.now(),
+        host: health.host,
+        user: health.user,
+        cliPath: health.cliPath,
+        version: health.version,
+        providerMode: health.providerMode,
+        model: health.model,
+        deepseekStatus: health.deepseekStatus,
+        lastError: health.lastError
+      });
+    } catch (e: any) {
+      this.updateCache('Remote Claude Code Agent', 'ERROR', e.message);
     }
   }
 

@@ -40,7 +40,18 @@ class TaskAdapter(private val onClick: (JSONObject) -> Unit) : RecyclerView.Adap
 
         fun bind(task: JSONObject) {
             title.text = task.optString("title", "Untitled Task")
-            status.text = task.optString("status", "unknown")
+            
+            val statusStr = task.optString("status", "unknown")
+            status.text = statusStr
+            
+            when (statusStr) {
+                "completed" -> status.setTextColor(android.graphics.Color.parseColor("#66BB6A"))
+                "failed", "cancelled", "blocked_policy_violation" -> status.setTextColor(android.graphics.Color.parseColor("#EF5350"))
+                "provider_quota_exceeded" -> status.setTextColor(android.graphics.Color.parseColor("#FF9800"))
+                "waiting_patch_approval", "waiting_approval" -> status.setTextColor(android.graphics.Color.parseColor("#FFCA28"))
+                else -> status.setTextColor(android.graphics.Color.parseColor("#00E5FF"))
+            }
+
             project.text = "Project: ${task.optString("targetProject", "none")}"
             prompt.text = task.optString("userPrompt", "")
         }

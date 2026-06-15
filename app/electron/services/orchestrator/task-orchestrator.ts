@@ -6,15 +6,15 @@ import { policyEngine } from './policy-engine';
 import { hermesAdapter } from './hermes-adapter';
 import { gitWorkspaceManager } from './git-workspace-manager';
 import { codexCliAdapter } from './codex-cli-adapter';
+import { remoteClaudeCodeAgent } from './remote-claude-code-agent';
 import { verificationService } from './verification-service';
 import { Task, ProjectIndex } from './types';
 
 const execAsync = promisify(exec);
 
 export class TaskOrchestrator {
-  
-  async submitTask(title: string, userPrompt: string, targetProject: string): Promise<Task> {
-    const task = taskEventStore.createTask(title, userPrompt, targetProject);
+  async submitTask(title: string, userPrompt: string, targetProject: string, executor?: string): Promise<Task> {
+    const task = taskEventStore.createTask(title, userPrompt, targetProject, executor);
     
     // Start processing asynchronously
     this.processTask(task.id).catch(err => {
@@ -103,22 +103,31 @@ export class TaskOrchestrator {
 
     // State: planning
     taskEventStore.updateTaskStatus(taskId, 'planning');
-    onLog('Generating Hermes plan...');
     
-    const { plan, isFallback } = await hermesAdapter.generatePlan(task.userPrompt, targetProject, context);
-    taskEventStore.addEvent(taskId, 'plan_generated', isFallback ? 'Hermes unavailable - generated fallback structural plan' : 'Hermes generated plan successfully', { plan });
+    if (task.executor === 'remote-claude-code') {
+      onLog('Skipping Hermes plan for autonomous executor: remote-claude-code');
+      taskEventStore.addEvent(taskId, 'plan_skipped', 'Autonomous agent skips initial structural planning');
+      
+      // Auto-approve autonomous tasks to move to execution
+      taskEventStore.updateTaskStatus(taskId, 'waiting_approval');
+      taskEventStore.addEvent(taskId, 'approval_request', 'Autonomous agent selected. Proceed to Phase 3A-R execution.');
+    } else {
+      onLog('Generating Hermes plan...');
+      const { plan, isFallback } = await hermesAdapter.generatePlan(task.userPrompt, targetProject, context);
+      taskEventStore.addEvent(taskId, 'plan_generated', isFallback ? 'Hermes unavailable - generated fallback structural plan' : 'Hermes generated plan successfully', { plan });
 
-    onLog('Evaluating plan against Policy Engine...');
-    const policyResult = await policyEngine.evaluateExecutionPlan(taskId, targetProject.id, { files: plan.filesToEdit || [], commands: plan.commands || [] });
-    if (!policyResult.valid) {
-      onLog(`[BLOCKED] Policy violation: ${policyResult.reason}`);
-      await policyEngine.detectPolicyViolation(taskId, { reason: policyResult.reason });
-      return;
+      onLog('Evaluating plan against Policy Engine...');
+      const policyResult = await policyEngine.evaluateExecutionPlan(taskId, targetProject.id, { files: plan.filesToEdit || [], commands: plan.commands || [] });
+      if (!policyResult.valid) {
+        onLog(`[BLOCKED] Policy violation: ${policyResult.reason}`);
+        await policyEngine.detectPolicyViolation(taskId, { reason: policyResult.reason });
+        return;
+      }
+
+      // Await approval
+      taskEventStore.updateTaskStatus(taskId, 'waiting_approval');
+      taskEventStore.addEvent(taskId, 'approval_request', 'Plan generated. Please approve to proceed (Phase 2.9B validation).');
     }
-
-    // Await approval
-    taskEventStore.updateTaskStatus(taskId, 'waiting_approval');
-    taskEventStore.addEvent(taskId, 'approval_request', 'Plan generated. Please approve to proceed (Phase 2.9B validation).');
   }
 
   async approveTask(taskId: string) {
@@ -144,37 +153,51 @@ export class TaskOrchestrator {
       return;
     }
 
-    // Phase 2.9B: Real Codex CLI Execution
-    onLog(`[Phase 2.9B] Invoking REAL Codex CLI for prompt: "${task.userPrompt}"`);
-    taskEventStore.addEvent(taskId, 'execution_started', 'Real Codex CLI execution started', {
-      phase: '2.9B',
-      prompt: task.userPrompt,
-      projectPath,
-      branchName,
-    });
+    // Phase 2.9B / Phase Remote-1.2: Branch execution
+    let execResult: any;
 
-    const projectConfig = { id: task.targetProject, path: projectPath, commands: {} };
-    
-    // Phase 2.9B: NEVER dry run for sandbox — we want real execution
-    const dryRun = task.targetProject !== 'codex-safety-test';
-    const execResult = await codexCliAdapter.executePlan(task.userPrompt, projectConfig, onLog, dryRun);
+    if (task.executor === 'remote-claude-code') {
+      onLog(`[Phase Remote-3A-R] Invoking REMOTE Claude Code CLI for prompt: "${task.userPrompt}"`);
+      taskEventStore.addEvent(taskId, 'execution_started', 'Remote Claude Code execution started', {
+        phase: 'Remote-3A-R',
+        prompt: task.userPrompt,
+        projectPath,
+        branchName,
+      });
+
+      const projectConfig = { id: task.targetProject, path: projectPath, commands: {} };
+      execResult = await remoteClaudeCodeAgent.executePlan(task.userPrompt, projectConfig, onLog);
+    } else {
+      // Default codex
+      onLog(`[Phase 2.9B] Invoking REAL Codex CLI for prompt: "${task.userPrompt}"`);
+      taskEventStore.addEvent(taskId, 'execution_started', 'Real Codex CLI execution started', {
+        phase: '2.9B',
+        prompt: task.userPrompt,
+        projectPath,
+        branchName,
+      });
+
+      const projectConfig = { id: task.targetProject, path: projectPath, commands: {} };
+      const dryRun = task.targetProject !== 'codex-safety-test';
+      execResult = await codexCliAdapter.executePlan(task.userPrompt, projectConfig, onLog, dryRun);
+    }
     
     // Record execution result event with full metrics
     taskEventStore.addEvent(taskId, 'execution_completed', 
-      execResult.realInvocation ? 'Real Codex CLI execution completed' : 'Codex CLI was NOT invoked (detection failed)',
+      execResult.realInvocation ? 'Real execution completed' : 'Execution was NOT invoked (detection failed)',
       {
-        phase: '2.9B',
+        phase: task.executor === 'remote-claude-code' ? 'Remote-1.2' : '2.9B',
         realInvocation: execResult.realInvocation,
         codexVersion: execResult.codexVersion,
         commandExecuted: execResult.commandExecuted,
         exitCode: execResult.exitCode,
         durationMs: execResult.durationMs,
         durationHuman: `${(execResult.durationMs / 1000).toFixed(1)}s`,
-        filesChanged: execResult.filesChanged,
-        filesChangedCount: execResult.filesChanged.length,
+        filesChanged: execResult.filesChanged || [],
+        filesChangedCount: (execResult.filesChanged || []).length,
         diffSize: execResult.diffSize,
-        stdout: execResult.stdout.substring(0, 5000),
-        stderr: execResult.stderr.substring(0, 2000),
+        stdout: (execResult.stdout || '').substring(0, 5000),
+        stderr: (execResult.stderr || '').substring(0, 2000),
         success: execResult.success,
       }
     );
@@ -186,10 +209,32 @@ export class TaskOrchestrator {
       onLog(`[ERROR] Codex CLI failed: exitCode=${execResult.exitCode}, files=${execResult.filesChanged.length}`);
     }
 
-    if (execResult.filesChanged.length === 0) {
-      onLog(`[Phase 2.9C] No files were changed. Task failed.`);
-      taskEventStore.updateTaskStatus(taskId, 'failed');
+    if (execResult.quotaExceeded) {
+      onLog(`[Phase 3A] Upstream provider quota exceeded.`);
+      taskEventStore.updateTaskStatus(taskId, 'provider_quota_exceeded' as any);
       return;
+    }
+
+    if (execResult.filesChanged && execResult.filesChanged.length === 0 && !execResult.dryRun) {
+      if (task.executor === 'remote-claude-code') {
+        onLog(`[Phase 2.9C] remote-claude-code returned no filesChanged. Waiting 3s for sync...`);
+        await new Promise(r => setTimeout(r, 3000));
+        // Check local git status
+        const { stdout: localStatus } = await execAsync('git status --porcelain', { cwd: projectPath }).catch(() => ({ stdout: '' }));
+        const localFiles = localStatus.split('\n').map(l => l.substring(3).trim()).filter(l => l.length > 0);
+        if (localFiles.length === 0) {
+          onLog(`[Phase 2.9C] No files were changed locally either. Task failed.`);
+          taskEventStore.updateTaskStatus(taskId, 'failed');
+          return;
+        }
+        execResult.filesChanged = localFiles;
+      } else {
+        onLog(`[Phase 2.9C] No files were changed. Task failed.`);
+        taskEventStore.updateTaskStatus(taskId, 'failed');
+        return;
+      }
+    } else if (execResult.dryRun) {
+      onLog(`[Dry Run] Execution completed without changing real files.`);
     }
 
     // Post-execution policy check (Phase 3A/2.9C)
@@ -205,15 +250,17 @@ export class TaskOrchestrator {
     taskEventStore.updateTaskStatus(taskId, 'verifying');
     onLog('[Phase 2.9C] Running structural verification...');
     
-    // Stage all changes to capture diff, but do NOT commit automatically
-    await execAsync('git add -A', { cwd: projectPath });
-
     // Generate diff from staged files vs HEAD
-    let diffText = '';
+    let diffText = execResult.diffOutput;
     try {
-      // Use -a (--text) to prevent "Binary files differ" on UTF-16/CRLF mismatches
-      const { stdout } = await execAsync(`git diff -a --cached`, { cwd: projectPath });
-      diffText = stdout || 'No diff output';
+      if (!diffText) {
+        // Stage all changes to capture diff locally
+        await execAsync('git add -A', { cwd: projectPath });
+        // Use -a (--text) to prevent "Binary files differ" on UTF-16/CRLF mismatches
+        const { stdout } = await execAsync(`git diff -a --cached`, { cwd: projectPath });
+        diffText = stdout || 'No diff output';
+      }
+      
       taskEventStore.addEvent(taskId, 'diff_generated', 'Generated structural diff from git', { 
         diff: diffText,
         diffSize: diffText.length,
@@ -264,7 +311,7 @@ export class TaskOrchestrator {
 
   async retryTask(taskId: string) {
     const task = taskEventStore.getTask(taskId);
-    if (!task || !['failed', 'cancelled'].includes(task.status)) return;
+    if (!task || !['failed', 'cancelled', 'provider_quota_exceeded'].includes(task.status)) return;
     
     taskEventStore.addLog(taskId, 'Retrying task...');
     taskEventStore.updateTaskStatus(taskId, 'queued');

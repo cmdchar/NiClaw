@@ -16,9 +16,11 @@ export interface CodexExecutionResult {
   durationMs: number;
   filesChanged: string[];
   diffSize: number;
+  diffOutput?: string;
   codexVersion: string;
   commandExecuted: string;
   realInvocation: boolean;
+  quotaExceeded?: boolean;
 }
 
 export class CodexCliAdapter {
@@ -227,7 +229,8 @@ export class CodexCliAdapter {
       onLog(`[Phase 2.9B] Warning: Could not capture git status: ${e.message}`);
     }
 
-    const success = exitCode === 0 && filesChanged.length > 0;
+    const isQuotaLimit = stderr.toLowerCase().includes('usage limit') || stderr.toLowerCase().includes('quota');
+    const success = exitCode === 0 && filesChanged.length > 0 && !isQuotaLimit;
     
     onLog(`[Phase 2.9B] Execution completed in ${(durationMs / 1000).toFixed(1)}s`);
     onLog(`[Phase 2.9B] Exit code: ${exitCode}, Files changed: ${filesChanged.length}, Success: ${success}`);
@@ -244,6 +247,7 @@ export class CodexCliAdapter {
       codexVersion: this.codexVersion,
       commandExecuted: cmdDisplay,
       realInvocation: true,
+      quotaExceeded: isQuotaLimit,
     };
   }
 }
