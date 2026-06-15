@@ -7,7 +7,6 @@ import { hermesAdapter } from './hermes-adapter';
 import { gitWorkspaceManager } from './git-workspace-manager';
 import { codexCliAdapter } from './codex-cli-adapter';
 import { remoteClaudeCodeAgent } from './remote-claude-code-agent';
-import { verificationService } from './verification-service';
 import { Task, ProjectIndex } from './types';
 
 const execAsync = promisify(exec);
@@ -50,7 +49,7 @@ export class TaskOrchestrator {
         confidenceScore: 10,
         status: 'READY' as any,
         source: 'manual' as any,
-      } as ProjectIndex;
+      } as unknown as ProjectIndex;
     } else {
       // Structural parser
       const prompt = task.userPrompt.toLowerCase();
@@ -104,30 +103,21 @@ export class TaskOrchestrator {
     // State: planning
     taskEventStore.updateTaskStatus(taskId, 'planning');
     
-    if (task.executor === 'remote-claude-code') {
-      onLog('Skipping Hermes plan for autonomous executor: remote-claude-code');
-      taskEventStore.addEvent(taskId, 'plan_skipped', 'Autonomous agent skips initial structural planning');
-      
-      // Auto-approve autonomous tasks to move to execution
-      taskEventStore.updateTaskStatus(taskId, 'waiting_approval');
-      taskEventStore.addEvent(taskId, 'approval_request', 'Autonomous agent selected. Proceed to Phase 3A-R execution.');
-    } else {
-      onLog('Generating Hermes plan...');
-      const { plan, isFallback } = await hermesAdapter.generatePlan(task.userPrompt, targetProject, context);
-      taskEventStore.addEvent(taskId, 'plan_generated', isFallback ? 'Hermes unavailable - generated fallback structural plan' : 'Hermes generated plan successfully', { plan });
+    onLog('Generating Hermes plan...');
+    const { plan, isFallback } = await hermesAdapter.generatePlan(task.userPrompt, targetProject, context);
+    taskEventStore.addEvent(taskId, 'plan_generated', isFallback ? 'Hermes unavailable - generated fallback structural plan' : 'Hermes generated plan successfully', { plan });
 
-      onLog('Evaluating plan against Policy Engine...');
-      const policyResult = await policyEngine.evaluateExecutionPlan(taskId, targetProject.id, { files: plan.filesToEdit || [], commands: plan.commands || [] });
-      if (!policyResult.valid) {
-        onLog(`[BLOCKED] Policy violation: ${policyResult.reason}`);
-        await policyEngine.detectPolicyViolation(taskId, { reason: policyResult.reason });
-        return;
-      }
-
-      // Await approval
-      taskEventStore.updateTaskStatus(taskId, 'waiting_approval');
-      taskEventStore.addEvent(taskId, 'approval_request', 'Plan generated. Please approve to proceed (Phase 2.9B validation).');
+    onLog('Evaluating plan against Policy Engine...');
+    const policyResult = await policyEngine.evaluateExecutionPlan(taskId, targetProject.id, { files: (plan as any).filesToEdit || [], commands: (plan as any).commands || [] });
+    if (!policyResult.valid) {
+      onLog(`[BLOCKED] Policy violation: ${policyResult.reason}`);
+      await policyEngine.detectPolicyViolation(taskId, { reason: policyResult.reason });
+      return;
     }
+
+    // Await approval
+    taskEventStore.updateTaskStatus(taskId, 'waiting_approval');
+    taskEventStore.addEvent(taskId, 'approval_request', 'Plan generated. Please approve to proceed (Phase 4.1 / 2.9B validation).');
   }
 
   async approveTask(taskId: string) {
@@ -165,7 +155,7 @@ export class TaskOrchestrator {
         branchName,
       });
 
-      const projectConfig = { id: task.targetProject, path: projectPath, commands: {} };
+      const projectConfig = { id: task.targetProject, name: task.targetProject, path: projectPath, commands: {}, type: 'auto', defaultBranch: 'main' } as any;
       execResult = await remoteClaudeCodeAgent.executePlan(task.userPrompt, projectConfig, onLog);
     } else {
       // Default codex
@@ -177,7 +167,7 @@ export class TaskOrchestrator {
         branchName,
       });
 
-      const projectConfig = { id: task.targetProject, path: projectPath, commands: {} };
+      const projectConfig = { id: task.targetProject, name: task.targetProject, path: projectPath, commands: {}, type: 'auto', defaultBranch: 'main' } as any;
       const dryRun = task.targetProject !== 'codex-safety-test';
       execResult = await codexCliAdapter.executePlan(task.userPrompt, projectConfig, onLog, dryRun);
     }
@@ -223,8 +213,8 @@ export class TaskOrchestrator {
         const { stdout: localStatus } = await execAsync('git status --porcelain', { cwd: projectPath }).catch(() => ({ stdout: '' }));
         const localFiles = localStatus.split('\n').map(l => l.substring(3).trim()).filter(l => l.length > 0);
         if (localFiles.length === 0) {
-          onLog(`[Phase 2.9C] No files were changed locally either. Task failed.`);
-          taskEventStore.updateTaskStatus(taskId, 'failed');
+          onLog(`[Phase 4.1] No files were changed locally. Task likely needs executor approval or made no changes.`);
+          taskEventStore.updateTaskStatus(taskId, 'no_changes');
           return;
         }
         execResult.filesChanged = localFiles;

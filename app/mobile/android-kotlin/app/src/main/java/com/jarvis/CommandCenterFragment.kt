@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,6 +33,7 @@ class CommandCenterFragment : Fragment() {
     private lateinit var btnRunTask: Button
     private lateinit var tasksRecyclerView: RecyclerView
     private lateinit var btnCmdBack: ImageButton
+    private lateinit var tvHermesStatus: TextView
     
     private val taskAdapter = TaskAdapter { task ->
         val fragment = TaskDetailFragment.newInstance(task.optString("id"))
@@ -62,6 +64,7 @@ class CommandCenterFragment : Fragment() {
         btnRunTask = view.findViewById(R.id.btnRunTask)
         tasksRecyclerView = view.findViewById(R.id.tasksRecyclerView)
         btnCmdBack = view.findViewById(R.id.btnCmdBack)
+        tvHermesStatus = view.findViewById(R.id.tvHermesStatus)
         
         tasksRecyclerView.layoutManager = LinearLayoutManager(context)
         tasksRecyclerView.adapter = taskAdapter
@@ -75,6 +78,7 @@ class CommandCenterFragment : Fragment() {
         }
 
         fetchProjects()
+        fetchHealth()
         return view
     }
 
@@ -117,6 +121,43 @@ class CommandCenterFragment : Fragment() {
                 } catch (e: Exception) {}
             }
         })
+    }
+
+    private fun fetchHealth() {
+        val ctx = context ?: return
+        ApiClient.getOrchestratorHealth(ctx) { response, error ->
+            if (response != null) {
+                val healthArr = response.optJSONArray("health") ?: JSONArray()
+                var hermesInfo = "Nu s-au primit date despre Hermes."
+                for (i in 0 until healthArr.length()) {
+                    val h = healthArr.optJSONObject(i)
+                    if (h?.optString("service") == "Hermes") {
+                        val status = h.optString("status")
+                        val httpStatus = h.optString("httpStatus", "N/A")
+                        val cliStatus = h.optString("cliStatus", "N/A")
+                        val selTrans = h.optString("selectedTransport", "N/A")
+                        val planTrans = h.optString("planningTransport", "N/A")
+                        val models = h.optInt("modelsCount", 0)
+                        val fallback = h.optBoolean("fallbackUsed", false)
+                        val err = h.optString("lastError", "None")
+
+                        hermesInfo = "Status: $status\n" +
+                            "HTTP: $httpStatus | CLI: $cliStatus\n" +
+                            "Transport: $selTrans | Planning: $planTrans\n" +
+                            "Models: $models\n" +
+                            "Fallback Used: $fallback\n" +
+                            "Last Error: $err"
+                    }
+                }
+                activity?.runOnUiThread {
+                    tvHermesStatus.text = hermesInfo
+                }
+            } else {
+                activity?.runOnUiThread {
+                    tvHermesStatus.text = "Eroare la preluarea statusului: ${error?.message}"
+                }
+            }
+        }
     }
 
     private fun fetchTasks() {

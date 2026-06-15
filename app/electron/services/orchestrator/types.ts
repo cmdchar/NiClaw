@@ -9,12 +9,17 @@ export type TaskStatus =
   | 'failed' 
   | 'provider_quota_exceeded'
   | 'blocked_policy_violation'
-  | 'cancelled';
+  | 'cancelled'
+  | 'parsing_intent'
+  | 'waiting_clarification'
+  | 'discovering_project'
+  | 'loading_context'
+  | 'no_changes';
 
 export interface TaskEvent {
   id: string;
   timestamp: number;
-  type: 'log' | 'status_change' | 'agent_action' | 'approval_request' | 'verification_result' | 'error';
+  type: 'log' | 'status_change' | 'agent_action' | 'approval_request' | 'verification_result' | 'error' | 'intent_ambiguous' | 'plan_skipped' | 'plan_generated' | 'execution_started' | 'execution_completed' | 'execution_timeout' | 'diff_generated' | 'report_generated';
   message: string;
   data?: any;
 }

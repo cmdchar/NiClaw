@@ -65,8 +65,20 @@ export class ServiceRegistry {
     try {
       const health = await hermesAdapter.healthCheck();
       if (health.status === 'ONLINE') {
-        const models = await hermesAdapter.getModels();
-        this.updateCache('Hermes', 'ONLINE', `Available models: ${models.length}`, health.latency);
+        const details = `Models: ${health.modelsCount} | HTTP: ${health.httpStatus} | CLI: ${health.cliStatus}`;
+        this.updateCache('Hermes', 'ONLINE', details, health.latency);
+        
+        // Expose extra properties so the frontend gets them
+        const cacheEntry = this.healthCache.get('Hermes');
+        if (cacheEntry) {
+            cacheEntry.httpStatus = health.httpStatus;
+            cacheEntry.cliStatus = health.cliStatus;
+            cacheEntry.selectedTransport = health.selectedTransport;
+            cacheEntry.planningTransport = health.planningTransport;
+            cacheEntry.modelsCount = health.modelsCount;
+            cacheEntry.fallbackUsed = health.fallbackUsed;
+            cacheEntry.lastError = health.lastError;
+        }
       } else {
         this.updateCache('Hermes', health.status, `Endpoint: ${health.endpoint || 'unconfigured'}`, health.latency);
       }
