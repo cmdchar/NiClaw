@@ -9,94 +9,195 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
-import javax.net.ssl.*
+import java.util.UUID
 
 object ApiClient {
-    private val client: OkHttpClient by lazy {
-        try {
-            val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-                override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-                override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-            })
+    private const val PREFS_NAME = "JarvisPrefs"
+    private const val DEFAULT_HOST_PROTOCOL = "http"
+    private const val DEFAULT_HOST_ADDRESS = "100.82.149.22"
+    private const val DEFAULT_HOST_PORT = 13210
+    private const val DEFAULT_STREAM_URL = "ws://100.82.149.22:3000/jarvis/stream"
+    const val EMULATOR_HOST_API_URL = "http://10.0.2.2:13210"
 
-            val sslContext = SSLContext.getInstance("SSL")
-            sslContext.init(null, trustAllCerts, SecureRandom())
-            val sslSocketFactory = sslContext.socketFactory
-
-            OkHttpClient.Builder()
-                .sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
-                .hostnameVerifier { _, _ -> true }
-                .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-                .writeTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-                .build()
-        } catch (e: Exception) {
-            OkHttpClient.Builder()
-                .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-                .writeTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-                .build()
-        }
+    val client: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
     }
     private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
-    fun getBaseUrl(context: Context): String {
-        val prefs = context.getSharedPreferences("JarvisPrefs", Context.MODE_PRIVATE)
-        val serverUrl = prefs.getString("server_url", "ws://10.10.1.219:3000/jarvis/stream")!!
-        
-        var isHttps = false
-        var host = "10.10.1.219"
-        
-        try {
-            val uri = Uri.parse(serverUrl)
-            val scheme = uri.scheme
-            if (scheme != null) {
-                isHttps = scheme.equals("wss", ignoreCase = true) || scheme.equals("https", ignoreCase = true)
-            }
-            val extractedHost = uri.host
-            if (extractedHost != null) {
-                host = extractedHost
-            }
+    private fun normalizeHostApiUrl(rawUrl: String?): String {
+        val fallback = "$DEFAULT_HOST_PROTOCOL://$DEFAULT_HOST_ADDRESS:$DEFAULT_HOST_PORT"
+        val trimmed = rawUrl?.trim().orEmpty()
+        if (trimmed.isEmpty()) return fallback
+
+        val withScheme = if (trimmed.contains("://")) trimmed else "$DEFAULT_HOST_PROTOCOL://$trimmed"
+        val httpUrl = withScheme
+            .replace("ws://", "http://")
+            .replace("wss://", "https://")
+
+        return try {
+            val uri = Uri.parse(httpUrl)
+            val scheme = if (uri.scheme.equals("https", ignoreCase = true)) "https" else "http"
+            val host = uri.host ?: return fallback
+            val port = if (uri.port > 0 && uri.port != 3000) uri.port else DEFAULT_HOST_PORT
+            "$scheme://$host:$port"
         } catch (e: Exception) {
-            // Fallback
+            fallback
+        }
+    }
+
+    fun getBaseUrl(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val explicitHostApiUrl = prefs.getString("host_api_url", null)
+        if (!explicitHostApiUrl.isNullOrBlank()) {
+            return normalizeHostApiUrl(explicitHostApiUrl)
         }
 
-        return if (isHttps) {
-            "https://$host:13210"
-        } else {
-            "http://$host:13210"
-        }
+        return normalizeHostApiUrl(prefs.getString("server_url", DEFAULT_STREAM_URL))
+    }
+
+    fun saveHostApiUrl(context: Context, hostUrl: String): String {
+        val normalized = normalizeHostApiUrl(hostUrl)
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString("host_api_url", normalized)
+            .apply()
+        return normalized
+    }
+
+    fun getDeviceId(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val existing = prefs.getString("android_device_id", null)
+        if (!existing.isNullOrBlank()) return existing
+
+        val generated = "android-${UUID.randomUUID()}"
+        prefs.edit().putString("android_device_id", generated).apply()
+        return generated
     }
 
     fun getToken(context: Context): String {
-        val prefs = context.getSharedPreferences("JarvisPrefs", Context.MODE_PRIVATE)
-        return prefs.getString("gateway_token", "35c6ae8e7a685718dfb4a45a1f2982d5")!!
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val pairingToken = prefs.getString("android_pairing_token", "")
+        if (!pairingToken.isNullOrBlank()) return pairingToken
+        return prefs.getString("gateway_token", "") ?: ""
     }
 
-    private fun buildRequest(context: Context, path: String, method: String = "GET", body: RequestBody? = null): Request {
-        val baseUrl = getBaseUrl(context)
+    fun saveAndroidPairingToken(context: Context, token: String) {
+        if (token.isBlank()) return
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString("android_pairing_token", token)
+            .putString("android_connection_status", "paired")
+            .apply()
+    }
+
+    fun buildRequest(context: Context, path: String, method: String = "GET", body: RequestBody? = null): Request {
+        val baseUrl = getBaseUrl(context).trimEnd('/')
         val token = getToken(context)
-        
-        // Append token query param or use Authorization header
-        val url = "$baseUrl$path?token=$token"
+        val cleanPath = if (path.startsWith("/")) path else "/$path"
         
         val builder = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $token")
+            .url("$baseUrl$cleanPath")
             .addHeader("Accept", "application/json")
+
+        if (token.isNotBlank()) {
+            builder.addHeader("Authorization", "Bearer $token")
+        }
         
-        if (method == "POST" && body != null) {
-            builder.post(body)
-        } else if (method == "DELETE") {
-            builder.delete()
-        } else if (method == "PUT" && body != null) {
-            builder.put(body)
+        when (method.uppercase()) {
+            "POST" -> builder.post(body ?: "{}".toRequestBody(JSON_MEDIA_TYPE))
+            "DELETE" -> builder.delete()
+            "PUT" -> builder.put(body ?: "{}".toRequestBody(JSON_MEDIA_TYPE))
         }
         
         return builder.build()
+    }
+
+    private fun enqueueJsonObject(request: Request, callback: (JSONObject?, Exception?) -> Unit) {
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback(null, e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val responseStr = response.body?.string() ?: "{}"
+                    if (!response.isSuccessful) {
+                        callback(null, Exception("Error code: ${response.code}, msg: $responseStr"))
+                        return
+                    }
+                    callback(JSONObject(responseStr), null)
+                } catch (e: Exception) {
+                    callback(null, e)
+                }
+            }
+        })
+    }
+
+    fun getAndroidStatus(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        enqueueJsonObject(buildRequest(context, "/api/android/status"), callback)
+    }
+
+    fun getAndroidBoard(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        enqueueJsonObject(buildRequest(context, "/api/android/board"), callback)
+    }
+
+    fun getAndroidAgents(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        enqueueJsonObject(buildRequest(context, "/api/android/agents"), callback)
+    }
+
+    fun getAndroidTasks(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        enqueueJsonObject(buildRequest(context, "/api/android/tasks"), callback)
+    }
+
+    fun pairAndroid(context: Context, code: String, deviceName: String, callback: (JSONObject?, Exception?) -> Unit) {
+        val payload = JSONObject().apply {
+            put("code", code.trim())
+            put("deviceName", deviceName.trim().ifEmpty { "NiClaw Android Companion" })
+            put("deviceId", getDeviceId(context))
+            put("platform", "android")
+        }
+        val request = Request.Builder()
+            .url("${getBaseUrl(context).trimEnd('/')}/api/android/pair")
+            .addHeader("Accept", "application/json")
+            .post(payload.toString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+
+        enqueueJsonObject(request) { response, error ->
+            if (response != null) {
+                val token = response.optString("token", "")
+                if (token.isNotBlank()) {
+                    saveAndroidPairingToken(context, token)
+                }
+            }
+            callback(response, error)
+        }
+    }
+
+    fun syncAndroid(context: Context, syncBoard: Boolean, callback: (JSONObject?, Exception?) -> Unit) {
+        val payload = JSONObject().apply {
+            put("source", "android-companion")
+            put("syncBoard", syncBoard)
+        }
+        enqueueJsonObject(
+            buildRequest(context, "/api/android/sync", "POST", payload.toString().toRequestBody(JSON_MEDIA_TYPE)),
+            callback
+        )
+    }
+
+    fun sendAndroidEvent(context: Context, type: String, payload: JSONObject, callback: (JSONObject?, Exception?) -> Unit) {
+        val eventPayload = JSONObject().apply {
+            put("type", type)
+            put("source", "android-companion")
+            put("payload", payload)
+        }
+        enqueueJsonObject(
+            buildRequest(context, "/api/android/event", "POST", eventPayload.toString().toRequestBody(JSON_MEDIA_TYPE)),
+            callback
+        )
     }
 
     fun getAgents(context: Context, callback: (List<JSONObject>?, Exception?) -> Unit) {
@@ -1327,14 +1428,9 @@ object ApiClient {
         })
     }
 
-    // --- Agent Mesh Real API Methods ---
-    private const val MESH_BASE_URL = "https://vm-niclaw.tail7a9097.ts.net:8002"
-
+    // --- Agent Mesh API Methods ---
     fun getMeshStatus(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
-        val request = Request.Builder()
-            .url("$MESH_BASE_URL/api/mesh/status")
-            .get()
-            .build()
+        val request = buildRequest(context, "/api/agent-mesh/status")
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { callback(null, e) }
             override fun onResponse(call: Call, response: Response) {
@@ -1348,10 +1444,7 @@ object ApiClient {
     }
 
     fun getMeshEvents(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
-        val request = Request.Builder()
-            .url("$MESH_BASE_URL/api/mesh/events?limit=20")
-            .get()
-            .build()
+        val request = buildRequest(context, "/api/mesh/events?limit=20")
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { callback(null, e) }
             override fun onResponse(call: Call, response: Response) {
@@ -1365,13 +1458,8 @@ object ApiClient {
     }
 
     fun runMeshSmokeTest(context: Context, target: String, callback: (JSONObject?, Exception?) -> Unit) {
-        val payload = JSONObject().apply { put("target", target) }.toString()
-        val body = payload.toRequestBody(JSON_MEDIA_TYPE)
-        val request = Request.Builder()
-            .url("$MESH_BASE_URL/api/mesh/smoke-tests")
-            .post(body)
-            .build()
-
+        val body = """{"target":"$target"}""".toRequestBody(JSON_MEDIA_TYPE)
+        val request = buildRequest(context, "/api/agent-mesh/smoke-test", "POST", body)
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { callback(null, e) }
             override fun onResponse(call: Call, response: Response) {
@@ -1437,6 +1525,93 @@ object ApiClient {
                     if (!response.isSuccessful) { callback(null, Exception("${response.code}: $s")); return }
                     callback(JSONObject(s), null)
                 } catch (e: Exception) { callback(null, e) }
+            }
+        })
+    }
+
+    // --- Models & Agent Editor API ---
+    fun getAvailableModels(context: Context, callback: (JSONArray?, Exception?) -> Unit) {
+        // Fallback models in case API fails
+        val fallbackModels = JSONArray().apply { put("gpt-4o"); put("claude-3-opus"); put("local-model") }
+
+        // According to user, Hermes models are at http://vm-niclaw.tail7a9097.ts.net:7789/models
+        // However we should use the Host API proxy. Let's try /api/models first.
+        val request = buildRequest(context, "/api/models")
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) { 
+                android.util.Log.e("ApiClient", "getAvailableModels err", e)
+                callback(fallbackModels, null) 
+            }
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val s = response.body?.string() ?: "[]"
+                    if (!response.isSuccessful) { 
+                        android.util.Log.e("ApiClient", "getAvailableModels HTTP ${response.code}")
+                        callback(fallbackModels, null)
+                        return 
+                    }
+                    
+                    if (s.startsWith("{")) {
+                        val obj = JSONObject(s)
+                        if (obj.has("models")) {
+                            callback(obj.optJSONArray("models"), null)
+                        } else {
+                            val arr = JSONArray()
+                            obj.keys().forEach { arr.put(it) }
+                            callback(arr, null)
+                        }
+                    } else if (s.startsWith("[")) {
+                        callback(JSONArray(s), null)
+                    } else {
+                        callback(fallbackModels, null)
+                    }
+                } catch (e: Exception) { 
+                    android.util.Log.e("ApiClient", "getAvailableModels parsing err", e)
+                    callback(fallbackModels, null) 
+                }
+            }
+        })
+    }
+
+    fun getModels(context: Context, callback: (JSONArray?, Exception?) -> Unit) {
+        val request = buildRequest(context, "/api/models")
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback(null, e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val responseStr = response.body?.string() ?: "[]"
+                    if (!response.isSuccessful) {
+                        callback(null, Exception("Error code: ${response.code}, msg: $responseStr"))
+                        return
+                    }
+                    val obj = JSONObject(responseStr)
+                    val models = obj.optJSONArray("models") ?: JSONArray()
+                    callback(models, null)
+                } catch (e: Exception) {
+                    callback(null, e)
+                }
+            }
+        })
+    }
+
+    fun saveAgentConfig(context: Context, agentData: JSONObject, callback: (Boolean, Exception?) -> Unit) {
+        val body = agentData.toString().toRequestBody(JSON_MEDIA_TYPE)
+        // Assume /api/agents for POST/PUT based on existing Host API structure
+        val id = agentData.optString("id")
+        val route = if (id.isNotEmpty()) "/api/agents/$id" else "/api/agents"
+        val method = if (id.isNotEmpty()) "PUT" else "POST"
+        val request = buildRequest(context, route, method, body) 
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) { callback(false, e) }
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    callback(true, null)
+                } else {
+                    callback(false, Exception("${response.code}: ${response.body?.string()}"))
+                }
             }
         })
     }

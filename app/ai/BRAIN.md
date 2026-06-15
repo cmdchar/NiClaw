@@ -1,5 +1,25 @@
 # BRAIN - CURRENT AI STATE
 
+## Latest update (2026-06-14) - Android Companion Host API Sync Repair
+- **Current State**:
+  - Codex repaired the existing native Kotlin Android companion in `mobile/android-kotlin`; no new Android app was created and no mock data was added.
+  - Android now has a dedicated `Android Sync` screen reachable from Settings. It supports Host API URL configuration, emulator fallback (`http://10.0.2.2:13210`), pairing code entry, Test Connection, Sync Now, heartbeat event push, and real Board/Agents/Tasks status rendering.
+  - `ApiClient.kt` now separates Host API URL from the legacy WebSocket URL through `host_api_url`, defaults to `http://10.10.1.219:13210`, supports Android device IDs, stores pairing tokens locally, and sends auth through `Authorization: Bearer` instead of leaking tokens into Host API query strings.
+  - The old hardcoded Android gateway-token fallback was removed from active Android sources. Portal legacy OpenClaw URL generation now only appends a token if the user explicitly saved one.
+  - Desktop Host API now exposes real Android Sync endpoints under `/api/android/*`: `pairing`, `pair`, `status`, `board`, `agents`, `tasks`, `event`, and `sync`.
+  - Desktop Settings > Remote Access now has an `Android Pairing Code` generator that calls `/api/android/pairing` through the existing Host API renderer proxy, so phone pairing no longer requires curl.
+  - Desktop stores paired Android devices in the Electron user data directory under `android-sync/state.json`; device tokens are stored only as SHA-256 hashes, pairing codes are one-time/short-lived, recent events are sanitized, and Host API request logs mask sensitive query parameters.
+  - Android HTTP local/LAN access is explicitly configured through `network_security_config.xml` for `10.0.2.2`, `10.10.1.219`, `127.0.0.1`, and `localhost`.
+  - Backups made before edits were moved outside the repo to `C:\Server\_codex_backups\niclaw\android-sync-20260614` so Gradle does not treat `.bak` files as Android resources.
+- **Validation**:
+  - Android: `.\gradlew.bat assembleDebug` passes.
+  - Desktop: `pnpm run typecheck` and `pnpm run build:vite` pass.
+  - Local HTTP smoke to `http://127.0.0.1:13210/api/android/pair` could not run because Host API was not running locally in this shell.
+- **Next Exact Steps**:
+  - Start NiClaw Desktop/Host API, enable Remote Access, generate an Android pairing code in Settings > Remote Access, then pair from the Android Sync screen.
+  - On emulator use `http://10.0.2.2:13210`; on a physical phone use the PC LAN/Tailscale-reachable Host API address and ensure Remote Access is enabled.
+  - After Antigravity finishes its Android Command Center UI work, run one end-to-end phone test: pair, status online, board/tasks/agents visible, Sync Now accepted by Desktop, heartbeat event recorded.
+
 ## Latest update (2026-06-13) - OpenHuman Runtime Repair on vm-niclaw
 - **Current State**:
   - Codex repaired the OpenHuman console on `vm-niclaw` without adding mocks.

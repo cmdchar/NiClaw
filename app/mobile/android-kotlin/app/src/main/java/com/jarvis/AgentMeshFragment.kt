@@ -168,6 +168,13 @@ class AgentMeshFragment : Fragment() {
 
             val nodeId = node.optString("id", "")
             
+            holder.itemView.setOnClickListener {
+                parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, AgentMeshDetailsFragment.newInstance(node.toString()))
+                .addToBackStack(null)
+                .commit()
+            }
+            
             val canSmokeTest = listOf("openclaw-bridge", "openhuman-core", "codex", "hermes", "telegram-hermes", "mesh").contains(nodeId)
             
             if (statusVal == "offline") {

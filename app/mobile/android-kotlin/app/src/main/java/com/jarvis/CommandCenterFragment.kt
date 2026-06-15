@@ -1,156 +1,189 @@
 package com.jarvis
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.Spinner
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
 
 class CommandCenterFragment : Fragment() {
 
-    private lateinit var txtServerStatus: TextView
-    private lateinit var txtProjects: TextView
-    private lateinit var txtTasks: TextView
-    private lateinit var txtReports: TextView
+    private lateinit var projectSpinner: Spinner
+    private lateinit var taskPromptInput: EditText
+    private lateinit var btnRunTask: Button
+    private lateinit var tasksRecyclerView: RecyclerView
+    private lateinit var btnCmdBack: ImageButton
+    
+    private val taskAdapter = TaskAdapter { task ->
+        val fragment = TaskDetailFragment.newInstance(task.optString("id"))
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+    
+    private val handler = Handler(Looper.getMainLooper())
+    private var isPolling = false
+    private val projectIds = mutableListOf<String>()
+
+    private val pollRunnable = object : Runnable {
+        override fun run() {
+            if (isPolling) {
+                fetchTasks()
+                handler.postDelayed(this, 2000)
+            }
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_command_center, container, false)
-        txtServerStatus = view.findViewById(R.id.txtServerStatus)
-        txtProjects = view.findViewById(R.id.txtProjects)
-        txtTasks = view.findViewById(R.id.txtTasks)
-        txtReports = view.findViewById(R.id.txtReports)
+        
+        projectSpinner = view.findViewById(R.id.projectSpinner)
+        taskPromptInput = view.findViewById(R.id.taskPromptInput)
+        btnRunTask = view.findViewById(R.id.btnRunTask)
+        tasksRecyclerView = view.findViewById(R.id.tasksRecyclerView)
+        btnCmdBack = view.findViewById(R.id.btnCmdBack)
+        
+        tasksRecyclerView.layoutManager = LinearLayoutManager(context)
+        tasksRecyclerView.adapter = taskAdapter
+
+        btnCmdBack.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+
+        btnRunTask.setOnClickListener {
+            submitTask()
+        }
+
+        fetchProjects()
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        loadData()
+    override fun onResume() {
+        super.onResume()
+        isPolling = true
+        handler.post(pollRunnable)
     }
 
-    private fun loadData() {
+    override fun onPause() {
+        super.onPause()
+        isPolling = false
+        handler.removeCallbacks(pollRunnable)
+    }
+
+    private fun fetchProjects() {
         val ctx = context ?: return
-
-        // 1. Status
-        ApiClient.getCommandCenterStatus(ctx) { res, err ->
-            activity?.runOnUiThread {
-                if (err != null) {
-                    txtServerStatus.text = "Eroare Status: ${err.message}"
-                } else if (res != null && res.optBoolean("success")) {
-                    val status = res.optJSONObject("status")
-                    if (status != null) {
-                        val memory = status.optJSONObject("memory")
-                        val used = memory?.optDouble("usedGB", 0.0) ?: 0.0
-                        val total = memory?.optDouble("totalGB", 0.0) ?: 0.0
-                        val cpu = status.optDouble("cpuLoad", 0.0)
-                        txtServerStatus.text = "CPU Load: $cpu%\nMemorie: $used / $total GB\nOS: ${status.optString("platform")}"
-                    } else {
-                        txtServerStatus.text = "Date de status lipsÄƒ."
+        val request = ApiClient.buildRequest(ctx, "/api/orchestrator/projects", "GET")
+        
+        ApiClient.client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {}
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body?.string() ?: return
+                try {
+                    val json = JSONObject(body)
+                    val projects = json.optJSONArray("projects") ?: JSONArray()
+                    val projectNames = mutableListOf<String>()
+                    projectIds.clear()
+                    
+                    for (i in 0 until projects.length()) {
+                        val p = projects.optJSONObject(i)
+                        projectNames.add(p.optString("name", "Unknown"))
+                        projectIds.add(p.optString("id", ""))
                     }
-                } else {
-                    txtServerStatus.text = "RÄƒspuns invalid de la server."
+                    
+                    activity?.runOnUiThread {
+                        val adapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_dropdown_item, projectNames)
+                        projectSpinner.adapter = adapter
+                    }
+                } catch (e: Exception) {}
+            }
+        })
+    }
+
+    private fun fetchTasks() {
+        val ctx = context ?: return
+        val request = ApiClient.buildRequest(ctx, "/api/orchestrator/tasks", "GET")
+        
+        ApiClient.client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {}
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body?.string() ?: return
+                try {
+                    val json = JSONObject(body)
+                    val tasksArr = json.optJSONArray("tasks") ?: JSONArray()
+                    val tasksList = mutableListOf<JSONObject>()
+                    
+                    for (i in 0 until tasksArr.length()) {
+                        tasksList.add(tasksArr.getJSONObject(i))
+                    }
+                    
+                    activity?.runOnUiThread {
+                        taskAdapter.submitList(tasksList)
+                    }
+                } catch (e: Exception) {}
+            }
+        })
+    }
+
+    private fun submitTask() {
+        val prompt = taskPromptInput.text.toString().trim()
+        if (prompt.isEmpty()) {
+            Toast.makeText(context, "Please enter a prompt", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val selectedIdx = projectSpinner.selectedItemPosition
+        if (selectedIdx < 0 || selectedIdx >= projectIds.size) return
+        val projectId = projectIds[selectedIdx]
+
+        val ctx = context ?: return
+        btnRunTask.isEnabled = false
+        
+        val json = JSONObject()
+        json.put("title", "Cmd: ${prompt.take(20)}...")
+        json.put("userPrompt", prompt)
+        json.put("targetProject", projectId)
+        
+        val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+        val request = ApiClient.buildRequest(ctx, "/api/orchestrator/tasks", "POST", body)
+        
+        ApiClient.client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                activity?.runOnUiThread {
+                    btnRunTask.isEnabled = true
+                    Toast.makeText(ctx, "Eroare rețea", Toast.LENGTH_SHORT).show()
                 }
             }
-        }
-
-        // 2. Projects
-        ApiClient.getCommandCenterProjects(ctx) { res, err ->
-            activity?.runOnUiThread {
-                if (err != null) {
-                    txtProjects.text = "Eroare Proiecte: ${err.message}"
-                } else if (res != null && res.optBoolean("success")) {
-                    val projectsArray = res.optJSONArray("projects")
-                    if (projectsArray != null && projectsArray.length() > 0) {
-                        val sb = java.lang.StringBuilder()
-                        for (i in 0 until projectsArray.length()) {
-                            val p = projectsArray.optJSONObject(i) ?: continue
-                            val name = p.optString("name", "Unknown")
-                            val git = p.optJSONObject("git")
-                            
-                            var score = 100
-                            var isDirty = false
-                            
-                            // Health Scoring
-                            if (git != null) {
-                                if (git.has("error") && git.optString("error").isNotEmpty()) {
-                                    score -= 50
-                                } else {
-                                    isDirty = git.optBoolean("dirty", false)
-                                    if (!isDirty) {
-                                        score += 20 // clean
-                                    } else {
-                                        val changed = git.optInt("changedFiles", 0)
-                                        score -= (changed * 2)
-                                    }
-                                }
-                            }
-                            
-                            val markers = p.optJSONArray("markers")
-                            if (markers != null && markers.length() > 0) {
-                                score += 10
-                            }
-                            
-                            // Cap score
-                            if (score > 100) score = 100
-                            if (score < 0) score = 0
-                            
-                            val dirtyStr = if (isDirty) "DIRTY" else "CLEAN"
-                            sb.append("$name - Scor: $score ($dirtyStr)\n")
-                        }
-                        txtProjects.text = sb.toString().trim()
+            override fun onResponse(call: Call, response: Response) {
+                activity?.runOnUiThread {
+                    btnRunTask.isEnabled = true
+                    if (response.isSuccessful) {
+                        taskPromptInput.text.clear()
+                        fetchTasks()
+                        Toast.makeText(ctx, "Task trimis!", Toast.LENGTH_SHORT).show()
                     } else {
-                        txtProjects.text = "Nu s-au gÄƒsit proiecte active."
+                        Toast.makeText(ctx, "Eroare: ${response.code}", Toast.LENGTH_SHORT).show()
                     }
-                } else {
-                    txtProjects.text = "Eroare: LipsÄƒ date proiecte."
                 }
             }
-        }
-
-        // 3. Tasks
-        ApiClient.getCommandCenterTasks(ctx) { res, err ->
-            activity?.runOnUiThread {
-                if (err != null) {
-                    txtTasks.text = "Eroare Sarcini: ${err.message}"
-                } else if (res != null && res.optBoolean("success")) {
-                    val tasksArray = res.optJSONArray("tasks")
-                    if (tasksArray != null && tasksArray.length() > 0) {
-                        val sb = java.lang.StringBuilder()
-                        for (i in 0 until Math.min(tasksArray.length(), 5)) {
-                            val task = tasksArray.optJSONObject(i) ?: continue
-                            sb.append("- ${task.optString("title", "FÄƒrÄƒ titlu")}\n")
-                        }
-                        txtTasks.text = sb.toString().trim()
-                    } else {
-                        txtTasks.text = "Nicio sarcinÄƒ nouÄƒ (Inbox gol)."
-                    }
-                } else {
-                    txtTasks.text = "Nu s-au putut rula sarcinile."
-                }
-            }
-        }
-
-        // 4. Reports
-        ApiClient.getCommandCenterReports(ctx) { res, err ->
-            activity?.runOnUiThread {
-                if (err != null) {
-                    txtReports.text = "Eroare Rapoarte: ${err.message}"
-                } else if (res != null && res.optBoolean("success")) {
-                    val reportsArray = res.optJSONArray("reports")
-                    if (reportsArray != null && reportsArray.length() > 0) {
-                        val sb = java.lang.StringBuilder()
-                        for (i in 0 until Math.min(reportsArray.length(), 3)) {
-                            val report = reportsArray.optJSONObject(i) ?: continue
-                            sb.append("â€¢ ${report.optString("name", "Unknown")}\n")
-                        }
-                        txtReports.text = sb.toString().trim()
-                    } else {
-                        txtReports.text = "Niciun raport generat recent."
-                    }
-                } else {
-                    txtReports.text = "Rapoarte indisponibile."
-                }
-            }
-        }
+        })
     }
 }

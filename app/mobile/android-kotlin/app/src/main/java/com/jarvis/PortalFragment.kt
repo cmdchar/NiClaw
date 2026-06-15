@@ -271,14 +271,18 @@ class PortalFragment : Fragment() {
         boardStatusLabel.text = "BoardAI $onlineFlag · rev $revision · $nodeCount noduri · $arrowCount legaturi\nSync: $syncAt · $publishFlag"
     }
 
+    private fun appendTokenIfPresent(url: String, token: String): String {
+        return if (token.isBlank()) url else "$url?token=${Uri.encode(token)}"
+    }
+
     private fun getAgentUrl(agentId: String): String {
         val context = context ?: return "https://aistudio.google.com"
         val prefs = context.getSharedPreferences("JarvisPrefs", Context.MODE_PRIVATE)
-        val serverUrl = prefs.getString("server_url", "ws://10.10.1.219:13210/jarvis/stream")!!
-        val gatewayToken = prefs.getString("gateway_token", "35c6ae8e7a685718dfb4a45a1f2982d5")!!
+        val serverUrl = prefs.getString("server_url", "ws://100.82.149.22:13210/jarvis/stream")!!
+        val gatewayToken = prefs.getString("gateway_token", "") ?: ""
         
         var isHttps = false
-        var host = "10.10.1.219"
+        var host = "100.82.149.22"
         
         try {
             val uri = Uri.parse(serverUrl)
@@ -304,7 +308,7 @@ class PortalFragment : Fragment() {
 
         return if (isHttps) {
             when (agentId) {
-                "openclaw" -> "https://$host/?token=$gatewayToken"
+                "openclaw" -> appendTokenIfPresent("https://$host/", gatewayToken)
                 "openhuman" -> "https://$host:10000"
                 "hermes" -> "https://$host:8443"
                 "opencode" -> "https://$host:8000"
@@ -312,7 +316,7 @@ class PortalFragment : Fragment() {
             }
         } else {
             when (agentId) {
-                "openclaw" -> "http://$host:18789/?token=$gatewayToken"
+                "openclaw" -> appendTokenIfPresent("http://$host:18789/", gatewayToken)
                 "openhuman" -> "http://$host:7788"
                 "hermes" -> "http://$host:7789"
                 "opencode" -> "http://$host:8080"

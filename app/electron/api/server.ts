@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { getPort } from '../utils/config';
 import { getSetting } from '../utils/store';
 import { logger } from '../utils/logger';
+import { validateAndroidSyncToken } from '../utils/android-sync';
 import { extensionRegistry } from '../extensions/registry';
 import type { HostApiContext } from './context';
 import { handleAppRoutes } from './routes/app';
@@ -27,6 +28,9 @@ import { handleGovernanceRoutes } from './routes/governance';
 import { handleCouncilRoutes } from './routes/council';
 import { handleAgentMeshRoutes } from './routes/agent-mesh';
 import { handleCommandCenterRoutes } from './routes/command-center';
+import { handleModelsRoutes } from './routes/models';
+import { handleOrchestratorRoutes } from './routes/orchestrator';
+import { handleAndroidRoutes, isAndroidPairRequest } from './routes/android';
 import { sendJson, setCorsHeaders, requireJsonContentType } from './route-utils';
 import { hermesDreamEngine } from '../services/dream-engine';
 
@@ -58,8 +62,11 @@ const coreRouteHandlers: RouteHandler[] = [
   handleLogRoutes,
   handleUsageRoutes,
   handleCouncilRoutes,
+  handleAndroidRoutes,
   handleAgentMeshRoutes,
   handleCommandCenterRoutes,
+  handleModelsRoutes,
+  handleOrchestratorRoutes,
 ];
 
 function buildRouteHandlers(): RouteHandler[] {
@@ -79,6 +86,21 @@ let hostApiToken: string = '';
 /** Retrieve the current Host API auth token (for use by IPC proxy). */
 export function getHostApiToken(): string {
   return hostApiToken;
+}
+
+function headerToString(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value.join(', ') : value;
+}
+
+function formatRequestPathForLog(url: URL): string {
+  const safeSearch = new URLSearchParams(url.searchParams);
+  for (const key of Array.from(safeSearch.keys())) {
+    if (/token|secret|password|key|code/i.test(key)) {
+      safeSearch.set(key, '***');
+    }
+  }
+  const query = safeSearch.toString();
+  return query ? `${url.pathname}?${query}` : url.pathname;
 }
 
 export function startHostApiServer(ctx: HostApiContext, port = getPort('CLAWX_HOST_API')): Server {
@@ -108,7 +130,7 @@ export function startHostApiServer(ctx: HostApiContext, port = getPort('CLAWX_HO
   const server = createServer(async (req, res) => {
     try {
       const requestUrl = new URL(req.url || '/', `http://127.0.0.1:${port}`);
-      logger.info(`[Host API] ${req.method} ${requestUrl.pathname}${requestUrl.search} from ${req.socket.remoteAddress}`);
+      logger.info(`[Host API] ${req.method} ${formatRequestPathForLog(requestUrl)} from ${req.socket.remoteAddress}`);
       // ── CORS headers ─────────────────────────────────────────
       // Set origin-aware CORS headers early so every response
       // (including error responses) carries them consistently.
@@ -133,11 +155,20 @@ export function startHostApiServer(ctx: HostApiContext, port = getPort('CLAWX_HO
 
       const gatewayToken = await getSetting('gatewayToken');
       const customApiToken = process.env.CLAWX_API_TOKEN || '';
+      const androidPairRequest = isAndroidPairRequest(req, requestUrl);
+      const androidDevice = bearerToken
+        ? await validateAndroidSyncToken(bearerToken, {
+            remoteAddress: req.socket.remoteAddress,
+            userAgent: headerToString(req.headers['user-agent']),
+          })
+        : null;
 
       if (
+        !androidPairRequest &&
         bearerToken !== hostApiToken &&
         bearerToken !== gatewayToken &&
-        (customApiToken === '' || bearerToken !== customApiToken)
+        (customApiToken === '' || bearerToken !== customApiToken) &&
+        !androidDevice
       ) {
         sendJson(res, 401, { success: false, error: 'Unauthorized' });
         return;
@@ -187,3 +218,4 @@ export function startHostApiServer(ctx: HostApiContext, port = getPort('CLAWX_HO
 
   return server;
 }
+

@@ -280,7 +280,202 @@ const openhumanHtml = `<!DOCTYPE html>
 </html>`;
 
 const path = require('path');
+const fs = require('fs');
 const openhumanWebPath = '/home/debian/openhuman/app/dist-web';
+const openhumanCoreTokenPath = process.env.OPENHUMAN_CORE_TOKEN_PATH || '/home/debian/.openhuman/core.token';
+const hostApiUrl = (process.env.NICLAW_HOST_API_URL || 'http://127.0.0.1:13210').replace(/\/+$/, '');
+const openhumanChatSessionKey = process.env.OPENHUMAN_CHAT_SESSION_KEY || 'agent:openhuman:main';
+const openhumanChatTimeoutMs = Number(process.env.OPENHUMAN_CHAT_TIMEOUT_MS || 30000);
+const openhumanChatMode = process.env.OPENHUMAN_CHAT_MODE || 'host-api';
+const ollamaBaseUrl = (process.env.OPENHUMAN_OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/+$/, '');
+const ollamaChatModel = process.env.OPENHUMAN_OLLAMA_MODEL || 'qwen2.5:3b';
+
+function readTrimmedFile(filePath) {
+    try {
+        return fs.readFileSync(filePath, 'utf8').trim();
+    } catch {
+        return '';
+    }
+}
+
+function getOpenHumanCoreToken() {
+    return process.env.OPENHUMAN_CORE_TOKEN || readTrimmedFile(openhumanCoreTokenPath);
+}
+
+function getHostApiToken() {
+    return process.env.NICLAW_HOST_API_TOKEN
+        || process.env.SUPERHERMES_NICLAW_HOST_API_TOKEN
+        || process.env.CLAWX_API_TOKEN
+        || '';
+}
+
+async function readJsonResponse(response) {
+    const raw = await response.text();
+    try {
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        throw new Error(`HTTP ${response.status}: ${raw.slice(0, 160)}`);
+    }
+}
+
+async function postHostApiJson(pathname, token, body) {
+    const response = await fetch(`${hostApiUrl}${pathname}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
+    const data = await readJsonResponse(response);
+    if (!response.ok || !data?.success) {
+        throw new Error(data?.error || data?.message || `HTTP ${response.status}`);
+    }
+    return data;
+}
+
+async function callOllamaDirect(text) {
+    const response = await fetch(`${ollamaBaseUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: ollamaChatModel,
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are OpenHuman Core inside the NiClaw ecosystem. Answer in the user language, stay concise, and do not invent runtime or tool status.'
+                },
+                {
+                    role: 'user',
+                    content: text
+                }
+            ],
+            stream: false,
+            keep_alive: '0'
+        })
+    });
+    const data = await readJsonResponse(response);
+    if (!response.ok) {
+        throw new Error(data?.error?.message || data?.error || `HTTP ${response.status}`);
+    }
+    const answer = data?.message?.content || data?.choices?.[0]?.message?.content;
+    if (typeof answer === 'string' && answer.trim()) return answer.trim();
+    throw new Error('Ollama did not return assistant text.');
+}
+
+function extractTextContent(content) {
+    if (typeof content === 'string') return content;
+    if (!Array.isArray(content)) return '';
+    return content
+        .map((part) => {
+            if (typeof part === 'string') return part;
+            if (part?.type === 'text' && typeof part?.text === 'string') return part.text;
+            if (typeof part?.content === 'string') return part.content;
+            return '';
+        })
+        .filter(Boolean)
+        .join('\n')
+        .trim();
+}
+
+function extractAssistantText(data) {
+    const result = data?.result || data?.data || data;
+    if (typeof result === 'string') return result;
+    const directContent = extractTextContent(result?.content);
+    if (directContent) return directContent;
+    if (typeof result?.message === 'string') return result.message;
+    if (Array.isArray(result?.messages)) {
+        const assistant = [...result.messages].reverse().find((message) => message?.role === 'assistant');
+        return extractTextContent(assistant?.content);
+    }
+    return '';
+}
+
+function extractAssistantError(message) {
+    if (!message || message.role !== 'assistant') return '';
+    if (typeof message.errorMessage === 'string' && message.errorMessage.trim()) {
+        return message.errorMessage.trim();
+    }
+    if (message.stopReason === 'error') {
+        return 'Assistant turn failed before producing content.';
+    }
+    return '';
+}
+
+function readAssistantOutcome(message) {
+    const text = extractTextContent(message?.content);
+    if (text) return { text };
+    const error = extractAssistantError(message);
+    return error ? { error } : {};
+}
+
+function findAssistantOutcomeForRun(messages, idempotencyKey, startedAtMs) {
+    if (!Array.isArray(messages)) return {};
+
+    const expectedUserKey = `${idempotencyKey}:user`;
+    const userIndex = messages.findLastIndex((message) => message?.idempotencyKey === expectedUserKey);
+    if (userIndex >= 0) {
+        const assistant = messages.slice(userIndex + 1).find((message) => message?.role === 'assistant');
+        const outcome = readAssistantOutcome(assistant);
+        if (outcome.text || outcome.error) return outcome;
+    }
+
+    const fallbackAssistant = [...messages].reverse().find((message) => {
+        const timestamp = Number(message?.timestamp || message?.__openclaw?.recordTimestampMs || 0);
+        return message?.role === 'assistant' && timestamp >= startedAtMs;
+    });
+    return readAssistantOutcome(fallbackAssistant);
+}
+
+async function waitForOpenHumanAssistantText(token, idempotencyKey, startedAtMs) {
+    const deadline = Date.now() + openhumanChatTimeoutMs;
+    let lastError = null;
+
+    while (Date.now() < deadline) {
+        try {
+            const history = await postHostApiJson('/api/gateway/rpc', token, {
+                method: 'chat.history',
+                params: {
+                    sessionKey: openhumanChatSessionKey,
+                    limit: 80
+                },
+                timeoutMs: 60000
+            });
+            const outcome = findAssistantOutcomeForRun(history?.result?.messages, idempotencyKey, startedAtMs);
+            if (outcome.text) return outcome.text;
+            if (outcome.error) {
+                const terminalError = new Error(`OpenHuman assistant failed: ${outcome.error}`);
+                terminalError.openhumanTerminal = true;
+                throw terminalError;
+            }
+        } catch (err) {
+            if (err?.openhumanTerminal) throw err;
+            lastError = err;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+
+    if (lastError) {
+        throw new Error(`OpenHuman run started, but history polling failed: ${lastError.message}`);
+    }
+    throw new Error('OpenHuman run started, but no assistant response was written to history before timeout.');
+}
+
+async function abortOpenHumanHostRun(token) {
+    try {
+        await postHostApiJson('/api/gateway/rpc', token, {
+            method: 'chat.abort',
+            params: {
+                sessionKey: openhumanChatSessionKey
+            },
+            timeoutMs: 30000
+        });
+    } catch (err) {
+        console.warn('Failed to abort OpenHuman Host API run:', err.message);
+    }
+}
 
 // Serve the compiled official OpenHuman SPA files
 openhumanApp.use(express.static(openhumanWebPath));
@@ -289,17 +484,25 @@ openhumanApp.post('/rpc', async (req, res) => {
     try {
         const headers = { ...req.headers };
         delete headers['content-length'];
+        delete headers['content-type'];
         delete headers['host'];
+        delete headers['authorization'];
+        delete headers['Authorization'];
         
+        const coreToken = getOpenHumanCoreToken();
+        const authorization = req.headers.authorization || (coreToken ? `Bearer ${coreToken}` : undefined);
+
         const response = await fetch('http://127.0.0.1:17788/rpc', {
             method: 'POST',
             headers: {
+                ...headers,
                 'Content-Type': 'application/json',
-                ...headers
+                ...(authorization ? { Authorization: authorization } : {})
             },
             body: JSON.stringify(req.body)
         });
-        const data = await response.json();
+        const data = await readJsonResponse(response);
+        res.status(response.status);
         res.json(data);
     } catch (err) {
         console.error('Error forwarding RPC:', err.message);
@@ -316,26 +519,52 @@ openhumanApp.post('/rpc', async (req, res) => {
 
 // Legacy chat endpoint
 openhumanApp.post('/chat', async (req, res) => {
-    const { text } = req.body;
-    try {
-        const response = await fetch('http://127.0.0.1:18789/api/chat/send-with-media', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                sessionKey: 'agent:openhuman:user:portal-client',
-                message: text,
-                deliver: true,
-                idempotencyKey: Date.now().toString()
-            })
-        });
-        const data = await response.json();
-        if (data && data.success) {
-            res.json({ text: data.result?.content || data.result?.message || 'Niciun răspuns de la agent.' });
-        } else {
-            res.json({ text: `Eroare de la OpenClaw: ${data?.error || 'Necunoscută'}` });
+    const text = String(req.body?.text || req.body?.message || '').trim();
+    if (!text) {
+        res.status(400).json({ text: 'Mesajul este gol.' });
+        return;
+    }
+
+    if (openhumanChatMode === 'ollama-direct') {
+        try {
+            res.json({ text: await callOllamaDirect(text) });
+        } catch (err) {
+            res.status(500).json({ text: `Eroare la conectare la Ollama local: ${err.message}` });
         }
+        return;
+    }
+
+    const hostApiToken = getHostApiToken();
+    if (!hostApiToken) {
+        res.status(503).json({ text: 'NiClaw Host API token is not configured on the server.' });
+        return;
+    }
+
+    let hostRunStarted = false;
+    try {
+        const idempotencyKey = Date.now().toString();
+        const startedAtMs = Date.now();
+        const data = await postHostApiJson('/api/chat/send-with-media', hostApiToken, {
+            sessionKey: openhumanChatSessionKey,
+            message: text,
+            deliver: true,
+            idempotencyKey
+        });
+        hostRunStarted = true;
+        const immediateText = extractAssistantText(data);
+        const assistantText = immediateText || await waitForOpenHumanAssistantText(hostApiToken, idempotencyKey, startedAtMs);
+        res.json({ text: assistantText });
     } catch (err) {
-        res.status(500).json({ text: `Eroare la conectare la OpenClaw: ${err.message}` });
+        if (hostRunStarted) {
+            await abortOpenHumanHostRun(hostApiToken);
+        }
+        try {
+            res.json({ text: await callOllamaDirect(text) });
+        } catch (fallbackErr) {
+            res.status(500).json({
+                text: `Eroare la conectare la NiClaw Host API: ${err.message}; fallback Ollama local a esuat: ${fallbackErr.message}`
+            });
+        }
     }
 });
 

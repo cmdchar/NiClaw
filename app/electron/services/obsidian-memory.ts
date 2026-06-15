@@ -45,6 +45,15 @@ export class ObsidianMemoryService {
     return resolved;
   }
 
+  public async testConnection(): Promise<boolean> {
+    try {
+      const s = await stat(this.vaultRoot);
+      return s.isDirectory();
+    } catch {
+      return false;
+    }
+  }
+
   public async readNote(relPath: string): Promise<string | null> {
     const absPath = this.safePath(relPath);
     if (!absPath) return null;
@@ -195,6 +204,41 @@ export class ObsidianMemoryService {
   public async refreshIndex(): Promise<void> {
     // In a more complex implementation, this would build a local sqlite or fuse index.
     // For now, it's a no-op as we walk the FS on demand.
+  }
+
+  public async getStats(): Promise<{ isConnected: boolean; fileCount: number; lastScan: number }> {
+    const isConnected = await this.testConnection();
+    if (!isConnected) return { isConnected: false, fileCount: 0, lastScan: Date.now() };
+
+    let count = 0;
+    const walk = async (dir: string) => {
+      let items: string[];
+      try {
+        items = await readdir(dir);
+      } catch {
+        return;
+      }
+      for (const item of items) {
+        if (item.startsWith('.')) continue;
+        const abs = join(dir, item);
+        let s;
+        try { s = await stat(abs); } catch { continue; }
+        if (s.isDirectory()) {
+          if (item !== 'node_modules' && item !== 'dist' && item !== 'build') {
+             await walk(abs);
+          }
+        } else if (s.isFile() && extname(item).toLowerCase() === '.md') {
+          count++;
+        }
+      }
+    };
+
+    await walk(this.vaultRoot);
+    return {
+        isConnected: true,
+        fileCount: count,
+        lastScan: Date.now()
+    };
   }
 }
 

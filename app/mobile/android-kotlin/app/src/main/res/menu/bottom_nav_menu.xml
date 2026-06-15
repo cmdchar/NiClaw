@@ -20,8 +20,4 @@
         android:id="@+id/navigation_settings"
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="Setări" />
-    <item
-        android:id="@+id/navigation_governance"
-        android:icon="@android:drawable/ic_secure"
-        android:title="Governance" />
 </menu>

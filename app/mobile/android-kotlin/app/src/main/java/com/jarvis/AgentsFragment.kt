@@ -43,7 +43,7 @@ class AgentsFragment : Fragment() {
         btnAddAgent = view.findViewById(R.id.btnAddAgent)
 
         adapter = AgentAdapter(agentsList, 
-            onEditClick = { agent -> showAgentEditorDialog(agent) },
+            onEditClick = { agent -> openAgentEditor(agent) },
             onDeleteClick = { agent -> showDeleteConfirmDialog(agent) }
         )
 
@@ -55,7 +55,7 @@ class AgentsFragment : Fragment() {
         }
 
         btnAddAgent.setOnClickListener {
-            showAgentEditorDialog(null)
+            openAgentEditor(null)
         }
 
         loadAgents(true)
@@ -98,55 +98,23 @@ class AgentsFragment : Fragment() {
         }
     }
 
+    private fun openAgentEditor(agent: JSONObject?) {
+        val jsonStr = agent?.toString()
+        val frag = AgentEditorFragment.newInstance(jsonStr)
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, frag)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    // LEGACY FALLBACK: kept per request, unused but safe to restore
     private fun showAgentEditorDialog(agent: JSONObject?) {
-        val ctx = context ?: return
-        val dialogView = LayoutInflater.from(ctx).inflate(R.layout.dialog_agent_editor, null)
-        
-        val editName = dialogView.findViewById<EditText>(R.id.editorAgentName)
-        val editSlug = dialogView.findViewById<EditText>(R.id.editorAgentSlug)
-        val editRole = dialogView.findViewById<EditText>(R.id.editorAgentRole)
-        val editModel = dialogView.findViewById<EditText>(R.id.editorAgentModel)
-        val dialogTitle = dialogView.findViewById<TextView>(R.id.dialogTitle)
-
-        val isEditMode = agent != null
-        if (isEditMode && agent != null) {
-            dialogTitle.text = "Editează Agent: ${agent.optString("name")}"
-            editName.setText(agent.optString("name"))
-            editSlug.setText(agent.optString("id"))
-            editSlug.isEnabled = false // ID/slug is immutable after creation
-            editRole.setText(agent.optString("role"))
-            editModel.setText(agent.optString("modelDisplay"))
-        } else {
-            dialogTitle.text = "Creează Agent Nou"
-        }
-
-        AlertDialog.Builder(ctx)
-            .setView(dialogView)
-            .setPositiveButton("Salvează") { dialog, _ ->
-                val name = editName.text.toString().trim()
-                val slug = editSlug.text.toString().trim()
-                val role = editRole.text.toString().trim()
-                val model = editModel.text.toString().trim()
-
-                if (name.isEmpty() || slug.isEmpty()) {
-                    Toast.makeText(ctx, "Numele și Slug sunt obligatorii!", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-
-                if (isEditMode && agent != null) {
-                    val id = agent.optString("id")
-                    ApiClient.updateAgent(ctx, id, name, role, model) { success, error ->
-                        handleActionResult(success, error, "Agent actualizat cu succes!", "Eroare la actualizare agent")
-                    }
-                } else {
-                    ApiClient.createAgent(ctx, name, role, model) { success, error ->
-                        handleActionResult(success, error, "Agent creat cu succes!", "Eroare la crearea agentului")
-                    }
-                }
-                dialog.dismiss()
-            }
-            .setNegativeButton("Anulează", null)
-            .show()
+        val agentStr = agent?.toString()
+        val fragment = AgentEditorFragment.newInstance(agentStr)
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 
     private fun showDeleteConfirmDialog(agent: JSONObject) {

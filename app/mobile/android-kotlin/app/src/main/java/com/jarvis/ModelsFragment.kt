@@ -132,7 +132,8 @@ class ModelsFragment : Fragment() {
             activity?.runOnUiThread {
                 progressLoading.visibility = View.GONE
                 if (error != null) {
-                    txtUsageContent.text = "Eroare la încărcare: ${error.message}"
+                    android.util.Log.e("ModelsFragment", "getUsageHistory error", error)
+                    txtUsageContent.text = "Istoricul nu a putut fi Ã®ncÄƒrcat.\nAcest backend ar putea necesita un update (rute lipsÄƒ)."
                     return@runOnUiThread
                 }
                 if (historyObj == null) {

@@ -133,7 +133,7 @@ function summarizeSnapshot(snapshot: BoardSnapshot) {
   };
 }
 
-async function buildBoardStatus() {
+export async function buildBoardStatus() {
   const projectRoot = findProjectRoot();
   const statusPath = join(projectRoot, BOARD_STATUS_FILE);
   const snapshotPath = join(projectRoot, BOARD_SNAPSHOT_FILE);

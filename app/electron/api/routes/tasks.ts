@@ -18,7 +18,7 @@ export interface SpatialTask {
   updatedAt: string;
 }
 
-interface TasksStore {
+export interface TasksStore {
   tasks: SpatialTask[];
 }
 
@@ -26,7 +26,7 @@ function tasksPath(): string {
   return join(getDataDir(), 'spatial', 'tasks.json');
 }
 
-async function readTasksStore(): Promise<TasksStore> {
+export async function readTasksStore(): Promise<TasksStore> {
   try {
     const raw = await readFile(tasksPath(), 'utf8');
     const parsed = JSON.parse(raw) as TasksStore;

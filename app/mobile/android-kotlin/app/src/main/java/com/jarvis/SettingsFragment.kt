@@ -46,7 +46,9 @@ class SettingsFragment : Fragment() {
     private lateinit var btnConfigureDreams: Button
     private lateinit var btnConfigureObsidian: Button
     private lateinit var btnAgentMesh: Button
+    private lateinit var btnAndroidSync: Button
     private lateinit var btnDevCommandCenter: Button
+    private lateinit var btnGovernance: Button
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -86,7 +88,9 @@ class SettingsFragment : Fragment() {
         btnConfigureDreams = view.findViewById(R.id.btnConfigureDreams)
         btnConfigureObsidian = view.findViewById(R.id.btnConfigureObsidian)
         btnAgentMesh = view.findViewById(R.id.btnAgentMesh)
+        btnAndroidSync = view.findViewById(R.id.btnAndroidSync)
         btnDevCommandCenter = view.findViewById(R.id.btnDevCommandCenter)
+        btnGovernance = view.findViewById(R.id.btnGovernance)
 
         val mainActivity = activity as? MainActivity
 
@@ -180,9 +184,23 @@ class SettingsFragment : Fragment() {
                 .commit()
         }
 
+        btnAndroidSync.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, AndroidSyncFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
         btnDevCommandCenter.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, CommandCenterFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
+        btnGovernance.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, GovernanceFragment())
                 .addToBackStack(null)
                 .commit()
         }
@@ -230,8 +248,8 @@ class SettingsFragment : Fragment() {
         val prefs = activity?.getSharedPreferences("JarvisPrefs", Context.MODE_PRIVATE) ?: return
         
         // Base API Connection
-        settingsServerUrl.setText(prefs.getString("server_url", "ws://10.10.1.219:3000/jarvis/stream"))
-        settingsGatewayToken.setText(prefs.getString("gateway_token", "35c6ae8e7a685718dfb4a45a1f2982d5"))
+        settingsServerUrl.setText(prefs.getString("server_url", "ws://100.82.149.22:3000/jarvis/stream"))
+        settingsGatewayToken.setText(prefs.getString("gateway_token", ""))
         
         // Preferences
         switchTts.isChecked = prefs.getBoolean("tts_enabled", true)

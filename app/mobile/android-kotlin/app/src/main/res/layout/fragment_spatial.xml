@@ -39,6 +39,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
+        android:paddingBottom="100dp"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/spatialHeader"
         app:layout_constraintBottom_toBottomOf="parent">
 
@@ -567,26 +569,109 @@
             </LinearLayout>
 
             <!-- Real-time Console logs -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="EVENIMENTE LIVE PLAN"
-                android:textColor="#5E6D8C"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:id="@+id/txtSpatialConsole"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:background="#05070B"
-                android:textColor="#4AF626"
-                android:fontFamily="monospace"
-                android:textSize="10sp"
-                android:padding="8dp"
-                android:scrollbars="vertical"
-                android:text="Procesarea datelor planului din Host API...\nNu există evenimente." />
+                android:layout_height="wrap_content"
+                android:background="#131824"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:text="TASK EXECUTION PANEL"
+                        android:textColor="#5E6D8C"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:orientation="horizontal">
+                        <CheckBox
+                            android:id="@+id/chkAutoScroll"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Auto-scroll"
+                            android:textColor="#8892B0"
+                            android:textSize="10sp"
+                            android:checked="true" />
+                        <Button
+                            android:id="@+id/btnClearLog"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:text="CLEAR"
+                            android:backgroundTint="#2C3545"
+                            android:textColor="#FFFFFF"
+                            android:textSize="10sp"
+                            android:layout_marginStart="8dp"/>
+                    </LinearLayout>
+                </RelativeLayout>
+
+                <!-- Status & Step Info -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Status:"
+                        android:textColor="#8892B0"
+                        android:textSize="11sp" />
+                    <TextView
+                        android:id="@+id/txtExecStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="IDLE"
+                        android:textColor="#00E5FF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="4dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" | Step:"
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginStart="8dp" />
+                    <TextView
+                        android:id="@+id/txtExecStep"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="None"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+
+                <ScrollView
+                    android:id="@+id/scrollConsole"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
+                    android:background="#05070B"
+                    android:padding="8dp">
+                    <TextView
+                        android:id="@+id/txtSpatialConsole"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#4AF626"
+                        android:fontFamily="monospace"
+                        android:textSize="10sp"
+                        android:text="System ready.\n" />
+                </ScrollView>
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

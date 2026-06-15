@@ -29,6 +29,11 @@ class SpatialFragment : Fragment() {
 
     private lateinit var layoutPlanSteps: LinearLayout
     private lateinit var txtSpatialConsole: TextView
+    private lateinit var txtExecStatus: TextView
+    private lateinit var txtExecStep: TextView
+    private lateinit var chkAutoScroll: CheckBox
+    private lateinit var btnClearLog: Button
+    private lateinit var scrollConsole: ScrollView
     private lateinit var progressSpatial: ProgressBar
     private lateinit var btnRefreshSpatial: ImageButton
 
@@ -80,6 +85,11 @@ class SpatialFragment : Fragment() {
 
         layoutPlanSteps = view.findViewById(R.id.layoutPlanSteps)
         txtSpatialConsole = view.findViewById(R.id.txtSpatialConsole)
+        txtExecStatus = view.findViewById(R.id.txtExecStatus)
+        txtExecStep = view.findViewById(R.id.txtExecStep)
+        chkAutoScroll = view.findViewById(R.id.chkAutoScroll)
+        btnClearLog = view.findViewById(R.id.btnClearLog)
+        scrollConsole = view.findViewById(R.id.scrollConsole)
         progressSpatial = view.findViewById(R.id.progressSpatial)
         btnRefreshSpatial = view.findViewById(R.id.btnRefreshSpatial)
 
@@ -153,6 +163,35 @@ class SpatialFragment : Fragment() {
         return view
     }
 
+    private var pollingRunnable: Runnable? = null
+    private val pollingHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val POLLING_INTERVAL_MS = 3000L
+
+    override fun onResume() {
+        super.onResume()
+        startPolling()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopPolling()
+    }
+
+    private fun startPolling() {
+        pollingRunnable = object : Runnable {
+            override fun run() {
+                loadAllData()
+                pollingHandler.postDelayed(this, POLLING_INTERVAL_MS)
+            }
+        }
+        pollingHandler.post(pollingRunnable!!)
+    }
+
+    private fun stopPolling() {
+        pollingRunnable?.let { pollingHandler.removeCallbacks(it) }
+        pollingRunnable = null
+    }
+
     private fun loadAllData() {
         val ctx = context ?: return
         progressSpatial.visibility = View.VISIBLE
@@ -173,6 +212,7 @@ class SpatialFragment : Fragment() {
 
                 if (error != null) {
                     Toast.makeText(ctx, "Eroare citire planuri: ${error.localizedMessage}", Toast.LENGTH_LONG).show()
+                    showEmptyState()
                     return@runOnUiThread
                 }
 
@@ -599,6 +639,8 @@ class SpatialFragment : Fragment() {
         layoutPlanSteps.addView(emptyTv)
 
         txtSpatialConsole.text = "Nu există evenimente."
+        txtExecStatus.text = "IDLE"
+        txtExecStep.text = "None"
     }
 
     private fun renderActivePlan(plan: JSONObject) {
@@ -612,6 +654,7 @@ class SpatialFragment : Fragment() {
         txtPlanTitle.text = title
         txtPlanObjective.text = objective
         txtPlanStatus.text = status
+        txtExecStatus.text = status
 
         // Status styling
         when (status) {
@@ -659,6 +702,10 @@ class SpatialFragment : Fragment() {
                 val stepStatus = step.optString("status", "pending").toUpperCase()
                 val stepRequiresApproval = step.optBoolean("requiresApproval", false)
                 val stepApprovalStatus = step.optString("approvalStatus", "not_required")
+
+                if (stepStatus == "IN_PROGRESS") {
+                    txtExecStep.text = stepTitle
+                }
 
                 if (stepRequiresApproval && stepApprovalStatus == "pending") {
                     pendingApprovalStep = step
@@ -754,9 +801,14 @@ class SpatialFragment : Fragment() {
         }
 
         txtSpatialConsole.text = consoleText.toString()
-        val scrollAmount = txtSpatialConsole.layout?.getLineTop(txtSpatialConsole.lineCount)?.minus(txtSpatialConsole.height) ?: 0
-        if (scrollAmount > 0) {
-            txtSpatialConsole.scrollTo(0, scrollAmount)
+        if (chkAutoScroll.isChecked) {
+            scrollConsole.post {
+                scrollConsole.fullScroll(View.FOCUS_DOWN)
+            }
+        }
+        
+        btnClearLog.setOnClickListener {
+            txtSpatialConsole.text = ""
         }
     }
 

@@ -84,7 +84,7 @@ class GovernanceFragment : Fragment() {
 
     private fun getBaseUrl(): String {
         val prefs = requireContext().getSharedPreferences("JarvisPrefs", android.content.Context.MODE_PRIVATE)
-        val wsUrl = prefs.getString("server_url", "ws://10.10.1.219:3000/jarvis/stream")!!
+        val wsUrl = prefs.getString("server_url", "ws://100.82.149.22:3000/jarvis/stream")!!
         return wsUrl.replace("ws://", "http://").replace("wss://", "https://").replace("/jarvis/stream", "")
     }
 
@@ -99,7 +99,10 @@ class GovernanceFragment : Fragment() {
             override fun onFailure(call: Call, e: IOException) {
                 activity?.runOnUiThread {
                     progressBar.visibility = View.GONE
-                    Toast.makeText(context, "Network Error", Toast.LENGTH_SHORT).show()
+                    items.clear()
+                    adapter.notifyDataSetChanged()
+                    tvEmpty.text = "Governance service is offline.\nError: ${e.message}"
+                    tvEmpty.visibility = View.VISIBLE
                 }
             }
 
@@ -107,24 +110,34 @@ class GovernanceFragment : Fragment() {
                 val bodyStr = response.body?.string() ?: ""
                 activity?.runOnUiThread {
                     progressBar.visibility = View.GONE
+                    items.clear()
+                    if (!response.isSuccessful) {
+                        tvEmpty.text = "Governance API Error: ${response.code}\nFailed to load metrics/health."
+                        tvEmpty.visibility = View.VISIBLE
+                        adapter.notifyDataSetChanged()
+                        return@runOnUiThread
+                    }
                     try {
                         val json = JSONObject(bodyStr)
-                        if (json.getBoolean("success")) {
-                            val resultArr = json.getJSONArray("result")
-                            items.clear()
+                        if (json.optBoolean("success", false)) {
+                            val resultArr = json.optJSONArray("result") ?: JSONArray()
                             for (i in 0 until resultArr.length()) {
                                 items.add(resultArr.getJSONObject(i))
                             }
-                            adapter.notifyDataSetChanged()
                             if (items.isEmpty()) {
+                                tvEmpty.text = "No items found."
                                 tvEmpty.visibility = View.VISIBLE
                             }
                         } else {
-                            Toast.makeText(context, "API Error", Toast.LENGTH_SHORT).show()
+                            tvEmpty.text = "API returned success=false."
+                            tvEmpty.visibility = View.VISIBLE
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
+                        tvEmpty.text = "Failed to parse Governance data.\n${e.message}"
+                        tvEmpty.visibility = View.VISIBLE
                     }
+                    adapter.notifyDataSetChanged()
                 }
             }
         })

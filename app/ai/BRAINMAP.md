@@ -106,7 +106,7 @@ ClawX is a React 19 + TypeScript + Vite desktop application packaged with Electr
     - HTTPS: `https://<host>/?token=<token>` (Mapped to port 443 via Tailscale Serve)
   * **OpenHuman Core**:
     - HTTP: `http://<IP>:7788`
-    - HTTPS: `https://<host>:10000` (Proxied to 7788 via Tailscale Serve, serving the official **OpenHuman Web Interface** and proxying `/rpc` requests to the native Rust Core daemon on port `17788`. Custom chat route `/chat` maps E2E messages directly to the OpenClaw Gateway on port `18789` under the `agent:openhuman` session slug).
+    - HTTPS: `https://<host>:10000` (Proxied to 7788 via Tailscale Serve, serving the official **OpenHuman Web Interface**. `POST /rpc` proxies to the native Rust Core daemon on port `17788` with the core bearer token injected server-side only. `POST /chat` supports the Host API/OpenClaw path for `agent:openhuman`, but the live vm-niclaw service currently runs `OPENHUMAN_CHAT_MODE=ollama-direct` using local Ollama `qwen2.5:3b` because external providers are rate-limited or out of credit. This is real local inference, not mock data.)
   * **Hermes Console**:
     - HTTP: `http://<IP>:7789`
     - HTTPS: `https://<host>:8443` (Proxied to 7789 via Tailscale Serve, running a custom mobile-responsive Inference chat console. Custom chat route `/chat` maps E2E messages directly to the OpenClaw Gateway on port `18789` under the `agent:hermes` session slug).

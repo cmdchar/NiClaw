@@ -14,9 +14,11 @@ import android.app.AlertDialog
 import android.widget.Toast
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import org.json.JSONObject
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
 class ChatFragment : Fragment() {
 
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: MessageAdapter
     private lateinit var textInput: EditText
@@ -33,10 +35,21 @@ class ChatFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_chat, container, false)
 
+        swipeRefresh = view.findViewById(R.id.chatSwipeRefresh)
         recyclerView = view.findViewById(R.id.chatRecyclerView)
         textInput = view.findViewById(R.id.textInput)
         sendButton = view.findViewById(R.id.sendButton)
-        btnSessions = view.findViewById(R.id.btnSessions)
+        val btnCommandCenter: ImageButton = view.findViewById(R.id.btnCommandCenter)
+        btnCommandCenter.setOnClickListener {
+            val cmdFragment = CommandCenterFragment()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, cmdFragment)
+                .addToBackStack(null)
+                .commit()
+        }
+
+        val btnSessions: ImageButton = view.findViewById(R.id.btnSessions)
+        this.btnSessions = btnSessions
         micButton = view.findViewById(R.id.micButton)
         chatStatusText = view.findViewById(R.id.chatStatusText)
         statusIndicator = view.findViewById(R.id.statusIndicator)
@@ -73,6 +86,17 @@ class ChatFragment : Fragment() {
         // Apply initial status
         mainActivity?.getCurrentStatus()?.let { updateStatus(it) }
 
+        // Setup Swipe Refresh
+        swipeRefresh.setOnRefreshListener {
+            loadInitialSessions()
+        }
+
+        // Auto-load sessions on open if empty
+        if (mainActivity?.getCachedMessages()?.isEmpty() == true) {
+            swipeRefresh.isRefreshing = true
+            loadInitialSessions()
+        }
+
         return view
     }
 
@@ -92,6 +116,29 @@ class ChatFragment : Fragment() {
                 else -> 0xFFFFFFFF.toInt()
             }
             statusIndicator.backgroundTintList = android.content.res.ColorStateList.valueOf(color)
+        }
+    }
+
+    private fun loadInitialSessions() {
+        val ctx = context ?: return
+        val mainActivity = activity as? MainActivity ?: return
+
+        ApiClient.getSessionsList(ctx, "default-agent") { response, error ->
+            mainActivity.runOnUiThread {
+                swipeRefresh.isRefreshing = false
+                if (error != null) {
+                    Toast.makeText(ctx, "Eroare la auto-încărcare sesiuni", Toast.LENGTH_SHORT).show()
+                    return@runOnUiThread
+                }
+                val sessionsArray = response?.optJSONArray("sessions")
+                if (sessionsArray != null && sessionsArray.length() > 0) {
+                    val s = sessionsArray.optJSONObject(0)
+                    val key = s?.optString("key", "")
+                    if (!key.isNullOrEmpty()) {
+                        loadSessionTranscript(key)
+                    }
+                }
+            }
         }
     }
 

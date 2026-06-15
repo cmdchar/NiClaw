@@ -8,6 +8,15 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useSettingsStore } from '@/stores/settings';
 import { invokeIpc } from '@/lib/api-client';
+import { hostApiFetch } from '@/lib/host-api';
+
+type AndroidPairingResponse = {
+  success: boolean;
+  pairing?: {
+    code?: string;
+    expiresAt?: string;
+  };
+};
 
 export function RemoteAccessSettings() {
   const { t } = useTranslation('settings');
@@ -19,6 +28,9 @@ export function RemoteAccessSettings() {
 
   const localIp = '192.168.1.100';
   const [token, setToken] = useState<string>('');
+  const [androidPairingCode, setAndroidPairingCode] = useState<string>('');
+  const [androidPairingExpiresAt, setAndroidPairingExpiresAt] = useState<string>('');
+  const [androidPairingLoading, setAndroidPairingLoading] = useState(false);
 
   useEffect(() => {
     // Get token from main process
@@ -34,6 +46,31 @@ export function RemoteAccessSettings() {
   const handleCopyToken = () => {
     navigator.clipboard.writeText(token);
     toast.success(t('developer.tokenCopied'));
+  };
+
+  const handleGenerateAndroidPairing = async () => {
+    setAndroidPairingLoading(true);
+    try {
+      const response = await hostApiFetch<AndroidPairingResponse>('/api/android/pairing');
+      const code = response.pairing?.code || '';
+      if (!response.success || !code) {
+        throw new Error('Host API did not return a pairing code');
+      }
+      setAndroidPairingCode(code);
+      setAndroidPairingExpiresAt(response.pairing?.expiresAt || '');
+      toast.success('Android pairing code generated');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(`Android pairing failed: ${message}`);
+    } finally {
+      setAndroidPairingLoading(false);
+    }
+  };
+
+  const handleCopyAndroidPairing = () => {
+    if (!androidPairingCode) return;
+    navigator.clipboard.writeText(androidPairingCode);
+    toast.success('Android pairing code copied');
   };
 
   return (
@@ -96,6 +133,44 @@ export function RemoteAccessSettings() {
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
+              </div>
+
+              <div className="space-y-2 rounded-xl border border-teal-500/20 bg-teal-500/5 p-3">
+                <Label className="text-xs font-bold text-foreground/70 uppercase tracking-wider">
+                  Android Pairing Code
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Generate a short-lived code, then enter it in the Android Sync screen.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={androidPairingCode || 'No active code'}
+                    className="font-mono text-sm h-10 rounded-xl bg-black/5 border-transparent tracking-widest"
+                  />
+                  <Button
+                    variant="outline"
+                    className="shrink-0 h-10 rounded-xl"
+                    onClick={handleGenerateAndroidPairing}
+                    disabled={androidPairingLoading}
+                  >
+                    {androidPairingLoading ? 'Generating...' : 'Generate'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 h-10 w-10 rounded-xl"
+                    onClick={handleCopyAndroidPairing}
+                    disabled={!androidPairingCode}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                {androidPairingExpiresAt && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Expires: {new Date(androidPairingExpiresAt).toLocaleString()}
+                  </p>
+                )}
               </div>
             </div>
 

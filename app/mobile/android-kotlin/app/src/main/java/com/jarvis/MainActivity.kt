@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
     private val spatialFragment = SpatialFragment()
     private val portalFragment = PortalFragment()
     private val settingsFragment = SettingsFragment()
-    private val governanceFragment = GovernanceFragment()
+
 
     // Global App States and Caches
     private var activeAdapter: MessageAdapter? = null
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val prefs = getSharedPreferences("JarvisPrefs", Context.MODE_PRIVATE)
-        var serverUrl = prefs.getString("server_url", "ws://10.10.1.219:3000/jarvis/stream")!!
+        var serverUrl = prefs.getString("server_url", "ws://100.82.149.22:3000/jarvis/stream")!!
         if (serverUrl.contains(":13210/jarvis/stream")) {
             serverUrl = serverUrl.replace(":13210/jarvis/stream", ":3000/jarvis/stream")
             prefs.edit().putString("server_url", serverUrl).apply()
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_spatial -> spatialFragment
                 R.id.navigation_portal -> portalFragment
                 R.id.navigation_settings -> settingsFragment
-                R.id.navigation_governance -> governanceFragment
+
                 else -> chatFragment
             }
             supportFragmentManager.beginTransaction()
@@ -103,8 +103,8 @@ class MainActivity : AppCompatActivity() {
                     settingsFragment
                 }
                 "governance" -> {
-                    bottomNav.selectedItemId = R.id.navigation_governance
-                    governanceFragment
+                    bottomNav.selectedItemId = R.id.navigation_settings
+                    settingsFragment
                 }
                 else -> chatFragment
             }
@@ -137,8 +137,8 @@ class MainActivity : AppCompatActivity() {
                     settingsFragment
                 }
                 "governance" -> {
-                    bottomNav.selectedItemId = R.id.navigation_governance
-                    governanceFragment
+                    bottomNav.selectedItemId = R.id.navigation_settings
+                    settingsFragment
                 }
                 else -> {
                     bottomNav.selectedItemId = R.id.navigation_chat

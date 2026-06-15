@@ -28,6 +28,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
+        android:paddingBottom="100dp"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/settingsHeader"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -677,11 +679,37 @@
                         style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
 
                     <Button
+                        android:id="@+id/btnAndroidSync"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginBottom="8dp"
+                        android:backgroundTint="#14B8A6"
+                        android:text="Android Sync"
+                        android:textColor="#0A0D14"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+
+                    <Button
                         android:id="@+id/btnDevCommandCenter"
                         android:layout_width="match_parent"
                         android:layout_height="40dp"
+                        android:layout_marginBottom="8dp"
                         android:backgroundTint="#2563EB"
                         android:text="Dev Command Center"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton" />
+
+                    <Button
+                        android:id="@+id/btnGovernance"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:backgroundTint="#8B5CF6"
+                        android:text="🛡️ Agent Governance"
                         android:textColor="#FFFFFF"
                         android:textSize="12sp"
                         android:insetTop="0dp"
