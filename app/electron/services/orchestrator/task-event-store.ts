@@ -22,6 +22,7 @@ export class TaskEventStore extends EventEmitter {
       await fs.mkdir(this.baseDir, { recursive: true });
       await fs.mkdir(join(this.baseDir, 'events'), { recursive: true });
       await fs.mkdir(join(this.baseDir, 'reports'), { recursive: true });
+      await fs.mkdir(join(this.baseDir, 'patches'), { recursive: true });
 
       const tasksFile = join(this.baseDir, 'tasks.json');
       try {

@@ -4,6 +4,10 @@ export type TaskStatus =
   | 'running' 
   | 'waiting_approval' 
   | 'waiting_patch_approval'
+  | 'patch_generated'
+  | 'waiting_patch_review'
+  | 'patch_extraction_failed'
+  | 'applying_patch'
   | 'verifying' 
   | 'completed' 
   | 'failed' 
@@ -19,9 +23,25 @@ export type TaskStatus =
 export interface TaskEvent {
   id: string;
   timestamp: number;
-  type: 'log' | 'status_change' | 'agent_action' | 'approval_request' | 'verification_result' | 'error' | 'intent_ambiguous' | 'plan_skipped' | 'plan_generated' | 'execution_started' | 'execution_completed' | 'execution_timeout' | 'diff_generated' | 'report_generated';
+  type: 'log' | 'status_change' | 'agent_action' | 'approval_request' | 'verification_result' | 'error' | 'intent_ambiguous' | 'plan_skipped' | 'plan_generated' | 'execution_started' | 'execution_completed' | 'execution_timeout' | 'diff_generated' | 'report_generated' | 'patch_proposal_generated';
   message: string;
   data?: any;
+}
+
+export interface PatchProposal {
+  taskId: string;
+  planner: string;
+  executor: string;
+  summary: string;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  filesChanged: string[];
+  diff: string;
+  rawOutput: string;
+  policyValidation: {
+    valid: boolean;
+    reason?: string;
+  };
+  createdAt: string;
 }
 
 export interface AuditLog {

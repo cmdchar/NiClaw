@@ -88,8 +88,76 @@
                 android:textColor="#AAB8C2"
                 android:textSize="12sp"
                 android:typeface="monospace"
-                android:minHeight="200dp"
+                android:minHeight="100dp"
                 android:layout_marginBottom="16dp" />
+
+            <!-- Patch Data Container -->
+            <LinearLayout
+                android:id="@+id/patchContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Patch Proposal"
+                    android:textColor="#00E5FF"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/tvPlannerValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#AAB8C2"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvExecutorValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#AAB8C2"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvRiskValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFCA28"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/tvFilesChangedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Diff viewer wrapped in horizontal scroll -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#131824"
+                    android:layout_marginBottom="8dp">
+                    <TextView
+                        android:id="@+id/tvDiffPreview"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="12dp"
+                        android:textColor="#AAB8C2"
+                        android:textSize="12sp"
+                        android:typeface="monospace"
+                        android:maxHeight="300dp" />
+                </HorizontalScrollView>
+
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
@@ -141,9 +209,20 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Approve"
+            android:text="Commit"
             android:backgroundTint="#00E5FF"
             android:textColor="#0A0D14"
+            android:visibility="gone"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btnApplyPatch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Apply Patch"
+            android:backgroundTint="#66BB6A"
+            android:textColor="#FFFFFF"
             android:visibility="gone" />
     </LinearLayout>
 

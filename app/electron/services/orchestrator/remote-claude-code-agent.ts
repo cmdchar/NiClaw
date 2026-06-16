@@ -228,6 +228,106 @@ claude -p "${prompt.replace(/"/g, '\\"')}"
             quotaExceeded: stdout.includes('quota') || stderr.includes('quota') || stdout.includes('Insufficient Balance')
         };
     }
+    async generatePatchProposal(prompt: string, project: { id: string, path: string, commands: any }, onLog: (msg: string) => void) {
+        onLog(`[Remote Claude] Starting Patch Proposal generation for project: ${project.id}`);
+        
+        // Map Windows path to VM path
+        let vmPath = project.path.replace(/\\/g, '/');
+        if (vmPath.toLowerCase().startsWith('c:/')) {
+            vmPath = '/home/debian/' + vmPath.substring(3);
+        }
+        
+        onLog(`[Remote Claude] Mapped path: ${vmPath}`);
+
+        // Write script locally, scp it, then execute
+        const tempScriptPath = require('path').join(require('os').tmpdir(), `claude_patch_${Date.now()}.sh`);
+        const remoteScriptPath = `/tmp/claude_patch_${Date.now()}.sh`;
+        
+        // Modified prompt: ask Claude to output the patch proposal without writing files
+        const patchPrompt = `${prompt.replace(/"/g, '\\"')}
+
+IMPORTANT INSTRUCTIONS:
+- Show the exact file modifications you would make as unified diff format.
+- For each file, show the full path relative to the project root.
+- Use standard unified diff format with --- a/file and +++ b/file headers.
+- If you cannot write files directly, output the complete proposed changes.
+- Do NOT ask for approval. Just output the proposed changes.`;
+
+        const scriptContent = `#!/bin/bash
+export PATH="/home/debian/.local/share/pnpm/bin:/home/debian/.local/bin:$PATH"
+source /home/debian/.config/niclaw/.env.deepseek
+export ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic"
+export ANTHROPIC_API_KEY="$DEEPSEEK_API_KEY"
+cd "${vmPath}"
+claude -p "${patchPrompt}"
+`;
+        
+        require('fs').writeFileSync(tempScriptPath, scriptContent);
+
+        const start = Date.now();
+        let stdout = '';
+        let stderr = '';
+        let exitCode = 0;
+
+        try {
+            // Upload the script
+            await execAsync(`scp -o BatchMode=yes -o ConnectTimeout=10 "${tempScriptPath}" debian@vm-niclaw.tail7a9097.ts.net:"${remoteScriptPath}"`);
+            
+            // Execute and capture output
+            const { stdout: out, stderr: err } = await execAsync(`${this.getSshPrefix()} "bash \\"${remoteScriptPath}\\""`, { maxBuffer: 1024 * 1024 * 10 });
+            stdout = out;
+            stderr = err;
+            
+            // Cleanup
+            await execAsync(`${this.getSshPrefix()} "rm -f \\"${remoteScriptPath}\\""`).catch(() => {});
+        } catch (err: any) {
+            stdout = err.stdout || '';
+            stderr = err.stderr || err.message;
+            exitCode = err.code || 1;
+        } finally {
+            require('fs').unlinkSync(tempScriptPath);
+        }
+
+        const durationMs = Date.now() - start;
+        onLog(`[Remote Claude] Patch proposal generation completed. Exit code: ${exitCode}`);
+        
+        // Parse changed files from git status on VM (in case Claude managed to write files)
+        let filesChanged: string[] = [];
+        let diffSize = 0;
+        let diffOutput = '';
+        try {
+            const { stdout: gitStatus } = await execAsync(`${this.getSshPrefix()} "cd \\"${vmPath}\\" && git status --porcelain"`);
+            filesChanged = gitStatus.split('\n').map(line => line.substring(3).trim()).filter(line => line.length > 0);
+            
+            if (filesChanged.length > 0) {
+                const { stdout: gitDiff } = await execAsync(`${this.getSshPrefix()} "cd \\"${vmPath}\\" && git diff HEAD"`, { maxBuffer: 1024 * 1024 * 5 });
+                diffSize = gitDiff.length;
+                diffOutput = gitDiff;
+
+                // Reset changes on VM to keep it clean (patch will be applied locally after review)
+                await execAsync(`${this.getSshPrefix()} "cd \\"${vmPath}\\" && git checkout -- . && git clean -fd"`).catch(() => {});
+                onLog(`[Remote Claude] Reverted VM changes after harvesting diff (${filesChanged.length} files).`);
+            }
+        } catch (e) {
+            onLog(`[Remote Claude] Could not parse git status: ${e}`);
+        }
+
+        return {
+            realInvocation: true,
+            codexVersion: this.claudeVersion,
+            commandExecuted: 'claude -p <patch-prompt>',
+            exitCode,
+            durationMs,
+            filesChanged,
+            diffSize,
+            diffOutput,
+            stdout,
+            stderr,
+            success: exitCode === 0,
+            quotaExceeded: stdout.includes('quota') || stderr.includes('quota') || stdout.includes('Insufficient Balance')
+        };
+    }
 }
 
 export const remoteClaudeCodeAgent = new RemoteClaudeCodeAgent();
+

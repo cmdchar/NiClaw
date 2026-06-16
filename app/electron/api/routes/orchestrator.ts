@@ -5,6 +5,7 @@ import { sendJson, requireJsonContentType } from '../route-utils';
 import { taskOrchestrator } from '../../services/orchestrator/task-orchestrator';
 import { taskEventStore } from '../../services/orchestrator/task-event-store';
 import { policyEngine } from '../../services/orchestrator/policy-engine';
+import { patchHarvester } from '../../services/orchestrator/patch-harvester';
 import { projectWorkspaceService } from '../../services/orchestrator/project-workspace-service';
 import { projectDiscoveryService } from '../../services/orchestrator/project-discovery-service';
 import { serviceRegistry } from '../../services/orchestrator/service-registry';
@@ -186,14 +187,14 @@ export async function handleOrchestratorRoutes(
     if (!requireJsonContentType(req, res)) return true;
     try {
       const body = await parseBody(req);
-      const { title, userPrompt, targetProject } = body;
+      const { title, userPrompt, targetProject, executor } = body;
       
       if (!userPrompt) {
         sendJson(res, 400, { error: 'Missing required field: userPrompt' });
         return true;
       }
 
-      const task = await taskOrchestrator.submitTask(title || 'New Task', userPrompt, targetProject || '');
+      const task = await taskOrchestrator.submitTask(title || 'New Task', userPrompt, targetProject || '', executor);
       sendJson(res, 201, task);
     } catch (e: any) {
       sendJson(res, 500, { error: e.message });
@@ -237,7 +238,7 @@ export async function handleOrchestratorRoutes(
   }
 
   // Task specific routes
-  const taskMatch = url.pathname.match(/^\/api\/orchestrator\/tasks\/([^/]+)(\/(events|approve|cancel|retry|retry-execution|rollback|stop|diff|approve-patch|reject-patch))?$/);
+  const taskMatch = url.pathname.match(/^\/api\/orchestrator\/tasks\/([^/]+)(\/(events|approve|cancel|retry|retry-execution|rollback|stop|diff|approve-patch|reject-patch|apply-patch|patch))?$/);
   if (taskMatch) {
     const taskId = taskMatch[1];
     const action = taskMatch[3];
@@ -252,6 +253,16 @@ export async function handleOrchestratorRoutes(
         const events = taskEventStore.getEvents(taskId);
         const diffEvent = events.find(e => e.type === 'diff_generated');
         sendJson(res, 200, { diff: diffEvent?.data?.diff || '' });
+        return true;
+      }
+      if (action === 'patch') {
+        patchHarvester.loadPatch(taskId).then(patch => {
+            if (!patch) {
+                sendJson(res, 404, { error: 'Patch not found' });
+            } else {
+                sendJson(res, 200, patch);
+            }
+        }).catch(err => sendJson(res, 500, { error: err.message }));
         return true;
       }
       const task = taskEventStore.getTask(taskId);
@@ -297,11 +308,29 @@ export async function handleOrchestratorRoutes(
       return true;
     }
 
-    if (action === 'reject-patch' && req.method === 'POST') {
-      taskOrchestrator.rejectPatch(taskId).catch(err => {
-        taskEventStore.addEvent(taskId, 'error', `Reject error: ${err.message}`);
+    if (action === 'apply-patch' && req.method === 'POST') {
+      taskOrchestrator.approvePatchReview(taskId).catch(err => {
+        taskEventStore.addEvent(taskId, 'error', `Apply Patch error: ${err.message}`);
+        taskEventStore.updateTaskStatus(taskId, 'failed');
       });
-      sendJson(res, 200, { success: true, message: 'Patch rejected, changes discarded' });
+      sendJson(res, 200, { success: true, message: 'Patch review approved, applying changes locally' });
+      return true;
+    }
+
+    if (action === 'reject-patch' && req.method === 'POST') {
+      const task = taskEventStore.getTask(taskId);
+      if (task?.status === 'waiting_patch_review') {
+        taskOrchestrator.rejectPatchReview(taskId).catch(err => {
+          taskEventStore.addEvent(taskId, 'error', `Reject Patch Review error: ${err.message}`);
+        });
+        sendJson(res, 200, { success: true, message: 'Patch proposal rejected, task cancelled' });
+      } else {
+        // Original final-commit discard
+        taskOrchestrator.rejectPatch(taskId).catch(err => {
+          taskEventStore.addEvent(taskId, 'error', `Reject error: ${err.message}`);
+        });
+        sendJson(res, 200, { success: true, message: 'Patch rejected, changes discarded' });
+      }
       return true;
     }
 

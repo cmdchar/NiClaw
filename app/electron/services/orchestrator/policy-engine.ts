@@ -184,6 +184,38 @@ export class PolicyEngine {
       policyVersion: '1.0.0-Phase2.8'
     };
   }
+    async validatePatchProposal(patch: any): Promise<{ valid: boolean; reason?: string }> {
+        try {
+            // Re-use the existing validateDiff logic but wrap it for patch proposal
+            const diffValidation = await this.validateDiff(patch.filesChanged);
+            if (!diffValidation.valid) {
+                return { valid: false, reason: `Policy Violation: ${diffValidation.reason}` };
+            }
+
+            // Additional check: Does the raw diff contain obvious secrets?
+            if (patch.diff) {
+                const secretPatterns = [
+                    /api_key\s*=|apikey\s*=/i,
+                    /password\s*=/i,
+                    /secret\s*=/i,
+                    /token\s*=/i,
+                    /PRIVATE KEY/i,
+                    /HERMES_API_TOKEN/i,
+                    /DEEPSEEK_API_KEY/i
+                ];
+
+                for (const pattern of secretPatterns) {
+                    if (pattern.test(patch.diff)) {
+                        return { valid: false, reason: 'Policy Violation: Patch diff contains potential secret/token patterns.' };
+                    }
+                }
+            }
+
+            return { valid: true };
+        } catch (e: any) {
+            return { valid: false, reason: `Error validating patch: ${e.message}` };
+        }
+    }
 }
 
 export const policyEngine = new PolicyEngine();

@@ -7,6 +7,7 @@ import { hermesAdapter } from './hermes-adapter';
 import { gitWorkspaceManager } from './git-workspace-manager';
 import { codexCliAdapter } from './codex-cli-adapter';
 import { remoteClaudeCodeAgent } from './remote-claude-code-agent';
+import { patchHarvester } from './patch-harvester';
 import { Task, ProjectIndex } from './types';
 
 const execAsync = promisify(exec);
@@ -192,104 +193,134 @@ export class TaskOrchestrator {
       }
     );
 
-    if (execResult.exitCode === 124) {
-      taskEventStore.addEvent(taskId, 'execution_timeout', 'Codex CLI hit execution timeout (10m)');
-      onLog(`[Phase 2.9C] Timeout hit (124). Checking if any files were changed...`);
-    } else if (!execResult.success) {
-      onLog(`[ERROR] Codex CLI failed: exitCode=${execResult.exitCode}, files=${execResult.filesChanged.length}`);
-    }
+    if (task.executor === 'remote-claude-code') {
+      // PHASE 4.2 Patch Harvesting Flow
+      taskEventStore.updateTaskStatus(taskId, 'patch_generated' as any);
+      onLog(`[Phase 4.2] Harvesting patch proposal...`);
+      
+      try {
+        const proposal = await patchHarvester.harvestPatch(
+          taskId,
+          execResult.stdout,
+          execResult.filesChanged || [],
+          execResult.diffOutput || '',
+          'hermes-cli',
+          'remote-claude-code'
+        );
 
-    if (execResult.quotaExceeded) {
-      onLog(`[Phase 3A] Upstream provider quota exceeded.`);
-      taskEventStore.updateTaskStatus(taskId, 'provider_quota_exceeded' as any);
-      return;
-    }
-
-    if (execResult.filesChanged && execResult.filesChanged.length === 0 && !execResult.dryRun) {
-      if (task.executor === 'remote-claude-code') {
-        onLog(`[Phase 2.9C] remote-claude-code returned no filesChanged. Waiting 3s for sync...`);
-        await new Promise(r => setTimeout(r, 3000));
-        // Check local git status
-        const { stdout: localStatus } = await execAsync('git status --porcelain', { cwd: projectPath }).catch(() => ({ stdout: '' }));
-        const localFiles = localStatus.split('\n').map(l => l.substring(3).trim()).filter(l => l.length > 0);
-        if (localFiles.length === 0) {
-          onLog(`[Phase 4.1] No files were changed locally. Task likely needs executor approval or made no changes.`);
+        if (!proposal) {
+          onLog(`[Phase 4.2] No files were changed or proposed. Task made no changes.`);
           taskEventStore.updateTaskStatus(taskId, 'no_changes');
           return;
         }
-        execResult.filesChanged = localFiles;
-      } else {
+
+        // Validate patch before showing to Android
+        const policyCheck = await policyEngine.validatePatchProposal(proposal);
+        if (!policyCheck.valid) {
+          onLog(`[Phase 4.2] Pre-review policy violation: ${policyCheck.reason}`);
+          await policyEngine.detectPolicyViolation(taskId, { reason: policyCheck.reason });
+          return; // Ends in blocked_policy_violation
+        }
+
+        taskEventStore.addEvent(taskId, 'patch_proposal_generated' as any, 'Generated patch proposal', { 
+          riskLevel: proposal.riskLevel,
+          filesChanged: proposal.filesChanged,
+          diffSize: proposal.diff.length,
+          summary: proposal.summary
+        });
+        
+        taskEventStore.updateTaskStatus(taskId, 'waiting_patch_review' as any);
+        onLog(`[Phase 4.2] Task waiting for patch review. Auto-commit disabled.`);
+        return; // Wait for human review
+
+      } catch (err: any) {
+        if (err.message === 'PATCH_EXTRACTION_FAILED') {
+          onLog(`[Phase 4.2] Extraction failed. Raw output preserved for review.`);
+          taskEventStore.addEvent(taskId, 'error', 'Failed to extract structured patch from Claude output', { rawOutput: err.rawOutput });
+          taskEventStore.updateTaskStatus(taskId, 'patch_extraction_failed' as any);
+          return;
+        }
+        throw err;
+      }
+    } else {
+      // Fallback flow for default codex
+      if (execResult.exitCode === 124) {
+        taskEventStore.addEvent(taskId, 'execution_timeout', 'Codex CLI hit execution timeout (10m)');
+      } else if (!execResult.success) {
+        onLog(`[ERROR] Codex CLI failed: exitCode=${execResult.exitCode}, files=${execResult.filesChanged.length}`);
+      }
+
+      if (execResult.filesChanged && execResult.filesChanged.length === 0 && !execResult.dryRun) {
         onLog(`[Phase 2.9C] No files were changed. Task failed.`);
         taskEventStore.updateTaskStatus(taskId, 'failed');
         return;
+      } else if (execResult.dryRun) {
+        onLog(`[Dry Run] Execution completed without changing real files.`);
       }
-    } else if (execResult.dryRun) {
-      onLog(`[Dry Run] Execution completed without changing real files.`);
-    }
 
-    // Post-execution policy check (Phase 3A/2.9C)
-    const policyCheck = await policyEngine.validateDiff(execResult.filesChanged, task.targetProject);
-    if (!policyCheck.valid) {
-      onLog(`[Phase 3A] Post-execution policy violation: ${policyCheck.reason}`);
-      await policyEngine.detectPolicyViolation(taskId, { reason: policyCheck.reason });
-      // Do not commit
-      return;
-    }
-
-    // State: verifying
-    taskEventStore.updateTaskStatus(taskId, 'verifying');
-    onLog('[Phase 2.9C] Running structural verification...');
-    
-    // Generate diff from staged files vs HEAD
-    let diffText = execResult.diffOutput;
-    try {
-      if (!diffText) {
-        // Stage all changes to capture diff locally
-        await execAsync('git add -A', { cwd: projectPath });
-        // Use -a (--text) to prevent "Binary files differ" on UTF-16/CRLF mismatches
-        const { stdout } = await execAsync(`git diff -a --cached`, { cwd: projectPath });
-        diffText = stdout || 'No diff output';
+      // Post-execution policy check (Phase 3A/2.9C)
+      const policyCheck = await policyEngine.validateDiff(execResult.filesChanged, task.targetProject);
+      if (!policyCheck.valid) {
+        onLog(`[Phase 3A] Post-execution policy violation: ${policyCheck.reason}`);
+        await policyEngine.detectPolicyViolation(taskId, { reason: policyCheck.reason });
+        // Do not commit
+        return;
       }
+
+      // State: verifying
+      taskEventStore.updateTaskStatus(taskId, 'verifying');
+      onLog('[Phase 2.9C] Running structural verification...');
       
-      taskEventStore.addEvent(taskId, 'diff_generated', 'Generated structural diff from git', { 
-        diff: diffText,
-        diffSize: diffText.length,
+      // Generate diff from staged files vs HEAD
+      let diffText = execResult.diffOutput;
+      try {
+        if (!diffText) {
+          // Stage all changes to capture diff locally
+          await execAsync('git add -A', { cwd: projectPath });
+          // Use -a (--text) to prevent "Binary files differ" on UTF-16/CRLF mismatches
+          const { stdout } = await execAsync(`git diff -a --cached`, { cwd: projectPath });
+          diffText = stdout || 'No diff output';
+        }
+        
+        taskEventStore.addEvent(taskId, 'diff_generated', 'Generated structural diff from git', { 
+          diff: diffText,
+          diffSize: diffText.length,
+          filesChanged: execResult.filesChanged,
+        });
+        onLog(`[Phase 2.9C] Diff captured: ${diffText.length} bytes`);
+      } catch(err: any) {
+        onLog(`Failed to capture diff: ${err.message}`);
+        taskEventStore.addEvent(taskId, 'diff_generated', 'Failed to generate structural diff', { diff: err.message });
+      }
+
+      // Build final report
+      const report = {
+        phase: '2.9C',
+        codexInvokedReal: execResult.realInvocation,
+        codexVersion: execResult.codexVersion,
+        commandExecuted: execResult.commandExecuted,
+        executionDurationMs: execResult.durationMs,
+        executionDurationHuman: `${(execResult.durationMs / 1000).toFixed(1)}s`,
+        exitCode: execResult.exitCode,
         filesChanged: execResult.filesChanged,
+        filesChangedCount: execResult.filesChanged.length,
+        diffSizeBytes: diffText.length,
+        buildTest: 'N/A (sandbox has no build/test scripts)',
+        success: execResult.success,
+      };
+
+      taskEventStore.addEvent(taskId, 'report_generated', 'Phase 2.9C Final Report', { report });
+      taskEventStore.updateTaskField(taskId, { 
+        resultSummary: `Phase 2.9C: Codex CLI ${execResult.realInvocation ? 'REAL' : 'NOT'} invoked. ` +
+          `v${execResult.codexVersion}, exit=${execResult.exitCode}, ` +
+          `files=${execResult.filesChanged.length}, ` +
+          `duration=${(execResult.durationMs / 1000).toFixed(1)}s`
       });
-      onLog(`[Phase 2.9C] Diff captured: ${diffText.length} bytes`);
-    } catch(err: any) {
-      onLog(`Failed to capture diff: ${err.message}`);
-      taskEventStore.addEvent(taskId, 'diff_generated', 'Failed to generate structural diff', { diff: err.message });
+      
+      // State: waiting_patch_approval (DO NOT auto-commit)
+      taskEventStore.updateTaskStatus(taskId, 'waiting_patch_approval');
+      onLog(`[Phase 2.9C] Task waiting for patch approval. Auto-commit disabled.`);
     }
-
-    // Build final report
-    const report = {
-      phase: '2.9C',
-      codexInvokedReal: execResult.realInvocation,
-      codexVersion: execResult.codexVersion,
-      commandExecuted: execResult.commandExecuted,
-      executionDurationMs: execResult.durationMs,
-      executionDurationHuman: `${(execResult.durationMs / 1000).toFixed(1)}s`,
-      exitCode: execResult.exitCode,
-      filesChanged: execResult.filesChanged,
-      filesChangedCount: execResult.filesChanged.length,
-      diffSizeBytes: diffText.length,
-      buildTest: 'N/A (sandbox has no build/test scripts)',
-      success: execResult.success,
-    };
-
-    taskEventStore.addEvent(taskId, 'report_generated', 'Phase 2.9C Final Report', { report });
-    taskEventStore.updateTaskField(taskId, { 
-      resultSummary: `Phase 2.9C: Codex CLI ${execResult.realInvocation ? 'REAL' : 'NOT'} invoked. ` +
-        `v${execResult.codexVersion}, exit=${execResult.exitCode}, ` +
-        `files=${execResult.filesChanged.length}, ` +
-        `duration=${(execResult.durationMs / 1000).toFixed(1)}s`
-    });
-    
-    // State: waiting_patch_approval (DO NOT auto-commit)
-    taskEventStore.updateTaskStatus(taskId, 'waiting_patch_approval');
-    onLog(`[Phase 2.9C] Task waiting for patch approval. Auto-commit disabled.`);
-    onLog(`[Phase 2.9B] Task completed. Real invocation: ${execResult.realInvocation}`);
   }
 
   async cancelTask(taskId: string) {
