@@ -47,28 +47,91 @@ export class TaskEventStore extends EventEmitter {
     }
   }
 
+  private writeQueue: Map<string, Promise<void>> = new Map();
+
+  private async safeWrite(targetFile: string, content: string) {
+    const runWrite = async () => {
+      const tempFile = `${targetFile}.tmp.${Date.now()}.${Math.floor(Math.random() * 10000)}`;
+      const backupFile = `${targetFile}.bak`;
+      
+      try {
+        await fs.writeFile(tempFile, content, 'utf8');
+        
+        try {
+          await fs.access(targetFile);
+          await fs.copyFile(targetFile, backupFile);
+        } catch (e) {
+          // Ignore if it doesn't exist
+        }
+
+        const delays = [50, 100, 200, 500, 1000];
+        let renamed = false;
+
+        for (let i = 0; i < delays.length + 1; i++) {
+          try {
+            await fs.rename(tempFile, targetFile);
+            renamed = true;
+            break;
+          } catch (e: any) {
+            if (['EPERM', 'EBUSY', 'EACCES'].includes(e.code) && i < delays.length) {
+              console.warn(`[Persistence] pid=${process.pid} file=${require('path').basename(targetFile)} attempt=${i + 1} code=${e.code}`);
+              console.warn(`[Persistence] Rename retry ${i + 1}/${delays.length} for ${require('path').basename(targetFile)}`);
+              await new Promise(r => setTimeout(r, delays[i]));
+            } else {
+              if (!['EPERM', 'EBUSY', 'EACCES'].includes(e.code) || i === delays.length) {
+                // If it's a different error or we exhausted retries, fallback
+                console.warn(`[Persistence] pid=${process.pid} file=${require('path').basename(targetFile)} attempt=${i + 1} code=${e.code}`);
+                console.warn(`[Persistence] Falling back to copy+replace for ${require('path').basename(targetFile)}`);
+                try {
+                  await fs.copyFile(tempFile, targetFile);
+                  await fs.unlink(tempFile).catch(() => {});
+                  renamed = true;
+                } catch (fallbackErr) {
+                  throw new Error(`Fallback failed: ${fallbackErr}`);
+                }
+                break;
+              }
+            }
+          }
+        }
+
+        if (!renamed) {
+          throw new Error('Rename and fallback both failed');
+        }
+
+        // Integrity Check
+        try {
+          const written = await fs.readFile(targetFile, 'utf8');
+          JSON.parse(written);
+        } catch (e) {
+          console.error(`[Persistence] Integrity check failed for ${require('path').basename(targetFile)}`);
+          throw new Error(`Integrity check failed: ${e}`);
+        }
+
+      } catch (err) {
+        console.error(`[Persistence] Failed to write ${targetFile}:`, err);
+        throw err;
+      }
+    };
+
+    // Serialize writes for the same target file
+    const currentQueue = this.writeQueue.get(targetFile) || Promise.resolve();
+    const nextQueue = currentQueue.then(() => runWrite()).catch(() => runWrite());
+    this.writeQueue.set(targetFile, nextQueue);
+    await nextQueue;
+  }
+
   private async saveTasks() {
     if (!this.initialized) return;
     try {
       const dbPath = join(this.baseDir, 'tasks.json');
-      const tempFile = join(this.baseDir, `tasks.json.tmp.${Date.now()}`);
-      const backupFile = join(this.baseDir, 'tasks.json.bak');
-      
       const rawTasks: Record<string, any> = {};
       for (const [id, task] of this.tasks.entries()) {
         rawTasks[id] = task;
       }
-      
-      await fs.writeFile(tempFile, JSON.stringify(rawTasks, null, 2), 'utf8');
-      try {
-        await fs.access(dbPath);
-        await fs.copyFile(dbPath, backupFile);
-      } catch (e) {
-        // ignore if it doesn't exist
-      }
-      await fs.rename(tempFile, dbPath);
+      await this.safeWrite(dbPath, JSON.stringify(rawTasks, null, 2));
     } catch (e) {
-      console.error('Failed to save tasks atomically:', e);
+      console.error('Failed to save tasks:', e);
     }
   }
 
@@ -78,25 +141,14 @@ export class TaskEventStore extends EventEmitter {
     if (!task) return;
     try {
       const dbPath = join(this.baseDir, 'events', `${taskId}.json`);
-      const tempFile = join(this.baseDir, 'events', `${taskId}.json.tmp.${Date.now()}`);
-      const backupFile = join(this.baseDir, 'events', `${taskId}.json.bak`);
-      
       const content = JSON.stringify({
         events: task.events,
         logs: task.logs,
         auditLogs: task.auditLogs
       }, null, 2);
-      
-      await fs.writeFile(tempFile, content, 'utf8');
-      try {
-        await fs.access(dbPath);
-        await fs.copyFile(dbPath, backupFile);
-      } catch (e) {
-        // ignore
-      }
-      await fs.rename(tempFile, dbPath);
+      await this.safeWrite(dbPath, content);
     } catch (e) {
-      console.error('Failed to save task events atomically:', e);
+      console.error('Failed to save task events:', e);
     }
   }
 

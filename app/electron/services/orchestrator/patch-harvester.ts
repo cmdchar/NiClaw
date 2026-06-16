@@ -88,15 +88,61 @@ export class PatchHarvester {
     const files: string[] = [];
     const diffBlocks: string[] = [];
 
+    // Pattern 0: Try to parse JSON if --output-format json was used
+    try {
+      const jsonStart = stdout.indexOf('{');
+      if (jsonStart !== -1) {
+        const jsonStr = stdout.substring(jsonStart);
+        const parsed = JSON.parse(jsonStr);
+        if (parsed && parsed.permission_denials && Array.isArray(parsed.permission_denials)) {
+          for (const denial of parsed.permission_denials) {
+            const tInput = denial.tool_input;
+            if (denial.tool_name === 'Replace' && tInput) {
+              const file = tInput.file_path || 'unknown';
+              const oldStr = tInput.old_string || '';
+              const newStr = tInput.new_string || '';
+              const diff = `--- a/${file}\n+++ b/${file}\n@@ -1,1 +1,1 @@\n-${oldStr.split('\\n').join('\\n-')}\n+${newStr.split('\\n').join('\\n+')}`;
+              diffBlocks.push(diff);
+              files.push(file);
+            } else if (denial.tool_name === 'Edit' && tInput) {
+              const file = tInput.file_path || 'unknown';
+              const oldStr = tInput.old_string || '';
+              const newStr = tInput.new_string || '';
+              const diff = `--- a/${file}\n+++ b/${file}\n@@ -1,1 +1,1 @@\n-${oldStr.split('\\n').join('\\n-')}\n+${newStr.split('\\n').join('\\n+')}`;
+              diffBlocks.push(diff);
+              files.push(file);
+            } else if (denial.tool_name === 'Write' && tInput) {
+              const file = tInput.file_path || 'unknown';
+              const diff = `--- a/${file}\n+++ b/${file}\n@@ -1,0 +1,1 @@\n+${(tInput.content || '').split('\\n').join('\\n+')}`;
+              diffBlocks.push(diff);
+              files.push(file);
+            }
+          }
+        }
+        
+        // If JSON contains a text result, use it for the regex fallbacks
+        if (parsed.result && typeof parsed.result === 'string') {
+          stdout = parsed.result;
+        }
+      }
+    } catch (e) {
+      // Not JSON or parse error, fall through
+    }
+
     // Pattern 1: Look for unified diff blocks in the output
-    const diffRegex = /^(---\s+a\/.*\n\+\+\+\s+b\/.*\n(?:@@.*@@.*\n(?:[+ -].*\n?)*))/gm;
+    const diffRegex = /^(---\s+(?:a\/.*|\/dev\/null)\n\+\+\+\s+(?:b\/.*|\/dev\/null)\n(?:@@.*@@.*\n(?:[+ -].*\n?)*))/gm;
     let match: RegExpExecArray | null;
     while ((match = diffRegex.exec(stdout)) !== null) {
       diffBlocks.push(match[1]);
       // Extract filename from +++ line
-      const fileMatch = match[1].match(/\+\+\+\s+b\/(.+)/);
-      if (fileMatch) {
+      const fileMatch = match[1].match(/\+\+\+\s+(?:b\/)?(.+)/);
+      if (fileMatch && fileMatch[1].trim() !== '/dev/null') {
         files.push(fileMatch[1].trim());
+      } else {
+        const fileMatchA = match[1].match(/---\s+(?:a\/)?(.+)/);
+        if (fileMatchA && fileMatchA[1].trim() !== '/dev/null') {
+          files.push(fileMatchA[1].trim());
+        }
       }
     }
 
@@ -118,13 +164,6 @@ export class PatchHarvester {
       }
       // Construct a pseudo-diff from the code block
       diffBlocks.push(`--- a/${filename}\n+++ b/${filename}\n@@ -1,0 +1,${match[2].split('\n').length} @@\n${match[2].split('\n').map(l => '+' + l).join('\n')}`);
-    }
-
-    // Pattern 4: If Claude outputs "I would make the following changes:" style text,
-    // capture the entire block as a textual diff
-    if (diffBlocks.length === 0 && stdout.length > 50) {
-      // Use the entire stdout as a textual patch proposal
-      diffBlocks.push(`# Claude Code Proposed Changes\n# (no unified diff available — parsed from stdout)\n\n${stdout.substring(0, 10000)}`);
     }
 
     return {

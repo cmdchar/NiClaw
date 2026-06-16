@@ -243,15 +243,13 @@ claude -p "${prompt.replace(/"/g, '\\"')}"
         const tempScriptPath = require('path').join(require('os').tmpdir(), `claude_patch_${Date.now()}.sh`);
         const remoteScriptPath = `/tmp/claude_patch_${Date.now()}.sh`;
         
-        // Modified prompt: ask Claude to output the patch proposal without writing files
         const patchPrompt = `${prompt.replace(/"/g, '\\"')}
 
-IMPORTANT INSTRUCTIONS:
-- Show the exact file modifications you would make as unified diff format.
-- For each file, show the full path relative to the project root.
-- Use standard unified diff format with --- a/file and +++ b/file headers.
-- If you cannot write files directly, output the complete proposed changes.
-- Do NOT ask for approval. Just output the proposed changes.`;
+Do not edit files.
+Do not request write permission.
+Return only a unified diff patch.
+The patch must target only the allowed files.
+No prose outside the diff.`;
 
         const scriptContent = `#!/bin/bash
 export PATH="/home/debian/.local/share/pnpm/bin:/home/debian/.local/bin:$PATH"
