@@ -58,23 +58,23 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Conexiune Host Gateway"
+                        android:text="Conexiune Host API &amp; Gateway"
                         android:textColor="#00E5FF"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_marginBottom="12dp" />
 
-                    <!-- Server URL Input -->
+                    <!-- Host API URL Input -->
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="WebSocket Server URL"
+                        android:text="Host API URL (Orchestrator REST)"
                         android:textColor="#8892B0"
                         android:textSize="11sp"
                         android:layout_marginBottom="4dp" />
 
                     <EditText
-                        android:id="@+id/settingsServerUrl"
+                        android:id="@+id/settingsHostApiUrl"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@android:drawable/editbox_background_normal"
@@ -83,7 +83,53 @@
                         android:textSize="14sp"
                         android:padding="10dp"
                         android:inputType="textUri"
-                        android:hint="ws://10.10.1.219:3000/jarvis/stream"
+                        android:hint="http://100.82.149.22:13210"
+                        android:textColorHint="#5E6D8C"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Gateway URL Input -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Gateway URL"
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/settingsGatewayUrl"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:drawable/editbox_background_normal"
+                        android:backgroundTint="#1C2434"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:inputType="textUri"
+                        android:hint="http://100.82.149.22:18789"
+                        android:textColorHint="#5E6D8C"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Classic WS URL Input -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Classic WebSocket URL (Opțional)"
+                        android:textColor="#8892B0"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/settingsClassicWsUrl"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:drawable/editbox_background_normal"
+                        android:backgroundTint="#1C2434"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:padding="10dp"
+                        android:inputType="textUri"
+                        android:hint="ws://100.82.149.22:7788/jarvis/stream"
                         android:textColorHint="#5E6D8C"
                         android:layout_marginBottom="10dp" />
 
@@ -267,22 +313,75 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Control Server local"
+                        android:text="Status Conexiuni"
                         android:textColor="#00E5FF"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_marginBottom="8dp" />
 
+                    <!-- Host API Status -->
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:id="@+id/lblHostApiStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Host API:"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/valHostApiStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toEndOf="@id/lblHostApiStatus"
+                            android:layout_marginStart="8dp"
+                            android:text="NECUNOSCUT"
+                            android:textColor="#8892B0"
+                            android:textStyle="bold"
+                            android:textSize="14sp" />
+                    </RelativeLayout>
+
+                    <!-- Orchestrator Status -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:id="@+id/lblOrchestratorStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Orchestrator:"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/valOrchestratorStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toEndOf="@id/lblOrchestratorStatus"
+                            android:layout_marginStart="8dp"
+                            android:text="NECUNOSCUT"
+                            android:textColor="#8892B0"
+                            android:textStyle="bold"
+                            android:textSize="14sp" />
+                    </RelativeLayout>
+
+                    <!-- Gateway Status -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp">
 
                         <TextView
                             android:id="@+id/lblGatewayStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Status Gateway:"
+                            android:text="Gateway:"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp" />
 
@@ -292,8 +391,34 @@
                             android:layout_height="wrap_content"
                             android:layout_toEndOf="@id/lblGatewayStatus"
                             android:layout_marginStart="8dp"
-                            android:text="CONECTAT"
-                            android:textColor="#00E5FF"
+                            android:text="NECUNOSCUT"
+                            android:textColor="#8892B0"
+                            android:textStyle="bold"
+                            android:textSize="14sp" />
+                    </RelativeLayout>
+
+                    <!-- Classic Chat Status -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/lblClassicChatStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Classic Chat WS:"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/valClassicChatStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toEndOf="@id/lblClassicChatStatus"
+                            android:layout_marginStart="8dp"
+                            android:text="NECUNOSCUT"
+                            android:textColor="#8892B0"
                             android:textStyle="bold"
                             android:textSize="14sp" />
                     </RelativeLayout>

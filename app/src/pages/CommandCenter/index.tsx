@@ -18,6 +18,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { hostApiFetch } from '@/lib/host-api';
 import { cn } from '@/lib/utils';
+import { TaskWorkspacePanel } from './components/TaskWorkspacePanel';
+import { Task } from '@/types/orchestrator-workspace';
 
 interface GitStatusSnapshot {
   isGit: boolean;
@@ -251,6 +253,8 @@ export function CommandCenter() {
   const [statusResponse, setStatusResponse] = useState<CommandCenterStatusResponse | null>(null);
   const [projectsResponse, setProjectsResponse] = useState<DevWorkspaceScanResponse | null>(null);
   const [tasksResponse, setTasksResponse] = useState<CommandCenterTasksResponse | null>(null);
+  const [orchestratorTasks, setOrchestratorTasks] = useState<Task[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [logsResponse, setLogsResponse] = useState<CommandCenterLogsResponse | null>(null);
   const [reportsResponse, setReportsResponse] = useState<CommandCenterReportsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -263,10 +267,11 @@ export function CommandCenter() {
     setRefreshing(true);
     setErrors([]);
 
-    const [statusResult, projectsResult, tasksResult, logsResult, reportsResult] = await Promise.all([
+    const [statusResult, projectsResult, tasksResult, orchTasksResult, logsResult, reportsResult] = await Promise.all([
       loadEndpoint<CommandCenterStatusResponse>('/api/command-center/status'),
       loadEndpoint<DevWorkspaceScanResponse>('/api/command-center/projects'),
       loadEndpoint<CommandCenterTasksResponse>('/api/command-center/tasks'),
+      loadEndpoint<{ tasks: Task[] }>('/api/orchestrator/tasks'),
       loadEndpoint<CommandCenterLogsResponse>('/api/command-center/logs'),
       loadEndpoint<CommandCenterReportsResponse>('/api/command-center/reports'),
     ]);
@@ -275,6 +280,7 @@ export function CommandCenter() {
       statusResult.error || statusResult.data?.error,
       projectsResult.error || projectsResult.data?.error,
       tasksResult.error || tasksResult.data?.error,
+      orchTasksResult.error,
       logsResult.error || logsResult.data?.error,
       reportsResult.error || reportsResult.data?.error,
     ].filter((message): message is string => Boolean(message));
@@ -282,6 +288,7 @@ export function CommandCenter() {
     if (statusResult.data) setStatusResponse(statusResult.data);
     if (projectsResult.data) setProjectsResponse(projectsResult.data);
     if (tasksResult.data) setTasksResponse(tasksResult.data);
+    if (orchTasksResult.data) setOrchestratorTasks(orchTasksResult.data.tasks);
     if (logsResult.data) setLogsResponse(logsResult.data);
     if (reportsResult.data) setReportsResponse(reportsResult.data);
     setErrors(nextErrors);
@@ -336,6 +343,10 @@ export function CommandCenter() {
         </div>
       </div>
     );
+  }
+
+  if (selectedTaskId) {
+    return <TaskWorkspacePanel taskId={selectedTaskId} onBack={() => setSelectedTaskId(null)} />;
   }
 
   return (
@@ -549,14 +560,42 @@ export function CommandCenter() {
 
             <Card className="rounded-lg shadow-none">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-base tracking-normal">Tasks</CardTitle>
+                <CardTitle className="text-base tracking-normal">Agent Tasks</CardTitle>
+                <Badge variant="outline">{orchestratorTasks.length} total</Badge>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {orchestratorTasks.length === 0 ? (
+                  <EmptyState text="No agent tasks submitted." />
+                ) : (
+                  orchestratorTasks.slice(0, 8).map((task) => (
+                    <div 
+                      key={task.id} 
+                      className="flex flex-col gap-1 rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedTaskId(task.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium truncate">{task.title}</span>
+                        <Badge variant={task.status === 'failed' ? 'destructive' : 'outline'} className="text-[10px]">
+                          {task.status}
+                        </Badge>
+                      </div>
+                      <span className="text-xs text-muted-foreground truncate">{task.targetProject}</span>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-lg shadow-none">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-base tracking-normal">Inbox Tasks</CardTitle>
                 <Badge variant="outline">{activeTasks.length} open</Badge>
               </CardHeader>
               <CardContent className="space-y-2">
                 {tasks.length === 0 ? (
                   <EmptyState text="No tasks found in the Command Center inbox." />
                 ) : (
-                  tasks.slice(0, 8).map((task) => (
+                  tasks.slice(0, 5).map((task) => (
                     <div key={`${task.line}-${task.text}`} className="flex gap-2 rounded-md border px-3 py-2 text-sm">
                       <span className={cn('mt-0.5 h-4 w-4 shrink-0 rounded border', task.checked && 'border-emerald-400 bg-emerald-400/20')} />
                       <span className={cn('min-w-0 flex-1 break-words', task.checked && 'text-muted-foreground line-through')}>

@@ -569,7 +569,7 @@ openhumanApp.post('/chat', async (req, res) => {
 });
 
 // Fallback for single-page React app (router paths like /chat, /settings, etc.)
-openhumanApp.get('(.*)', (req, res, next) => {
+openhumanApp.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   const indexFile = path.join(__dirname, '../niclaw-openhuman/dist/index.html');
   if (fs.existsSync(indexFile)) {

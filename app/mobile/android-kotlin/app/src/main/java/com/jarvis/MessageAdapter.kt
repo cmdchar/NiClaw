@@ -6,13 +6,28 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-data class Message(val text: String, val isUser: Boolean)
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.HorizontalScrollView
+import org.json.JSONObject
 
-class MessageAdapter(private val messages: MutableList<Message>) :
-    RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
+data class ClarificationOption(val id: String, val label: String)
+
+data class Message(
+    val text: String, 
+    val isUser: Boolean,
+    val options: List<ClarificationOption>? = null
+)
+
+class MessageAdapter(
+    private val messages: MutableList<Message>,
+    private val onOptionSelected: ((ClarificationOption) -> Unit)? = null
+) : RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
 
     class MessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val messageText: TextView = view.findViewById(R.id.messageText)
+        val chipsScrollView: HorizontalScrollView? = view.findViewById(R.id.chipsScrollView)
+        val chipsContainer: LinearLayout? = view.findViewById(R.id.chipsContainer)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
@@ -40,6 +55,34 @@ class MessageAdapter(private val messages: MutableList<Message>) :
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
         val msg = messages[position]
         holder.messageText.text = if (msg.isUser) msg.text else formatExecutionSteps(msg.text)
+        
+        if (!msg.isUser && holder.chipsScrollView != null && holder.chipsContainer != null) {
+            if (!msg.options.isNullOrEmpty()) {
+                holder.chipsScrollView.visibility = View.VISIBLE
+                holder.chipsContainer.removeAllViews()
+                for (option in msg.options) {
+                    val button = Button(holder.itemView.context).apply {
+                        text = option.label
+                        setTextColor(android.graphics.Color.parseColor("#00E5FF"))
+                        setBackgroundColor(android.graphics.Color.parseColor("#3300E5FF"))
+                        setPadding(16, 8, 16, 8)
+                        val layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        layoutParams.setMargins(0, 0, 16, 0)
+                        this.layoutParams = layoutParams
+                        
+                        setOnClickListener {
+                            onOptionSelected?.invoke(option)
+                        }
+                    }
+                    holder.chipsContainer.addView(button)
+                }
+            } else {
+                holder.chipsScrollView.visibility = View.GONE
+            }
+        }
     }
 
     override fun getItemCount() = messages.size

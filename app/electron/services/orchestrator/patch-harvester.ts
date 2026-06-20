@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { getDataDir } from '../../utils/paths';
 import { PatchProposal } from './types';
+import { taskEventStore } from './task-event-store';
 
 /**
  * PatchHarvester extracts structured patch proposals from Claude Code CLI output.
@@ -76,6 +77,12 @@ export class PatchHarvester {
 
     // 5. Persist to disk
     await this.savePatch(proposal);
+
+    // 6. Sprint 3: Link patch to Workspace
+    const ws = taskEventStore.getWorkspaceForTask(taskId);
+    if (ws) {
+      taskEventStore.addWorkspacePatch(ws.id, taskId, diff, extractedFiles);
+    }
 
     return proposal;
   }

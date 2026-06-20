@@ -5,9 +5,11 @@ import { EventEmitter } from 'events';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { getDataDir } from '../../utils/paths';
+import { TaskWorkspace, WorkspaceEvent, WorkspaceArtifact, WorkspacePatch, WorkspaceDecision } from './workspace-types';
 
 export class TaskEventStore extends EventEmitter {
   private tasks: Map<string, Task> = new Map();
+  private workspaces: Map<string, TaskWorkspace> = new Map();
   private baseDir: string = '';
   private initialized: boolean = false;
 
@@ -23,6 +25,7 @@ export class TaskEventStore extends EventEmitter {
       await fs.mkdir(join(this.baseDir, 'events'), { recursive: true });
       await fs.mkdir(join(this.baseDir, 'reports'), { recursive: true });
       await fs.mkdir(join(this.baseDir, 'patches'), { recursive: true });
+      await fs.mkdir(join(this.baseDir, 'workspaces'), { recursive: true });
 
       const tasksFile = join(this.baseDir, 'tasks.json');
       try {
@@ -41,6 +44,25 @@ export class TaskEventStore extends EventEmitter {
           console.error('Failed to load tasks.json', e);
         }
       }
+
+      const workspacesFile = join(this.baseDir, 'workspaces.json');
+      try {
+        const wdata = await fs.readFile(workspacesFile, 'utf8');
+        const rawWorkspaces = JSON.parse(wdata);
+        for (const [id, ws] of Object.entries(rawWorkspaces)) {
+          const w = ws as TaskWorkspace;
+          w.events = w.events || [];
+          w.artifacts = w.artifacts || [];
+          w.patches = w.patches || [];
+          w.decisions = w.decisions || [];
+          this.workspaces.set(id, w);
+        }
+      } catch (e: any) {
+        if (e.code !== 'ENOENT') {
+          console.error('Failed to load workspaces.json', e);
+        }
+      }
+
       this.initialized = true;
     } catch (error) {
       console.error('Failed to initialize TaskEventStore', error);
@@ -152,13 +174,28 @@ export class TaskEventStore extends EventEmitter {
     }
   }
 
-  createTask(title: string, userPrompt: string, targetProject: string, executor?: string): Task {
+  private async saveWorkspaces() {
+    if (!this.initialized) return;
+    try {
+      const dbPath = join(this.baseDir, 'workspaces.json');
+      const rawWorkspaces: Record<string, any> = {};
+      for (const [id, ws] of this.workspaces.entries()) {
+        rawWorkspaces[id] = ws;
+      }
+      await this.safeWrite(dbPath, JSON.stringify(rawWorkspaces, null, 2));
+    } catch (e) {
+      console.error('Failed to save workspaces:', e);
+    }
+  }
+
+  createTask(title: string, userPrompt: string, targetProject: string, executor?: string, taskType?: Task['taskType']): Task {
     const id = randomUUID();
     const task: Task = {
       id,
       title,
       userPrompt,
       targetProject,
+      taskType,
       executor,
       status: 'queued',
       assignedAgents: [],
@@ -261,6 +298,143 @@ export class TaskEventStore extends EventEmitter {
     const task = this.tasks.get(taskId);
     if (!task) return [];
     return task.events || [];
+  }
+
+  // --- Workspace Methods ---
+
+  createWorkspaceForTask(taskId: string): TaskWorkspace {
+    const id = randomUUID();
+    const now = new Date().toISOString();
+    const workspace: TaskWorkspace = {
+      id,
+      taskId,
+      status: 'initializing',
+      baseDirectory: join(this.baseDir, 'workspaces', id),
+      createdAt: now,
+      createdBy: 'system',
+      sourceTaskId: taskId,
+      events: [],
+      artifacts: [],
+      patches: [],
+      decisions: [],
+      contextFiles: []
+    };
+    this.workspaces.set(id, workspace);
+    
+    // Add creation event
+    this.addWorkspaceEvent(id, 'workspace.created', `Workspace ${id} created for task ${taskId}`, { taskId });
+    
+    this.saveWorkspaces();
+    this.emit('workspace_created', workspace);
+    return workspace;
+  }
+
+  getWorkspace(id: string): TaskWorkspace | undefined {
+    return this.workspaces.get(id);
+  }
+
+  getWorkspaceForTask(taskId: string): TaskWorkspace | undefined {
+    for (const ws of this.workspaces.values()) {
+      if (ws.taskId === taskId) return ws;
+    }
+    return undefined;
+  }
+
+  addWorkspaceEvent(workspaceId: string, type: string, message: string, data?: any) {
+    const ws = this.workspaces.get(workspaceId);
+    if (!ws) return;
+    
+    const event: WorkspaceEvent = {
+      id: randomUUID(),
+      type,
+      message,
+      data,
+      createdAt: new Date().toISOString(),
+      createdBy: 'system',
+      sourceWorkspaceId: workspaceId
+    };
+    
+    ws.events.push(event);
+    ws.updatedAt = new Date().toISOString();
+    this.saveWorkspaces();
+    this.emit('workspace_event', { workspaceId, event });
+  }
+
+  updateWorkspaceStatus(workspaceId: string, status: TaskWorkspace['status']) {
+    const ws = this.workspaces.get(workspaceId);
+    if (!ws) return;
+    ws.status = status;
+    ws.updatedAt = new Date().toISOString();
+    this.addWorkspaceEvent(workspaceId, 'workspace.status_changed', `Workspace status changed to ${status}`, { status });
+    this.saveWorkspaces();
+    this.emit('workspace_updated', ws);
+  }
+
+  async saveWorkspaceArtifact(workspaceId: string, name: string, type: string, content: string): Promise<WorkspaceArtifact | undefined> {
+    const ws = this.workspaces.get(workspaceId);
+    if (!ws) return undefined;
+
+    const artifactId = randomUUID();
+    const artifactDir = join(ws.baseDirectory, 'artifacts');
+    await fs.mkdir(artifactDir, { recursive: true });
+    
+    // Using a safe file name
+    const safeName = name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+    const filePath = join(artifactDir, `${artifactId}_${safeName}`);
+    
+    await this.safeWrite(filePath, content);
+
+    const artifact: WorkspaceArtifact = {
+      id: artifactId,
+      name,
+      type,
+      path: filePath,
+      createdAt: new Date().toISOString(),
+      createdBy: 'system',
+      sourceWorkspaceId: workspaceId
+    };
+
+    ws.artifacts.push(artifact);
+    ws.updatedAt = new Date().toISOString();
+    this.saveWorkspaces();
+    this.emit('workspace_artifact', { workspaceId, artifact });
+    
+    return artifact;
+  }
+
+  addWorkspacePatch(workspaceId: string, patchId: string, diff: string, filesChanged: string[]): WorkspacePatch | undefined {
+    const ws = this.workspaces.get(workspaceId);
+    if (!ws) return undefined;
+
+    const patch: WorkspacePatch = {
+      id: patchId,
+      targetFile: filesChanged.join(', '),
+      diff,
+      status: 'proposed',
+      createdAt: new Date().toISOString(),
+      createdBy: 'system',
+      sourceWorkspaceId: workspaceId
+    };
+
+    ws.patches.push(patch);
+    ws.updatedAt = new Date().toISOString();
+    this.saveWorkspaces();
+    this.emit('workspace_patch', { workspaceId, patch });
+
+    return patch;
+  }
+
+  updateWorkspacePatchStatus(workspaceId: string, patchId: string, status: WorkspacePatch['status']) {
+    const ws = this.workspaces.get(workspaceId);
+    if (!ws) return;
+    const patch = ws.patches.find(p => p.id === patchId);
+    if (!patch) return;
+    
+    patch.status = status;
+    patch.updatedAt = new Date().toISOString();
+    ws.updatedAt = new Date().toISOString();
+    this.saveWorkspaces();
+    this.emit('workspace_patch_updated', { workspaceId, patch });
   }
 }
 

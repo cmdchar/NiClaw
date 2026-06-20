@@ -16,7 +16,9 @@ import androidx.fragment.app.Fragment
 
 class SettingsFragment : Fragment() {
 
-    private lateinit var settingsServerUrl: EditText
+    private lateinit var settingsHostApiUrl: EditText
+    private lateinit var settingsGatewayUrl: EditText
+    private lateinit var settingsClassicWsUrl: EditText
     private lateinit var settingsGatewayToken: EditText
     private lateinit var btnSaveSettings: Button
     private lateinit var switchTts: SwitchCompat
@@ -24,7 +26,10 @@ class SettingsFragment : Fragment() {
     private lateinit var radioLanguage: RadioGroup
     private lateinit var radioLangRo: RadioButton
     private lateinit var radioLangEn: RadioButton
+    private lateinit var valHostApiStatus: TextView
+    private lateinit var valOrchestratorStatus: TextView
     private lateinit var valGatewayStatus: TextView
+    private lateinit var valClassicChatStatus: TextView
     private lateinit var btnRestartGateway: Button
 
     // New Proxy Settings Views
@@ -58,7 +63,9 @@ class SettingsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
 
         // Bind existing views
-        settingsServerUrl = view.findViewById(R.id.settingsServerUrl)
+        settingsHostApiUrl = view.findViewById(R.id.settingsHostApiUrl)
+        settingsGatewayUrl = view.findViewById(R.id.settingsGatewayUrl)
+        settingsClassicWsUrl = view.findViewById(R.id.settingsClassicWsUrl)
         settingsGatewayToken = view.findViewById(R.id.settingsGatewayToken)
         btnSaveSettings = view.findViewById(R.id.btnSaveSettings)
         switchTts = view.findViewById(R.id.switchTts)
@@ -66,7 +73,10 @@ class SettingsFragment : Fragment() {
         radioLanguage = view.findViewById(R.id.radioLanguage)
         radioLangRo = view.findViewById(R.id.radioLangRo)
         radioLangEn = view.findViewById(R.id.radioLangEn)
+        valHostApiStatus = view.findViewById(R.id.valHostApiStatus)
+        valOrchestratorStatus = view.findViewById(R.id.valOrchestratorStatus)
         valGatewayStatus = view.findViewById(R.id.valGatewayStatus)
+        valClassicChatStatus = view.findViewById(R.id.valClassicChatStatus)
         btnRestartGateway = view.findViewById(R.id.btnRestartGateway)
 
         // Bind new Proxy views
@@ -95,10 +105,7 @@ class SettingsFragment : Fragment() {
         val mainActivity = activity as? MainActivity
 
         loadSettings()
-
-        // Sync connection status display
-        val currentStatus = mainActivity?.getCurrentStatus() ?: "Deconectat"
-        updateStatusDisplay(currentStatus)
+        fetchStatusAndCapabilities()
 
         // Click listeners
         btnSaveSettings.setOnClickListener {
@@ -248,7 +255,9 @@ class SettingsFragment : Fragment() {
         val prefs = activity?.getSharedPreferences("JarvisPrefs", Context.MODE_PRIVATE) ?: return
         
         // Base API Connection
-        settingsServerUrl.setText(prefs.getString("server_url", "ws://100.82.149.22:3000/jarvis/stream"))
+        settingsHostApiUrl.setText(prefs.getString("host_api_url", "http://100.82.149.22:13210"))
+        settingsGatewayUrl.setText(prefs.getString("gateway_url", "http://100.82.149.22:18789"))
+        settingsClassicWsUrl.setText(prefs.getString("server_url", "ws://100.82.149.22:3000/jarvis/stream"))
         settingsGatewayToken.setText(prefs.getString("gateway_token", ""))
         
         // Preferences
@@ -276,22 +285,27 @@ class SettingsFragment : Fragment() {
         val mainActivity = activity as? MainActivity
         val prefs = activity?.getSharedPreferences("JarvisPrefs", Context.MODE_PRIVATE) ?: return
         
-        val newUrl = settingsServerUrl.text.toString().trim()
+        val newHostUrl = settingsHostApiUrl.text.toString().trim()
+        val newGatewayUrl = settingsGatewayUrl.text.toString().trim()
+        val newWsUrl = settingsClassicWsUrl.text.toString().trim()
         val newToken = settingsGatewayToken.text.toString().trim()
 
-        if (newUrl.isEmpty()) {
-            Toast.makeText(context, "URL-ul nu poate fi gol!", Toast.LENGTH_SHORT).show()
+        if (newHostUrl.isEmpty()) {
+            Toast.makeText(context, "Host API URL-ul nu poate fi gol!", Toast.LENGTH_SHORT).show()
             return
         }
 
         prefs.edit().apply {
-            putString("server_url", newUrl)
+            putString("host_api_url", newHostUrl)
+            putString("gateway_url", newGatewayUrl)
+            putString("server_url", newWsUrl)
             putString("gateway_token", newToken)
             apply()
         }
 
-        mainActivity?.reconnect(newUrl)
+        mainActivity?.reconnect(newWsUrl)
         Toast.makeText(context, "Setări salvate! Se reconectează...", Toast.LENGTH_SHORT).show()
+        fetchStatusAndCapabilities()
     }
 
     private fun saveProxySettings() {
@@ -337,14 +351,50 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    private fun fetchStatusAndCapabilities() {
+        val ctx = context ?: return
+        valHostApiStatus.text = "SE VERIFICĂ..."
+        valHostApiStatus.setTextColor(0xFF8892B0.toInt())
+        valOrchestratorStatus.text = "SE VERIFICĂ..."
+        valOrchestratorStatus.setTextColor(0xFF8892B0.toInt())
+        valGatewayStatus.text = "SE VERIFICĂ..."
+        valGatewayStatus.setTextColor(0xFF8892B0.toInt())
+
+        ApiClient.getCapabilities(ctx) { caps, error ->
+            activity?.runOnUiThread {
+                if (error != null || caps == null) {
+                    valHostApiStatus.text = "EROARE"
+                    valHostApiStatus.setTextColor(0xFFFF5252.toInt())
+                    valOrchestratorStatus.text = "EROARE"
+                    valOrchestratorStatus.setTextColor(0xFFFF5252.toInt())
+                    valGatewayStatus.text = "EROARE"
+                    valGatewayStatus.setTextColor(0xFFFF5252.toInt())
+                } else {
+                    valHostApiStatus.text = if (caps.optBoolean("hostApi", false)) "ONLINE" else "OFFLINE"
+                    valHostApiStatus.setTextColor(if (caps.optBoolean("hostApi", false)) 0xFF00E5FF.toInt() else 0xFFFF5252.toInt())
+                    
+                    valOrchestratorStatus.text = if (caps.optBoolean("orchestrator", false)) "ONLINE" else "OFFLINE"
+                    valOrchestratorStatus.setTextColor(if (caps.optBoolean("orchestrator", false)) 0xFF00E5FF.toInt() else 0xFFFF5252.toInt())
+                    
+                    valGatewayStatus.text = if (caps.optBoolean("gateway", false)) "ONLINE" else "OFFLINE"
+                    valGatewayStatus.setTextColor(if (caps.optBoolean("gateway", false)) 0xFF00E5FF.toInt() else 0xFFFF5252.toInt())
+                }
+                
+                val mainActivity = activity as? MainActivity
+                val currentStatus = mainActivity?.getCurrentStatus() ?: "Deconectat"
+                updateStatusDisplay(currentStatus)
+            }
+        }
+    }
+
     fun updateStatusDisplay(status: String) {
         if (!isAdded) return
         activity?.runOnUiThread {
-            valGatewayStatus.text = status.toUpperCase()
-            if (status == "Conectat") {
-                valGatewayStatus.setTextColor(0xFF00E5FF.toInt())
+            valClassicChatStatus.text = status.toUpperCase()
+            if (status == "Conectat" || status == "Conectat (REST)") {
+                valClassicChatStatus.setTextColor(0xFF00E5FF.toInt())
             } else {
-                valGatewayStatus.setTextColor(0xFFFF5252.toInt())
+                valClassicChatStatus.setTextColor(0xFFFF5252.toInt())
             }
         }
     }

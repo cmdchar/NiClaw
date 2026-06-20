@@ -216,6 +216,53 @@ export class PolicyEngine {
             return { valid: false, reason: `Error validating patch: ${e.message}` };
         }
     }
+
+    async classifyWorkspaceAction(action: { type: 'read' | 'list' | 'search' | 'command', payload: any }): Promise<{ level: 'safe' | 'medium' | 'dangerous' | 'blocked', reason?: string }> {
+      try {
+        if (['read', 'list', 'search'].includes(action.type)) {
+          // File path check for sensitive files
+          const path = action.payload?.path || action.payload?.query || '';
+          const pathCheck = await this.validateFileChange(path); // Reusing logic to check against forbidden_paths
+          if (!pathCheck.valid) {
+            return { level: 'blocked', reason: `Sensitive path accessed: ${pathCheck.reason}` };
+          }
+          return { level: 'safe' };
+        }
+
+        if (action.type === 'command') {
+          const command = (action.payload?.command || '').toLowerCase();
+          
+          // Check for blocked commands first
+          const cmdCheck = await this.validateCommand(command);
+          if (!cmdCheck.valid) {
+            return { level: 'blocked', reason: cmdCheck.reason };
+          }
+
+          // Destructive or deploy/git push (already in forbidden commands, but let's be explicit)
+          if (command.includes('git push') || command.includes('deploy') || command.includes('reset --hard')) {
+            return { level: 'blocked', reason: `Destructive or deploy command blocked: ${command}` };
+          }
+
+          // File writes, env changes, package installs
+          if (command.includes('npm install') || command.includes('pnpm install') || command.includes('yarn install') || 
+              command.includes('echo') || command.includes('>') || command.includes('>>') || command.includes('export ')) {
+            return { level: 'dangerous', reason: 'Command modifies state (package install, file write, or env change)' };
+          }
+
+          // Test/build
+          if (command.includes('test') || command.includes('build') || command.includes('typecheck') || command.includes('lint')) {
+            return { level: 'medium', reason: 'Test or build command' };
+          }
+
+          // Fallback for unrecognized commands
+          return { level: 'dangerous', reason: 'Unrecognized command defaults to dangerous' };
+        }
+
+        return { level: 'blocked', reason: `Unknown action type: ${action.type}` };
+      } catch (e: any) {
+        return { level: 'blocked', reason: `Error classifying action: ${e.message}` };
+      }
+    }
 }
 
 export const policyEngine = new PolicyEngine();

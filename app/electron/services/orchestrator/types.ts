@@ -60,6 +60,7 @@ export interface Task {
   title: string;
   userPrompt: string;
   targetProject: string;
+  taskType?: 'project_code_change' | 'agent_diagnostics' | 'system_health' | 'gateway_diagnostics' | 'android_connectivity_test' | 'hermes_health' | 'remote_claude_health' | 'orchestrator_status' | 'patch_review';
   executor?: string;
   status: TaskStatus;
   assignedAgents: string[];
@@ -72,6 +73,19 @@ export interface Task {
   auditLogs: AuditLog[];
   resultSummary?: string;
   verificationResult?: any;
+  clarification?: {
+    question: string;
+    reason: string;
+    options?: Array<{
+      id: string;
+      label: string;
+      projectId?: string;
+      confidence?: number;
+    }>;
+    requestedAt: string;
+    answeredAt?: string;
+    answer?: string;
+  };
 }
 
 export interface ProjectConfig {

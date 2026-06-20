@@ -13,9 +13,12 @@ import { Task, ProjectIndex } from './types';
 const execAsync = promisify(exec);
 
 export class TaskOrchestrator {
-  async submitTask(title: string, userPrompt: string, targetProject: string, executor?: string): Promise<Task> {
-    const task = taskEventStore.createTask(title, userPrompt, targetProject, executor);
+  async submitTask(title: string, userPrompt: string, targetProject: string, executor?: string, taskType?: Task['taskType']): Promise<Task> {
+    const task = taskEventStore.createTask(title, userPrompt, targetProject, executor, taskType);
     
+    // Sprint 3: Auto-create workspace for the task
+    taskEventStore.createWorkspaceForTask(task.id);
+
     // Start processing asynchronously
     this.processTask(task.id).catch(err => {
       taskEventStore.addEvent(task.id, 'error', `Orchestrator error: ${err.message}`);
@@ -23,6 +26,33 @@ export class TaskOrchestrator {
     });
 
     return task;
+  }
+
+  async clarifyTask(taskId: string, answer: string, selectedOptionId?: string): Promise<void> {
+    const task = taskEventStore.getTask(taskId);
+    if (!task) throw new Error('Task not found');
+    if (task.status !== 'waiting_clarification') throw new Error('Task is not waiting for clarification');
+
+    const clarification = task.clarification || { question: '', reason: '', requestedAt: new Date().toISOString() };
+    clarification.answer = answer;
+    clarification.answeredAt = new Date().toISOString();
+
+    taskEventStore.updateTaskField(taskId, { clarification });
+    
+    taskEventStore.addEvent(taskId, 'status_change', 'Clarification received', { answer, selectedOptionId });
+    taskEventStore.addAuditLog(taskId, 'Clarification answered', 'user');
+
+    if (selectedOptionId) {
+      taskEventStore.updateTaskField(taskId, { targetProject: selectedOptionId });
+    } else {
+      taskEventStore.updateTaskField(taskId, { userPrompt: `${task.userPrompt}\n[Clarification]: ${answer}` });
+    }
+
+    // Resume execution
+    this.processTask(taskId).catch(err => {
+      taskEventStore.addEvent(taskId, 'error', `Orchestrator error: ${err.message}`);
+      taskEventStore.updateTaskStatus(taskId, 'failed');
+    });
   }
 
   private async processTask(taskId: string) {
@@ -34,6 +64,27 @@ export class TaskOrchestrator {
     // State: parsing_intent
     taskEventStore.updateTaskStatus(taskId, 'parsing_intent');
     onLog('Parsing structural intent from prompt...');
+
+    if (task.taskType === 'agent_diagnostics') {
+      onLog('Running Agent Diagnostics...');
+      taskEventStore.updateTaskStatus(taskId, 'running');
+      try {
+        const health = await import('./service-registry').then(m => m.serviceRegistry.getHealthStatus());
+        let report = "## Agent Diagnostics Report\n\n";
+        for (const h of health) {
+          report += `- **${h.service}**: ${h.status} (Latency: ${h.latency}ms)\n`;
+        }
+        task.resultSummary = report;
+        taskEventStore.updateTaskField(taskId, { resultSummary: report });
+        taskEventStore.addEvent(taskId, 'report_generated', 'Diagnostics completed', { report });
+        taskEventStore.updateTaskStatus(taskId, 'completed');
+        onLog('Agent Diagnostics completed successfully.');
+      } catch (e: any) {
+        onLog(`Agent Diagnostics failed: ${e.message}`);
+        taskEventStore.updateTaskStatus(taskId, 'failed');
+      }
+      return;
+    }
 
     // Check if targetProject was explicitly provided (e.g. codex-safety-test sandbox)
     let targetProject: ProjectIndex | null = null;
@@ -80,6 +131,21 @@ export class TaskOrchestrator {
 
       if (candidates.length === 0 || candidates[0].score < 3) {
         // Ambiguous
+        const options = projects.map(p => ({
+          id: p.id,
+          label: p.name,
+          projectId: p.id,
+          confidence: p.confidenceScore
+        })).slice(0, 5);
+
+        taskEventStore.updateTaskField(taskId, {
+          clarification: {
+            question: "Which project would you like to target?",
+            reason: "Could not structurally determine the target project.",
+            options,
+            requestedAt: new Date().toISOString()
+          }
+        });
         taskEventStore.updateTaskStatus(taskId, 'waiting_clarification');
         taskEventStore.addEvent(taskId, 'intent_ambiguous', 'Could not structurally determine the target project.', {
           options: projects.map(p => p.name).slice(0, 5)
@@ -107,6 +173,12 @@ export class TaskOrchestrator {
     onLog('Generating Hermes plan...');
     const { plan, isFallback } = await hermesAdapter.generatePlan(task.userPrompt, targetProject, context);
     taskEventStore.addEvent(taskId, 'plan_generated', isFallback ? 'Hermes unavailable - generated fallback structural plan' : 'Hermes generated plan successfully', { plan });
+
+    // Sprint 3: Add to workspace timeline
+    const ws = taskEventStore.getWorkspaceForTask(taskId);
+    if (ws) {
+      taskEventStore.addWorkspaceEvent(ws.id, 'workspace.plan.generated', isFallback ? 'Fallback plan generated' : 'Plan generated successfully', { plan });
+    }
 
     onLog('Evaluating plan against Policy Engine...');
     const policyResult = await policyEngine.evaluateExecutionPlan(taskId, targetProject.id, { files: (plan as any).filesToEdit || [], commands: (plan as any).commands || [] });
@@ -156,6 +228,12 @@ export class TaskOrchestrator {
         branchName,
       });
 
+      // Sprint 3: Add to workspace timeline
+      const ws = taskEventStore.getWorkspaceForTask(taskId);
+      if (ws) {
+        taskEventStore.addWorkspaceEvent(ws.id, 'workspace.execution.started', 'Remote Claude Code execution started', { executor: 'remote-claude-code' });
+      }
+
       const projectConfig = { id: task.targetProject, name: task.targetProject, path: projectPath, commands: {}, type: 'auto', defaultBranch: 'main' } as any;
       execResult = await remoteClaudeCodeAgent.generatePatchProposal(task.userPrompt, projectConfig, onLog);
     } else {
@@ -167,6 +245,12 @@ export class TaskOrchestrator {
         projectPath,
         branchName,
       });
+
+      // Sprint 3: Add to workspace timeline
+      const ws = taskEventStore.getWorkspaceForTask(taskId);
+      if (ws) {
+        taskEventStore.addWorkspaceEvent(ws.id, 'workspace.execution.started', 'Real Codex CLI execution started', { executor: 'codex-cli' });
+      }
 
       const projectConfig = { id: task.targetProject, name: task.targetProject, path: projectPath, commands: {}, type: 'auto', defaultBranch: 'main' } as any;
       const dryRun = task.targetProject !== 'codex-safety-test';
@@ -192,6 +276,23 @@ export class TaskOrchestrator {
         success: execResult.success,
       }
     );
+
+    // Sprint 3: Add to workspace timeline
+    const ws = taskEventStore.getWorkspaceForTask(taskId);
+    if (ws) {
+      taskEventStore.addWorkspaceEvent(ws.id, 'workspace.execution.completed', 'Execution completed', { 
+         success: execResult.success,
+         filesChangedCount: (execResult.filesChanged || []).length,
+         durationHuman: `${(execResult.durationMs / 1000).toFixed(1)}s`
+      });
+      // Save large logs as workspace artifacts
+      if (execResult.stdout && execResult.stdout.length > 500) {
+        await taskEventStore.saveWorkspaceArtifact(ws.id, `execution_stdout_${Date.now()}.log`, 'execution_log', execResult.stdout);
+      }
+      if (execResult.stderr && execResult.stderr.length > 500) {
+        await taskEventStore.saveWorkspaceArtifact(ws.id, `execution_stderr_${Date.now()}.log`, 'execution_log', execResult.stderr);
+      }
+    }
 
     if (task.executor === 'remote-claude-code') {
       // PHASE 4.2 Patch Harvesting Flow
@@ -229,6 +330,18 @@ export class TaskOrchestrator {
           summary: proposal.summary
         });
         
+        // Sprint 3: Add to workspace timeline
+        const ws = taskEventStore.getWorkspaceForTask(taskId);
+        if (ws) {
+           taskEventStore.addWorkspaceEvent(ws.id, 'workspace.patch.generated', 'Patch proposal generated', { 
+              riskLevel: proposal.riskLevel,
+              filesChanged: proposal.filesChanged,
+              diffSize: proposal.diff.length,
+              summary: proposal.summary
+           });
+           taskEventStore.addWorkspaceEvent(ws.id, 'workspace.patch.review_requested', 'Task waiting for patch review', { status: 'waiting_patch_review' });
+        }
+
         taskEventStore.updateTaskStatus(taskId, 'waiting_patch_review' as any);
         onLog(`[Phase 4.2] Task waiting for patch review. Auto-commit disabled.`);
         return; // Wait for human review
@@ -356,6 +469,13 @@ export class TaskOrchestrator {
       }
       taskEventStore.updateTaskStatus(taskId, 'completed');
       taskEventStore.addAuditLog(taskId, 'COMMIT_APPROVED', 'user', undefined, undefined, 'User approved final commit of the patch.');
+
+      // Sprint 3: Update workspace patch status
+      const ws = taskEventStore.getWorkspaceForTask(taskId);
+      if (ws) {
+         taskEventStore.updateWorkspacePatchStatus(ws.id, taskId, 'applied');
+         taskEventStore.addWorkspaceEvent(ws.id, 'workspace.patch.applied', 'Patch committed to repository');
+      }
     } catch (e: any) {
       taskEventStore.addLog(taskId, `[ERROR] Commit failed: ${e.message}`);
       throw e;
@@ -376,6 +496,13 @@ export class TaskOrchestrator {
       }
       taskEventStore.updateTaskStatus(taskId, 'cancelled');
       taskEventStore.addAuditLog(taskId, 'PATCH_REJECTED', 'user', undefined, undefined, 'User discarded patch after local review.');
+
+      // Sprint 3: Update workspace patch status
+      const ws = taskEventStore.getWorkspaceForTask(taskId);
+      if (ws) {
+         taskEventStore.updateWorkspacePatchStatus(ws.id, taskId, 'rejected');
+         taskEventStore.addWorkspaceEvent(ws.id, 'workspace.patch.rejected', 'Patch discarded');
+      }
     } catch (e: any) {
       taskEventStore.addLog(taskId, `[ERROR] Discard failed: ${e.message}`);
       throw e;
@@ -446,6 +573,13 @@ export class TaskOrchestrator {
       
       taskEventStore.addEvent(taskId, 'status_change', 'Patch applied successfully. Waiting for final commit approval.');
       taskEventStore.updateTaskStatus(taskId, 'waiting_patch_approval');
+
+      // Sprint 3: Update workspace patch status
+      const ws = taskEventStore.getWorkspaceForTask(taskId);
+      if (ws) {
+         taskEventStore.updateWorkspacePatchStatus(ws.id, taskId, 'approved'); // 'approved' means reviewed and applied locally, pending final commit
+         taskEventStore.addWorkspaceEvent(ws.id, 'workspace.patch.approved', 'Patch approved and applied to local branch');
+      }
     } catch (e: any) {
       taskEventStore.updateTaskStatus(taskId, 'failed');
       taskEventStore.addEvent(taskId, 'error', `Failed to process patch: ${e.message}`);
@@ -458,6 +592,13 @@ export class TaskOrchestrator {
 
     taskEventStore.addLog(taskId, '[Phase 4.2B] Patch review rejected by user.');
     taskEventStore.updateTaskStatus(taskId, 'cancelled');
+
+    // Sprint 3: Update workspace patch status
+    const ws = taskEventStore.getWorkspaceForTask(taskId);
+    if (ws) {
+       taskEventStore.updateWorkspacePatchStatus(ws.id, taskId, 'rejected');
+       taskEventStore.addWorkspaceEvent(ws.id, 'workspace.patch.rejected', 'Patch review rejected by user');
+    }
   }
 }
 

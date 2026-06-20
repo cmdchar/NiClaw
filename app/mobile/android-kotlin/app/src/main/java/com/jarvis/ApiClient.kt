@@ -16,7 +16,7 @@ object ApiClient {
     private const val DEFAULT_HOST_PROTOCOL = "http"
     private const val DEFAULT_HOST_ADDRESS = "100.82.149.22"
     private const val DEFAULT_HOST_PORT = 13210
-    private const val DEFAULT_STREAM_URL = "ws://100.82.149.22:3000/jarvis/stream"
+    private const val DEFAULT_STREAM_URL = "ws://100.82.149.22:13210/jarvis/stream"
     const val EMULATOR_HOST_API_URL = "http://10.0.2.2:13210"
 
     val client: OkHttpClient by lazy {
@@ -668,6 +668,32 @@ object ApiClient {
                     callback(JSONObject(responseStr), null)
                 } catch (e: Exception) {
                     Log.e("ApiClient", "getGatewayHealth parsing exception: ${e.message}", e)
+                    callback(null, e)
+                }
+            }
+        })
+    }
+
+    fun getCapabilities(context: Context, callback: (JSONObject?, Exception?) -> Unit) {
+        val request = buildRequest(context, "/api/android/capabilities")
+        Log.d("ApiClient", "getCapabilities: requesting GET /api/android/capabilities")
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("ApiClient", "getCapabilities failure: ${e.message}", e)
+                callback(null, e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val responseStr = response.body?.string() ?: "{}"
+                    Log.d("ApiClient", "getCapabilities response code=${response.code}")
+                    if (!response.isSuccessful) {
+                        callback(null, Exception("Error code: ${response.code}, msg: $responseStr"))
+                        return
+                    }
+                    callback(JSONObject(responseStr), null)
+                } catch (e: Exception) {
+                    Log.e("ApiClient", "getCapabilities parsing exception: ${e.message}", e)
                     callback(null, e)
                 }
             }

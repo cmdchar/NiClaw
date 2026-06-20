@@ -1,5 +1,30 @@
 # CHANGELOG - ClawX AI Updates
 
+## (2026-06-20) - Complete NiClaw Implementation Roadmap
+- Created the root master roadmap `NICLAW_IMPLEMENTATION_ROADMAP.md`.
+- Created phase plan files in the repository root for the remaining path to completion:
+  - `PHASE_4_4A_UNIFIED_ORCHESTRATOR_WORKSPACE.md`
+  - `PHASE_4_4B_PERSISTENT_TASK_WORKSPACE.md`
+  - `PHASE_4_4C_DESKTOP_WORKSPACE_UI.md`
+  - `PHASE_4_4D_ANDROID_WORKSPACE_CONTROL.md`
+  - `PHASE_4_5_AGENT_COMMUNICATION_HERMES_MESH.md`
+  - `PHASE_4_6_SECOND_BRAIN_MEMORY_UNIFICATION.md`
+  - `PHASE_4_7_VM_RUNTIME_DEPLOYMENT_HARDENING.md`
+  - `PHASE_4_8_BUILD_RELEASE_PIPELINE.md`
+  - `PHASE_4_9_SECURITY_POLICY_AUDIT.md`
+  - `PHASE_5_0_PRODUCTION_READINESS.md`
+  - `PHASE_5_1_KNOWLEDGE_GRAPH_PROJECT_INTELLIGENCE.md`
+  - `PHASE_5_2_MULTI_AGENT_PLANNING_ENGINE.md`
+  - `PHASE_5_3_AUTONOMOUS_PROJECT_MODE.md`
+- Each plan contains concrete task checklists, ownership guidance for Codex/Antigravity, validation commands, and acceptance criteria.
+- The roadmap keeps the existing product rule explicit: no mock data, no simulated backend behavior, and no removal of functional capabilities.
+- Replaced the original `PHASE_5_0_FINAL_QA_ACCEPTANCE.md` with `PHASE_5_0_PRODUCTION_READINESS.md` because 5.1-5.3 continue the Agent Operating System roadmap after the production-ready baseline.
+- Added `Provenance Everywhere` as a global implementation rule and seeded provenance fields into 4.4B, 5.1, 5.2, and 5.3.
+- Added impact milestones: NiClaw Workspace OS, Connected Agent Ecosystem, Project Intelligence Platform, and Autonomous Agent OS.
+- Roadmap is now treated as frozen for execution unless implementation reveals a real blocker.
+- Marked `NICLAW_IMPLEMENTATION_ROADMAP.md` status as `FROZEN` and documented the only allowed reasons to modify roadmap structure.
+- Added a three-sprint execution plan to `PHASE_4_4B_PERSISTENT_TASK_WORKSPACE.md`: Sprint 1 workspace types/event store, Sprint 2 kernel/routes/policy, Sprint 3 orchestrator/patch loop.
+
 ## (2026-06-14) - Android Companion Host API Sync Repair
 - Repaired the existing native Kotlin Android companion in `mobile/android-kotlin` instead of creating a new app.
 - Added Desktop Host API Android Sync endpoints: `/api/android/pairing`, `/api/android/pair`, `/api/android/status`, `/api/android/board`, `/api/android/agents`, `/api/android/tasks`, `/api/android/event`, and `/api/android/sync`.
@@ -649,3 +674,6 @@
 - Created mandatory AI workspace folder and workflow files.
 - Documented project-specific building routes and configurations.
 - **2026-06-13**: Antigravity: Added Dev Command Center Android Companion UI with real data hooks inside SettingsFragment. No mocks, native buildRequest usage.
+
+ -   * * 2 0 2 6 - 0 6 - 2 0 * * :   A n t i g r a v i t y :   P h a s e   4 . 4 B . 9   &   4 . 4 B . 1 0   c o m p l e t e d .   A n d r o i d   R e a d - O n l y   W o r k s p a c e   V i e w   a n d   A c t i o n s .   M o d i f i e d   T a s k D e t a i l F r a g m e n t . k t   t o   f e t c h   a n d   d i s p l a y   p e r s i s t e n t   w o r k s p a c e   e v e n t s   t i m e l i n e   a n d   r e a d   p a t c h   f r o m   w o r k s p a c e   i f   a v a i l a b l e .  
+ 

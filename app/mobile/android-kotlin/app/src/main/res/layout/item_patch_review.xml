@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_glass_card"
+    android:padding="12dp"
+    android:layout_marginTop="8dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Patch Review Required"
+        android:textColor="#FFB300"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/patchTargetFile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="src/index.ts"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:fontFamily="monospace" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginTop="8dp"
+        android:background="#11FFFFFF">
+        <TextView
+            android:id="@+id/patchDiff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="+ console.log('test')\n- console.log('old')"
+            android:textColor="#00E5FF"
+            android:textSize="10sp"
+            android:padding="8dp"
+            android:fontFamily="monospace" />
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/btnRejectPatch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reject"
+            android:textColor="#FF5252"
+            style="?android:attr/borderlessButtonStyle" />
+
+        <Button
+            android:id="@+id/btnDiscardPatch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Discard"
+            android:textColor="#FF5252"
+            style="?android:attr/borderlessButtonStyle"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnApplyPatch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Apply"
+            android:textColor="#00E5FF"
+            android:background="#3300E5FF" />
+
+        <Button
+            android:id="@+id/btnCommitPatch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Commit"
+            android:textColor="#00E5FF"
+            android:background="#3300E5FF"
+            android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>

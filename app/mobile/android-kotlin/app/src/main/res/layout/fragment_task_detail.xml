@@ -57,18 +57,158 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#1E2738"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="#131824">
+                
+                <TextView
+                    android:id="@+id/detailTaskId"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#8892B0"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/detailTaskType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#AAB8C2"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/detailProject"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#AAB8C2"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/detailPlanner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#AAB8C2"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/detailExecutor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#AAB8C2"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/detailStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="#2E3C56"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:text="unknown"
+                    android:textColor="#00E5FF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+
             <TextView
-                android:id="@+id/detailStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="#2E3C56"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                android:text="unknown"
-                android:textColor="#00E5FF"
-                android:textSize="14sp"
+                android:text="Original Request:"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
                 android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/detailPrompt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#AAB8C2"
+                android:textSize="14sp"
                 android:layout_marginBottom="16dp" />
+
+            <!-- Clarification Container -->
+            <LinearLayout
+                android:id="@+id/clarificationContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#2D2A1C"
+                android:padding="16dp"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Orchestrator needs clarification"
+                    android:textColor="#FFCA28"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reason:"
+                    android:textColor="#AAB8C2"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/tvClarificationReason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFCA28"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Question:"
+                    android:textColor="#AAB8C2"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/tvClarificationQuestion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/cgClarificationOptions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your answer to orchestrator:"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp" />
+
+                <EditText
+                    android:id="@+id/etClarificationAnswer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Type your answer here..."
+                    android:textColorHint="#8892B0"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#00E5FF"
+                    android:layout_marginBottom="12dp" />
+
+                <Button
+                    android:id="@+id/btnSubmitClarification"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Send Clarification"
+                    android:backgroundTint="#FFCA28"
+                    android:textColor="#0A0D14" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -157,6 +297,54 @@
                         android:maxHeight="300dp" />
                 </HorizontalScrollView>
 
+            </LinearLayout>
+
+            <!-- Old clarification container removed -->
+
+            <!-- Debug Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btnToggleDebug"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Show Debug"
+                    android:textSize="12sp"
+                    android:backgroundTint="#2E3C56"
+                    android:textColor="#FFFFFF" />
+
+                <LinearLayout
+                    android:id="@+id/debugContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="#220000"
+                    android:padding="12dp"
+                    android:visibility="gone"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Raw Task Debug (Dev Only)"
+                        android:textColor="#FF5252"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvDebugRaw"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#FFCDD2"
+                        android:textSize="10sp"
+                        android:typeface="monospace" />
+                </LinearLayout>
             </LinearLayout>
 
         </LinearLayout>

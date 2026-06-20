@@ -15,7 +15,12 @@ import android.widget.Toast
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import org.json.JSONObject
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
+import java.io.IOException
 class ChatFragment : Fragment() {
 
     private lateinit var swipeRefresh: SwipeRefreshLayout
@@ -27,6 +32,22 @@ class ChatFragment : Fragment() {
     private lateinit var micButton: FloatingActionButton
     private lateinit var chatStatusText: TextView
     private lateinit var statusIndicator: View
+    
+    // Clarification Banner
+    private lateinit var clarificationBanner: View
+    private lateinit var btnOpenClarificationTask: android.widget.Button
+    private var pendingClarificationTaskId: String? = null
+    
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var isPolling = false
+    private val pollRunnable = object : Runnable {
+        override fun run() {
+            if (isPolling) {
+                checkClarificationTasks()
+                handler.postDelayed(this, 5000)
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -56,8 +77,49 @@ class ChatFragment : Fragment() {
 
         val mainActivity = activity as? MainActivity
 
+        clarificationBanner = view.findViewById(R.id.clarificationBanner)
+        btnOpenClarificationTask = view.findViewById(R.id.btnOpenClarificationTask)
+        
+        btnOpenClarificationTask.setOnClickListener {
+            pendingClarificationTaskId?.let { taskId ->
+                android.util.Log.d("TaskNav", "opening taskId=$taskId")
+                val taskDetail = TaskDetailFragment.newInstance(taskId)
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragmentContainer, taskDetail)
+                    .addToBackStack(null)
+                    .commit()
+            }
+        }
+
         // Setup RecyclerView
-        adapter = MessageAdapter(mainActivity?.getCachedMessages() ?: mutableListOf())
+        adapter = MessageAdapter(mainActivity?.getCachedMessages() ?: mutableListOf()) { option ->
+            pendingClarificationTaskId?.let { taskId ->
+                val ctx = context ?: return@MessageAdapter
+                val reqBody = JSONObject().apply {
+                    put("answer", option.label)
+                    put("selectedOptionId", option.id)
+                }.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+                
+                val req = ApiClient.buildRequest(ctx, "/api/orchestrator/tasks/$taskId/clarify", "POST", reqBody)
+                ApiClient.client.newCall(req).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        activity?.runOnUiThread { Toast.makeText(ctx, "Clarification failed: ${e.message}", Toast.LENGTH_SHORT).show() }
+                    }
+                    override fun onResponse(call: Call, response: Response) {
+                        if (response.isSuccessful) {
+                            activity?.runOnUiThread { 
+                                pendingClarificationTaskId = null
+                                clarificationBanner.visibility = View.GONE
+                                val msg = Message(option.label, true)
+                                mainActivity?.getCachedMessages()?.add(msg)
+                                adapter.notifyItemInserted((mainActivity?.getCachedMessages()?.size ?: 1) - 1)
+                                recyclerView.scrollToPosition((mainActivity?.getCachedMessages()?.size ?: 1) - 1)
+                            }
+                        }
+                    }
+                })
+            }
+        }
         recyclerView.layoutManager = LinearLayoutManager(context).apply { stackFromEnd = true }
         recyclerView.adapter = adapter
 
@@ -68,8 +130,44 @@ class ChatFragment : Fragment() {
         sendButton.setOnClickListener {
             val text = textInput.text.toString().trim()
             if (text.isNotEmpty()) {
-                mainActivity?.sendMessage(text)
+                val cacheSize = mainActivity?.getCachedMessages()?.size ?: 1
+                val msg = Message(text, true)
+                mainActivity?.getCachedMessages()?.add(msg)
+                adapter.notifyItemInserted(cacheSize)
+                recyclerView.scrollToPosition(cacheSize)
                 textInput.text.clear()
+
+                val ctx = context ?: return@setOnClickListener
+                if (pendingClarificationTaskId != null) {
+                    val reqBody = JSONObject().apply {
+                        put("answer", text)
+                    }.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+                    val req = ApiClient.buildRequest(ctx, "/api/orchestrator/tasks/$pendingClarificationTaskId/clarify", "POST", reqBody)
+                    ApiClient.client.newCall(req).enqueue(object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {}
+                        override fun onResponse(call: Call, response: Response) {
+                            if (response.isSuccessful) {
+                                activity?.runOnUiThread {
+                                    pendingClarificationTaskId = null
+                                    clarificationBanner.visibility = View.GONE
+                                }
+                            }
+                        }
+                    })
+                } else {
+                    val reqBody = JSONObject().apply {
+                        put("prompt", text)
+                        put("taskType", "auto")
+                        put("executor", "auto")
+                    }.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+                    val req = ApiClient.buildRequest(ctx, "/api/orchestrator/tasks", "POST", reqBody)
+                    ApiClient.client.newCall(req).enqueue(object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            activity?.runOnUiThread { Toast.makeText(ctx, "Failed to create task", Toast.LENGTH_SHORT).show() }
+                        }
+                        override fun onResponse(call: Call, response: Response) {}
+                    })
+                }
             }
         }
 
@@ -88,7 +186,7 @@ class ChatFragment : Fragment() {
 
         // Setup Swipe Refresh
         swipeRefresh.setOnRefreshListener {
-            loadInitialSessions()
+            loadInitialSessions(isManualRefresh = true)
         }
 
         // Auto-load sessions on open if empty
@@ -111,7 +209,7 @@ class ChatFragment : Fragment() {
         activity?.runOnUiThread {
             chatStatusText.text = status
             val color = when (status) {
-                "Conectat" -> 0xFF00E5FF.toInt()
+                "Conectat", "Conectat (REST)" -> 0xFF00E5FF.toInt()
                 "Deconectat", "Eroare Conexiune" -> 0xFFFF5252.toInt()
                 else -> 0xFFFFFFFF.toInt()
             }
@@ -119,7 +217,7 @@ class ChatFragment : Fragment() {
         }
     }
 
-    private fun loadInitialSessions() {
+    private fun loadInitialSessions(isManualRefresh: Boolean = false) {
         val ctx = context ?: return
         val mainActivity = activity as? MainActivity ?: return
 
@@ -127,7 +225,9 @@ class ChatFragment : Fragment() {
             mainActivity.runOnUiThread {
                 swipeRefresh.isRefreshing = false
                 if (error != null) {
-                    Toast.makeText(ctx, "Eroare la auto-încărcare sesiuni", Toast.LENGTH_SHORT).show()
+                    if (isManualRefresh) {
+                        Toast.makeText(ctx, "Eroare la auto-încărcare sesiuni", Toast.LENGTH_SHORT).show()
+                    }
                     return@runOnUiThread
                 }
                 val sessionsArray = response?.optJSONArray("sessions")
@@ -239,5 +339,52 @@ class ChatFragment : Fragment() {
                 updateStatus("Sesiune încărcată")
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isPolling = true
+        handler.post(pollRunnable)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        isPolling = false
+        handler.removeCallbacks(pollRunnable)
+    }
+
+    private fun checkClarificationTasks() {
+        val ctx = context ?: return
+        val request = ApiClient.buildRequest(ctx, "/api/orchestrator/tasks", "GET")
+        
+        ApiClient.client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: java.io.IOException) {}
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                val body = response.body?.string() ?: return
+                try {
+                    val json = JSONObject(body)
+                    val tasksArray = json.optJSONArray("tasks") ?: org.json.JSONArray()
+                    var clarificationTaskId: String? = null
+                    
+                    for (i in 0 until tasksArray.length()) {
+                        val t = tasksArray.optJSONObject(i)
+                        if (t?.optString("status") == "waiting_clarification") {
+                            clarificationTaskId = t.optString("id")
+                            break
+                        }
+                    }
+                    
+                    activity?.runOnUiThread {
+                        if (clarificationTaskId != null) {
+                            pendingClarificationTaskId = clarificationTaskId
+                            clarificationBanner.visibility = View.VISIBLE
+                        } else {
+                            pendingClarificationTaskId = null
+                            clarificationBanner.visibility = View.GONE
+                        }
+                    }
+                } catch (e: Exception) {}
+            }
+        })
     }
 }

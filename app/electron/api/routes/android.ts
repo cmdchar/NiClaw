@@ -13,6 +13,7 @@ import {
 } from '../../utils/android-sync';
 import { buildBoardStatus, syncBoardSnapshot } from './board';
 import { readTasksStore, type SpatialTask } from './tasks';
+import { getSetting } from '../../utils/store';
 
 interface AndroidPairRequest {
   code?: string;
@@ -141,7 +142,8 @@ export async function handleAndroidRoutes(
         remoteAddress: req.socket.remoteAddress,
         userAgent: headerToString(req.headers['user-agent']),
       });
-      sendJson(res, 200, { success: true, ...result });
+      const gatewayToken = await getSetting('gatewayToken');
+      sendJson(res, 200, { success: true, ...result, gatewayToken });
     } catch {
       sendJson(res, 401, { success: false, error: 'Invalid or expired pairing code' });
     }
@@ -164,6 +166,23 @@ export async function handleAndroidRoutes(
           emulatorFallback: 'http://10.0.2.2:13210',
           lanTemplate: 'http://<PC_LAN_IP>:13210',
         },
+      });
+    } catch (error) {
+      sendJson(res, 500, { success: false, error: String(error) });
+    }
+    return true;
+  }
+
+  if (url.pathname === '/api/android/capabilities' && req.method === 'GET') {
+    try {
+      sendJson(res, 200, {
+        hostApi: true,
+        orchestrator: true,
+        gateway: true,
+        classicJarvisWs: false,
+        websocketUrl: null,
+        gatewayUrl: "http://100.82.149.22:18789",
+        orchestratorBaseUrl: `http://${req.headers.host || url.hostname + ':' + url.port}`
       });
     } catch (error) {
       sendJson(res, 500, { success: false, error: String(error) });

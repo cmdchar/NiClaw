@@ -114,6 +114,13 @@ class CommandCenterFragment : Fragment() {
                         projectIds.add(p.optString("id", ""))
                     }
                     
+                    // Add pseudo-projects
+                    projectNames.add(0, "System (Auto Detect)")
+                    projectIds.add(0, "")
+                    
+                    projectNames.add("Agent Diagnostics (Tooling)")
+                    projectIds.add("_diagnostics_")
+
                     activity?.runOnUiThread {
                         val adapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_dropdown_item, projectNames)
                         projectSpinner.adapter = adapter
@@ -138,15 +145,8 @@ class CommandCenterFragment : Fragment() {
                         val selTrans = h.optString("selectedTransport", "N/A")
                         val planTrans = h.optString("planningTransport", "N/A")
                         val models = h.optInt("modelsCount", 0)
-                        val fallback = h.optBoolean("fallbackUsed", false)
-                        val err = h.optString("lastError", "None")
-
-                        hermesInfo = "Status: $status\n" +
-                            "HTTP: $httpStatus | CLI: $cliStatus\n" +
-                            "Transport: $selTrans | Planning: $planTrans\n" +
-                            "Models: $models\n" +
-                            "Fallback Used: $fallback\n" +
-                            "Last Error: $err"
+                        hermesInfo = "Status: $status\nHTTP: $httpStatus | CLI: $cliStatus\nTransport Sel: $selTrans | Plan: $planTrans\nModele disponibile: $models"
+                        break
                     }
                 }
                 activity?.runOnUiThread {
@@ -154,7 +154,7 @@ class CommandCenterFragment : Fragment() {
                 }
             } else {
                 activity?.runOnUiThread {
-                    tvHermesStatus.text = "Eroare la preluarea statusului: ${error?.message}"
+                    tvHermesStatus.text = "Eroare citire health: ${error?.message}"
                 }
             }
         }
@@ -201,7 +201,12 @@ class CommandCenterFragment : Fragment() {
         val json = JSONObject()
         json.put("title", "Cmd: ${prompt.take(20)}...")
         json.put("userPrompt", prompt)
-        json.put("targetProject", projectId)
+        
+        if (projectId == "_diagnostics_") {
+            json.put("taskType", "agent_diagnostics")
+        } else if (projectId.isNotEmpty()) {
+            json.put("targetProject", projectId)
+        }
         
         val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
         val request = ApiClient.buildRequest(ctx, "/api/orchestrator/tasks", "POST", body)

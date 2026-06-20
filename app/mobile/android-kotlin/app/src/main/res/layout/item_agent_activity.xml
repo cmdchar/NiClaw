@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="160dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_marginEnd="8dp"
+    android:background="#151A22"
+    android:elevation="4dp">
+
+    <TextView
+        android:id="@+id/tvAgentName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:text="Agent Name" />
+
+    <TextView
+        android:id="@+id/tvAgentStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#00E5FF"
+        android:textSize="12sp"
+        android:layout_marginTop="4dp"
+        android:text="up" />
+
+    <TextView
+        android:id="@+id/tvAgentAction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#888888"
+        android:textSize="11sp"
+        android:layout_marginTop="8dp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:text="Waiting for tasks..." />
+
+</LinearLayout>

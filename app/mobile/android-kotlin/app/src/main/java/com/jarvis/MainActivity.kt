@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     // Fragment Instances
     private val chatFragment = ChatFragment()
     private val agentsFragment = AgentsFragment()
-    private val spatialFragment = SpatialFragment()
+    private val unifiedCommandCenterFragment = UnifiedCommandCenterFragment()
     private val portalFragment = PortalFragment()
     private val settingsFragment = SettingsFragment()
 
@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity() {
 
     private val RECORD_AUDIO_REQUEST_CODE = 101
     private var isFlashlightOn = false
+    private var isClassicWsEnabled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +64,7 @@ class MainActivity : AppCompatActivity() {
 
         setupSTT()
         setupTTS()
+        fetchCapabilities()
 
         // Setup Bottom Navigation
         val bottomNav: BottomNavigationView = findViewById(R.id.bottomNav)
@@ -70,7 +72,7 @@ class MainActivity : AppCompatActivity() {
             val fragment: Fragment = when (item.itemId) {
                 R.id.navigation_chat -> chatFragment
                 R.id.navigation_agents -> agentsFragment
-                R.id.navigation_spatial -> spatialFragment
+                R.id.navigation_spatial -> unifiedCommandCenterFragment
                 R.id.navigation_portal -> portalFragment
                 R.id.navigation_settings -> settingsFragment
 
@@ -92,7 +94,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 "spatial" -> {
                     bottomNav.selectedItemId = R.id.navigation_spatial
-                    spatialFragment
+                    unifiedCommandCenterFragment
                 }
                 "portal" -> {
                     bottomNav.selectedItemId = R.id.navigation_portal
@@ -126,7 +128,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 "spatial" -> {
                     bottomNav.selectedItemId = R.id.navigation_spatial
-                    spatialFragment
+                    unifiedCommandCenterFragment
                 }
                 "portal" -> {
                     bottomNav.selectedItemId = R.id.navigation_portal
@@ -178,6 +180,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun reconnect(newUrl: String) {
+        if (!isClassicWsEnabled) {
+            onStatusUpdate("Conectat (REST)")
+            return
+        }
         jarvisClient.reconnect(newUrl)
         onStatusUpdate("Reconectare...")
     }
@@ -280,7 +286,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun fetchCapabilities() {
+        ApiClient.getCapabilities(this) { caps, error ->
+            if (caps != null) {
+                isClassicWsEnabled = caps.optBoolean("classicJarvisWs", true)
+                if (!isClassicWsEnabled) {
+                    onStatusUpdate("Conectat (REST)")
+                }
+            }
+        }
+    }
+
     fun onStatusUpdate(msg: String) {
+        if (msg == "Eroare Conexiune" && !isClassicWsEnabled) {
+            return // Suppress
+        }
         runOnUiThread {
             currentStatus = msg
             // Inform active fragment views

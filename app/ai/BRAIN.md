@@ -1,5 +1,23 @@
 # BRAIN - CURRENT AI STATE
 
+## Latest update (2026-06-20) - Complete NiClaw Implementation Roadmap
+- **Current State**:
+  - Codex created the root-level implementation roadmap needed to finish NiClaw in controlled phases.
+  - The master index is `C:\Server\niclaw\NICLAW_IMPLEMENTATION_ROADMAP.md`.
+  - Phase plans now exist in the project root for Unified Orchestrator Workspace, Persistent Task Workspace, Desktop Workspace UI, Android Workspace Control, Hermes Mesh communication, SecondBrain memory unification, VM runtime hardening, build/release, security/policy audit, production readiness, Knowledge Graph/Project Intelligence, Multi-Agent Planning Engine, and Autonomous Project Mode.
+  - Each phase document includes concrete tasks, file ownership boundaries, endpoints/contracts where relevant, validation commands, and acceptance criteria.
+  - The roadmap preserves the no-mock rule: every UI/client feature must consume real Host API, Hermes Mesh, VM runtime, or SecondBrain data.
+  - `PHASE_5_0_FINAL_QA_ACCEPTANCE.md` was replaced by `PHASE_5_0_PRODUCTION_READINESS.md` because advanced Agent Operating System phases continue after the readiness baseline.
+  - Added global `Provenance Everywhere` rule: durable records should preserve creator/time/source task/workspace/patch/agent/decision/event metadata when applicable.
+  - Added four impact milestones: NiClaw Workspace OS, Connected Agent Ecosystem, Project Intelligence Platform, and Autonomous Agent OS.
+  - Roadmap documents are now considered frozen for execution unless a real implementation blocker appears.
+  - `NICLAW_IMPLEMENTATION_ROADMAP.md` status is now formally `FROZEN`; changes are allowed only for architectural blockers, newly discovered technical constraints, or major product direction changes.
+  - `PHASE_4_4B_PERSISTENT_TASK_WORKSPACE.md` now has a three-sprint execution plan: Sprint 1 workspace types/event store, Sprint 2 kernel/routes/policy, Sprint 3 orchestrator/patch loop.
+- **Next Exact Steps**:
+  - Start with 4.4B Sprint 1: `Workspace Types` and `TaskEventStore Extension`.
+  - Keep Codex and Antigravity on separate file ownership per phase to avoid conflicting edits.
+  - After each implemented phase, update `app/ai/BRAIN.md`, `app/ai/TASKS.md`, `app/ai/CHANGELOG_AI.md`, and any relevant SecondBrain notes before moving forward.
+
 ## Latest update (2026-06-14) - Android Companion Host API Sync Repair
 - **Current State**:
   - Codex repaired the existing native Kotlin Android companion in `mobile/android-kotlin`; no new Android app was created and no mock data was added.
@@ -224,3 +242,6 @@
   - 1. Connect and expand code review workspace panels with Git diff summary adapters on the Host API.
   - 2. Sync the updated Android Kotlin client and Host API code changes to `/home/debian/NiClaw` on `vm-niclaw`.
   - 3. Consolidate Obsidian Second Brain notes and journals.
+
+ -   * * 2 0 2 6 - 0 6 - 2 0   P h a s e   4 . 4 B * * :   A n t i g r a v i t y   i m p l e m e n t e d   A n d r o i d   W o r k s p a c e   V i e w .   T a s k D e t a i l F r a g m e n t   n o w   f e t c h e s   / a p i / o r c h e s t r a t o r / t a s k s / : t a s k I d / w o r k s p a c e   t o   d i s p l a y   a   d u r a b l e   t i m e l i n e ,   s e p a r a t i n g   t a s k s ,   c o m m a n d s ,   a r t i f a c t s ,   a n d   p a t c h e s   s e a m l e s s l y .   A l s o   i n t e g r a t e d   p a t c h   r e v i e w   d i r e c t l y   f r o m   w o r k s p a c e   p a y l o a d s .  
+ 

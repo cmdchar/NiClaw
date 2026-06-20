@@ -1,3 +1,21 @@
+- [x] (2026-06-20) Codex complete NiClaw roadmap: created `NICLAW_IMPLEMENTATION_ROADMAP.md` and root phase plans for 4.4A through 5.3, including exact task checklists, ownership boundaries, validation commands, and no-mock acceptance criteria.
+- [x] (2026-06-20) Codex roadmap freeze update: added `Provenance Everywhere` as a global rule, added impact milestones, and seeded provenance requirements into 4.4B plus phases 5.1-5.3.
+- [x] (2026-06-20) Codex formal roadmap freeze: marked `NICLAW_IMPLEMENTATION_ROADMAP.md` as `FROZEN` and added allowed-change criteria.
+- [x] (2026-06-20) Codex 4.4B execution split: added Sprint 1, Sprint 2, and Sprint 3 delivery slices to `PHASE_4_4B_PERSISTENT_TASK_WORKSPACE.md`.
+- [x] (2026-06-20) Phase 4.4B Sprint 1 next: implement workspace types and TaskEventStore workspace persistence.
+- [ ] (2026-06-20) Phase 4.4A next: implement Unified Orchestrator Workspace according to `PHASE_4_4A_UNIFIED_ORCHESTRATOR_WORKSPACE.md`.
+- [x] (2026-06-20) Phase 4.4B next: implement Persistent Task Workspace according to `PHASE_4_4B_PERSISTENT_TASK_WORKSPACE.md`.
+- [ ] (2026-06-20) Phase 4.4C next: implement Desktop Workspace UI according to `PHASE_4_4C_DESKTOP_WORKSPACE_UI.md`.
+- [ ] (2026-06-20) Phase 4.4D next: implement Android Workspace Control according to `PHASE_4_4D_ANDROID_WORKSPACE_CONTROL.md`.
+- [ ] (2026-06-20) Phase 4.5 next: complete Hermes Mesh agent communication according to `PHASE_4_5_AGENT_COMMUNICATION_HERMES_MESH.md`.
+- [ ] (2026-06-20) Phase 4.6 next: complete SecondBrain memory unification according to `PHASE_4_6_SECOND_BRAIN_MEMORY_UNIFICATION.md`.
+- [ ] (2026-06-20) Phase 4.7 next: harden VM runtime/deployment according to `PHASE_4_7_VM_RUNTIME_DEPLOYMENT_HARDENING.md`.
+- [ ] (2026-06-20) Phase 4.8 next: complete build/release pipeline according to `PHASE_4_8_BUILD_RELEASE_PIPELINE.md`.
+- [ ] (2026-06-20) Phase 4.9 next: complete security/policy audit according to `PHASE_4_9_SECURITY_POLICY_AUDIT.md`.
+- [ ] (2026-06-20) Phase 5.0 next: complete production readiness according to `PHASE_5_0_PRODUCTION_READINESS.md`.
+- [ ] (2026-06-20) Phase 5.1 next: implement Knowledge Graph and Project Intelligence according to `PHASE_5_1_KNOWLEDGE_GRAPH_PROJECT_INTELLIGENCE.md`.
+- [ ] (2026-06-20) Phase 5.2 next: implement Multi-Agent Planning Engine according to `PHASE_5_2_MULTI_AGENT_PLANNING_ENGINE.md`.
+- [ ] (2026-06-20) Phase 5.3 next: implement Autonomous Project Mode according to `PHASE_5_3_AUTONOMOUS_PROJECT_MODE.md`.
 - [x] (2026-06-14) Codex Android Companion Host API Sync repair: inspected the existing native Kotlin app in `mobile/android-kotlin`, removed hardcoded token fallback from active Android sources, added configurable Host API URL + emulator fallback, added Android pairing/token storage, added Android Sync screen, added local/LAN network security config, and wired real Host API calls with no mock payloads.
 - [x] (2026-06-14) Codex Desktop Android Sync API: added `/api/android/pairing`, `/api/android/pair`, `/api/android/status`, `/api/android/board`, `/api/android/agents`, `/api/android/tasks`, `/api/android/event`, and `/api/android/sync`; paired-device tokens are stored hashed, Host API logs mask sensitive query parameters, and Settings > Remote Access can generate Android pairing codes.
 - [x] (2026-06-14) Codex validation: Android `.\gradlew.bat assembleDebug`, Desktop `pnpm run typecheck`, and Desktop `pnpm run build:vite` pass after Android Sync repair.

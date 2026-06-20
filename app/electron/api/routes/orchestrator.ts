@@ -10,6 +10,7 @@ import { projectWorkspaceService } from '../../services/orchestrator/project-wor
 import { projectDiscoveryService } from '../../services/orchestrator/project-discovery-service';
 import { serviceRegistry } from '../../services/orchestrator/service-registry';
 import { obsidianMemoryService } from '../../services/obsidian-memory';
+import { workspaceKernel } from '../../services/orchestrator/workspace-kernel';
 
 export async function handleOrchestratorRoutes(
   req: IncomingMessage,
@@ -62,6 +63,88 @@ export async function handleOrchestratorRoutes(
       projectsLinked: projects.length,
       lastScan: stats.lastScan
     });
+    return true;
+  }
+
+  // GET /api/orchestrator/workspace
+  if (url.pathname === '/api/orchestrator/workspace' && req.method === 'GET') {
+    const health = await serviceRegistry.getHealthStatus();
+    const tasks = taskEventStore.getAllTasks();
+    const activeTask = tasks.find(t => t.status === 'running' || t.status === 'paused');
+    const recentTasks = tasks.filter(t => t.status === 'completed' || t.status === 'failed').slice(-5);
+    const waitingClarifications = tasks.filter(t => t.status === 'waiting_clarification');
+    const waitingPatchReviews = tasks.filter(t => t.status === 'waiting_patch_review');
+    const waitingCommits = tasks.filter(t => t.status === 'waiting_commit');
+
+    const agentActivity = health.map(h => {
+      let lastAction = 'Idle';
+      let lastOutputSummary = h.details || 'OK';
+
+      if (activeTask) {
+        const events = taskEventStore.getEvents(activeTask.id);
+        const agentEvents = events.filter(e => e.source === h.service || e.source === 'system');
+        if (agentEvents.length > 0) {
+          const lastEvent = agentEvents[agentEvents.length - 1];
+          lastAction = lastEvent.type;
+          lastOutputSummary = lastEvent.message;
+        }
+      }
+
+      return {
+        id: h.service,
+        name: h.service,
+        type: 'agent',
+        status: h.status,
+        currentTaskId: activeTask?.id || null,
+        lastAction,
+        lastOutputSummary
+      };
+    });
+
+    sendJson(res, 200, {
+      health,
+      activeTask,
+      recentTasks,
+      waitingClarifications,
+      waitingPatchReviews,
+      waitingCommits,
+      agentActivity,
+      events: activeTask ? taskEventStore.getEvents(activeTask.id) : [],
+      logs: [] // Add latest logs if needed
+    });
+    return true;
+  }
+
+  // GET /api/orchestrator/agents/activity
+  if (url.pathname === '/api/orchestrator/agents/activity' && req.method === 'GET') {
+    const health = await serviceRegistry.getHealthStatus();
+    const activeTask = taskEventStore.getAllTasks().find(t => t.status !== 'completed' && t.status !== 'failed');
+    
+    const agentActivity = health.map(h => {
+      let lastAction = 'Idle';
+      let lastOutputSummary = h.details || 'OK';
+
+      if (activeTask) {
+        const events = taskEventStore.getEvents(activeTask.id);
+        const agentEvents = events.filter(e => e.source === h.service || e.source === 'system');
+        if (agentEvents.length > 0) {
+          const lastEvent = agentEvents[agentEvents.length - 1];
+          lastAction = lastEvent.type;
+          lastOutputSummary = lastEvent.message;
+        }
+      }
+
+      return {
+        id: h.service,
+        name: h.service,
+        type: 'agent',
+        status: h.status,
+        currentTaskId: activeTask?.id || null,
+        lastAction,
+        lastOutputSummary
+      };
+    });
+    sendJson(res, 200, { agents: agentActivity });
     return true;
   }
 
@@ -187,14 +270,14 @@ export async function handleOrchestratorRoutes(
     if (!requireJsonContentType(req, res)) return true;
     try {
       const body = await parseBody(req);
-      const { title, userPrompt, targetProject, executor } = body;
+      const { title, userPrompt, targetProject, executor, taskType } = body;
       
       if (!userPrompt) {
         sendJson(res, 400, { error: 'Missing required field: userPrompt' });
         return true;
       }
 
-      const task = await taskOrchestrator.submitTask(title || 'New Task', userPrompt, targetProject || '', executor);
+      const task = await taskOrchestrator.submitTask(title || 'New Task', userPrompt, targetProject || '', executor, taskType);
       sendJson(res, 201, task);
     } catch (e: any) {
       sendJson(res, 500, { error: e.message });
@@ -237,8 +320,99 @@ export async function handleOrchestratorRoutes(
     return true;
   }
 
+  // Workspace specific routes
+  const workspaceMatch = url.pathname.match(/^\/api\/orchestrator\/tasks\/([^/]+)\/workspace(\/(events|artifacts|files\/list|files\/read|search|command|observation|patch))?$/);
+  if (workspaceMatch) {
+    const taskId = workspaceMatch[1];
+    const subRoute = workspaceMatch[3];
+    const ws = taskEventStore.getWorkspaceForTask(taskId);
+    if (!ws) {
+      sendJson(res, 404, { error: 'Workspace not found for task' });
+      return true;
+    }
+    
+    if (req.method === 'GET') {
+      if (!subRoute) {
+        sendJson(res, 200, ws);
+        return true;
+      }
+      if (subRoute === 'events') {
+        sendJson(res, 200, { events: ws.events });
+        return true;
+      }
+      if (subRoute === 'artifacts') {
+        sendJson(res, 200, { artifacts: ws.artifacts });
+        return true;
+      }
+    }
+    
+    // Check for nested artifact read GET /api/orchestrator/tasks/:taskId/workspace/artifacts/:artifactId/read
+    const artifactMatch = url.pathname.match(/^\/api\/orchestrator\/tasks\/([^/]+)\/workspace\/artifacts\/([^/]+)\/read$/);
+    if (artifactMatch && req.method === 'GET') {
+      const artifactId = artifactMatch[2];
+      const artifact = ws.artifacts.find(a => a.id === artifactId);
+      if (!artifact || !artifact.path) {
+        sendJson(res, 404, { error: 'Artifact not found or has no path' });
+        return true;
+      }
+      try {
+        const fs = require('fs').promises;
+        const content = await fs.readFile(artifact.path, 'utf8');
+        sendJson(res, 200, { content });
+      } catch (e: any) {
+        sendJson(res, 500, { error: 'Failed to read artifact file', details: e.message });
+      }
+      return true;
+    }
+    
+    if (req.method === 'POST') {
+      if (!requireJsonContentType(req, res)) return true;
+      const body = await parseBody(req);
+      const projectId = taskEventStore.getTask(taskId)?.targetProject || '';
+      
+      try {
+        if (subRoute === 'files/list') {
+          const files = await workspaceKernel.listFiles(ws.id, projectId, body.path);
+          sendJson(res, 200, { files });
+          return true;
+        }
+        if (subRoute === 'files/read') {
+          const content = await workspaceKernel.readFile(ws.id, projectId, body.path);
+          sendJson(res, 200, { content });
+          return true;
+        }
+        if (subRoute === 'search') {
+          const results = await workspaceKernel.search(ws.id, projectId, body.query, body.glob);
+          sendJson(res, 200, { results });
+          return true;
+        }
+        if (subRoute === 'command') {
+          const { stdout, stderr } = await workspaceKernel.runCommand(ws.id, projectId, body.command, body.cwd);
+          sendJson(res, 200, { stdout, stderr });
+          return true;
+        }
+        if (subRoute === 'observation') {
+          taskEventStore.addWorkspaceEvent(ws.id, 'workspace.observation', body.message || 'Observation recorded', { source: body.source, ...body });
+          sendJson(res, 200, { success: true });
+          return true;
+        }
+        if (subRoute === 'patch') {
+          sendJson(res, 501, { error: 'Not implemented' });
+          return true;
+        }
+      } catch (e: any) {
+        if (e.message.includes('blocked') || e.message.includes('Policy Engine')) {
+          sendJson(res, 403, { error: e.message });
+        } else {
+          sendJson(res, 500, { error: e.message });
+        }
+        return true;
+      }
+    }
+  }
+
   // Task specific routes
-  const taskMatch = url.pathname.match(/^\/api\/orchestrator\/tasks\/([^/]+)(\/(events|approve|cancel|retry|retry-execution|rollback|stop|diff|approve-patch|reject-patch|apply-patch|patch))?$/);
+  const taskMatch = url.pathname.match(/^\/api\/orchestrator\/tasks\/([^/]+)(\/(events|approve|cancel|retry|retry-execution|rollback|stop|diff|approve-patch|reject-patch|apply-patch|patch|clarify))?$/);
   if (taskMatch) {
     const taskId = taskMatch[1];
     const action = taskMatch[3];
@@ -274,6 +448,19 @@ export async function handleOrchestratorRoutes(
       return true;
     }
 
+
+    if (action === 'clarify' && req.method === 'POST') {
+      try {
+        const body = await parseBody(req);
+        taskOrchestrator.clarifyTask(taskId, body.answer, body.selectedOptionId).catch(err => {
+          console.error(`Error clarifying task ${taskId}:`, err);
+        });
+        sendJson(res, 200, { success: true });
+      } catch (e: any) {
+        sendJson(res, 400, { error: e.message });
+      }
+      return true;
+    }
 
     if (action === 'approve' && req.method === 'POST') {
       // Fire-and-forget: start execution asynchronously, return immediately
