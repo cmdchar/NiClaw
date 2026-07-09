@@ -1,5 +1,30 @@
 # CHANGELOG - ClawX AI Updates
 
+## (2026-07-09) - Phase 4.8 & Phase 4.9 Formal Freeze
+- **Status**: COMPLETE & FROZEN
+- **Milestones**:
+  - Finalized Phase 4.8 (Build & Release Pipeline) and verified cross-platform build determinism (`verify.mjs` / `pnpm run verify`).
+  - Finalized Phase 4.9 (Security Policy Audit) by explicitly overriding vulnerabilities (Baileys, SheetJS) through pnpm monorepo `resolutions`.
+  - Achieved ZERO critical and ZERO high-severity vulnerabilities globally.
+  - Implemented runtime integrity validation logic in `electron-bootstrap.ts` to assert that the `dist-node/host-runtime.ts` file hash strictly matches the SHA256 generated at build time in `build-manifest.json`.
+
+## (2026-07-06) - Phase 4.9C Dual Runtime Support
+- **Status**: COMPLETE
+- **Blocking issues**: NONE
+- **Milestones**:
+  - Implemented explicit runtime detection via `NICLAW_RUNTIME` (`node` vs `electron`).
+  - Added standalone `node-bootstrap.ts`, replacing global `import { app } from 'electron'` instances.
+  - Successfully demonstrated pure Node headless Gateway spawning and execution.
+  - Resolved circular dependencies and safely extracted `CoreServices` types.
+
+
+## (2026-07-06) - Phase 4.9B Runtime Abstraction Layer
+- **Status**: COMPLETE
+- **Blocking issues**: NONE
+- **Known limitations**: `token-usage.test.ts` contains legacy mock payload mismatches unrelated to runtime abstraction.
+- Introduced a `RuntimeAbstraction` layer to cleanly decouple Electron-specific dependencies (`app`, `BrowserWindow`, `shell`, etc.) from core business logic (Host API, Orchestrator, Gateway).
+- Verified pure Node daemon capabilities via `dist-node/host-runtime.ts` without direct `electron` imports throwing exceptions.
+
 ## (2026-06-20) - Complete NiClaw Implementation Roadmap
 - Created the root master roadmap `NICLAW_IMPLEMENTATION_ROADMAP.md`.
 - Created phase plan files in the repository root for the remaining path to completion:
@@ -677,3 +702,9 @@
 
  -   * * 2 0 2 6 - 0 6 - 2 0 * * :   A n t i g r a v i t y :   P h a s e   4 . 4 B . 9   &   4 . 4 B . 1 0   c o m p l e t e d .   A n d r o i d   R e a d - O n l y   W o r k s p a c e   V i e w   a n d   A c t i o n s .   M o d i f i e d   T a s k D e t a i l F r a g m e n t . k t   t o   f e t c h   a n d   d i s p l a y   p e r s i s t e n t   w o r k s p a c e   e v e n t s   t i m e l i n e   a n d   r e a d   p a t c h   f r o m   w o r k s p a c e   i f   a v a i l a b l e .  
  
+## (2026-07-06) - Phase 4.8 Build Release Pipeline & Phase 4.9B/4.9C Runtime Layer Completed
+- **Phase 4.9B & 4.9C**: Completed Runtime Abstraction Layer and Dual Runtime Support (Node daemon and Electron boots independently via NICLAW_RUNTIME).
+- **Phase 4.8**: Replaced legacy PowerShell scripts with cross-platform verify.mjs (zx/node).
+  - Added Vite UI build, Node daemon smoke test, and Android APK Gradle builds into a unified verification run.
+  - Fixed Windows/PowerShell quoting edge-cases when spawning Gradle daemon from Node.
+  - Implemented secure build-manifest.json generation containing SHA256 hashes of the resulting binaries for artifact security.

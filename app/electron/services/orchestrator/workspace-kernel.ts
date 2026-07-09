@@ -117,7 +117,7 @@ export class WorkspaceKernel {
     }
   }
 
-  async runCommand(workspaceId: string, projectId: string, command: string, cwdRelative?: string): Promise<{ stdout: string, stderr: string }> {
+  async runCommand(workspaceId: string, projectId: string, command: string, cwdRelative?: string, isApproved: boolean = false): Promise<{ stdout: string, stderr: string }> {
     const ws = taskEventStore.getWorkspace(workspaceId);
     if (!ws) throw new Error('Workspace not found');
 
@@ -132,6 +132,13 @@ export class WorkspaceKernel {
       await policyEngine.detectPolicyViolation(ws.taskId, { reason: classification.reason });
       
       throw new Error(`Command blocked by Policy Engine: ${classification.reason}`);
+    }
+
+    if (classification.level === 'dangerous' && !isApproved) {
+      taskEventStore.addWorkspaceEvent(workspaceId, 'workspace.command.blocked', `Command requires explicit approval: ${classification.reason}`, eventData);
+      const error: any = new Error(`Command requires explicit approval: ${classification.reason}`);
+      error.code = 'REQUIRES_APPROVAL';
+      throw error;
     }
 
     try {

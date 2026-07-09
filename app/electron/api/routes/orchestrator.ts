@@ -387,7 +387,7 @@ export async function handleOrchestratorRoutes(
           return true;
         }
         if (subRoute === 'command') {
-          const { stdout, stderr } = await workspaceKernel.runCommand(ws.id, projectId, body.command, body.cwd);
+          const { stdout, stderr } = await workspaceKernel.runCommand(ws.id, projectId, body.command, body.cwd, body.isApproved === true);
           sendJson(res, 200, { stdout, stderr });
           return true;
         }
@@ -401,7 +401,10 @@ export async function handleOrchestratorRoutes(
           return true;
         }
       } catch (e: any) {
-        if (e.message.includes('blocked') || e.message.includes('Policy Engine')) {
+        if (e.code === 'REQUIRES_APPROVAL') {
+          taskEventStore.updateTaskStatus(taskId, 'waiting_approval');
+          sendJson(res, 403, { error: e.message, code: 'REQUIRES_APPROVAL' });
+        } else if (e.message.includes('blocked') || e.message.includes('Policy Engine')) {
           sendJson(res, 403, { error: e.message });
         } else {
           sendJson(res, 500, { error: e.message });
