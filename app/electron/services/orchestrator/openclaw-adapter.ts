@@ -31,11 +31,12 @@ export class OpenClawAdapter {
             const timeoutId = setTimeout(() => controller.abort(), 500);
 
             // First check the Host API proxy status
+            const { getHostApiToken } = require('../../api/server');
             const res = await fetch(this.hostApiUrl, {
                 method: 'GET',
                 signal: controller.signal,
                 headers: {
-                    'Authorization': 'Bearer clawx-0eba16e8bf0cc00161be8cf3c7e664c9'
+                    'Authorization': `Bearer ${getHostApiToken()}`
                 }
             });
 
