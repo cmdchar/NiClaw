@@ -49,7 +49,7 @@ fs.mkdirSync(STAGING_DIR, { recursive: true });
 
 // 3. Generate VM specific package.json in staging
 const vmPkg = { ...pkgJson };
-vmPkg.dependencies = { ...vmPkg.dependencies, electron: electronVersion };
+vmPkg.dependencies = { ...vmPkg.dependencies, electron: electronVersion, openclaw: 'file:./build/openclaw' };
 vmPkg.scripts = { ...vmPkg.scripts, "start:vm": "electron dist-electron/main/index.js --headless" };
 delete vmPkg.scripts.postinstall;
 delete vmPkg.scripts.preinstall;
@@ -196,7 +196,7 @@ fs.writeFileSync(path.join(STAGING_DIR, 'manifest.json'), JSON.stringify(manifes
 
 
 // 7. Create the tarball using node-tar
-import tar from 'tar';
+import * as tar from 'tar';
 
 const includedPaths = [
     'bin/',

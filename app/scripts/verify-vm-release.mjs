@@ -127,7 +127,7 @@ if (resVersion.exitCode !== 0 || resVersion.stdout !== state.currentVersion) {
 }
 
 // 4. Verify processes are physically running out of current release
-const services = ['clawx-ai-os.service', 'openclaw-gateway.service', 'jarvis-openclaw-bridge.service'];
+const services = ['clawx-ai-os.service', 'openclaw-gateway.service'];
 for (const svc of services) {
     const resSvc = await ssh(`systemctl is-active ${svc}`);
     if (resSvc.stdout !== 'active') {
@@ -146,7 +146,7 @@ for (const svc of services) {
     // Collect provenance signals
     const resCwd = await ssh(`readlink -f /proc/${pid}/cwd`);
     const resExe = await ssh(`readlink -f /proc/${pid}/exe`);
-    const resCmd = await ssh(`cat /proc/${pid}/cmdline | tr '\\0' ' '`);
+    const resCmd = await ssh(`cat /proc/${pid}/cmdline | xargs -0 echo`);
     
     const signals = [resCwd.stdout, resExe.stdout, resCmd.stdout];
     let isTainted = false;

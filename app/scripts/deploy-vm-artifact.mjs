@@ -103,10 +103,11 @@ if (isDryRun) {
 
 // 1 & 2: SCP and unpack
 console.log(`📦 Uploading bundle...`);
-await $`cd release && scp.exe -q -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=3 ${bundleName} ${bundleName}.sha256 ${host}:/tmp/`;
+const shaFile = `niclaw-vm-bundle-${version}.sha256`;
+await $`cd release && scp.exe -q -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=3 ${bundleName} ${shaFile} ${host}:/tmp/`;
 
 console.log(`🔬 Verifying checksum...`);
-const resSha = await ssh(`cd /tmp && sha256sum -c ${bundleName}.sha256`);
+const resSha = await ssh(`cd /tmp && sha256sum -c ${shaFile}`);
 if (resSha.exitCode !== 0) {
     console.error(`❌ Checksum mismatch! Deployment aborted.`);
     console.error(resSha.stderr || resSha.stdout);
@@ -114,6 +115,7 @@ if (resSha.exitCode !== 0) {
 }
 
 console.log(`📦 Unpacking on VM...`);
+await ssh(`rm -rf /opt/niclaw/releases/${version}`);
 await ssh(`mkdir -p /opt/niclaw/releases/${version}`);
 await ssh(`tar -xzf /tmp/${bundleName} -C /opt/niclaw/releases/${version}`);
 await ssh(`rm /tmp/${bundleName}`);
@@ -122,8 +124,6 @@ await ssh(`rm /tmp/${bundleName}`);
 console.log(`?? Installing production dependencies...`);
 await ssh(`cd /opt/niclaw/releases/${version} && pnpm install --prod --ignore-scripts`);
 
-console.log(`?? Installing openclaw production dependencies...`);
-await ssh(`cd /opt/niclaw/releases/${version}/build/openclaw && pnpm install --prod --ignore-scripts --ignore-workspace`);
 
 console.log(`?? Approving native builds (allowlist)...`);
 await ssh(`cd /opt/niclaw/releases/${version} && pnpm approve-builds better-sqlite3`);
@@ -145,8 +145,14 @@ xvfb-run -a pnpm exec electron dist-electron/main/index.js --headless --user-dat
 echo $! > /tmp/staging-boot.pid
 `.trim();
 
-const scriptB64 = Buffer.from(stagingScript).toString('base64');
-await ssh(`echo ${scriptB64} | base64 -d > /tmp/run-staging.sh && bash /tmp/run-staging.sh`);
+const tmpStaging = 'run-staging-temp.sh';
+fs.writeFileSync(tmpStaging, stagingScript);
+try {
+    await $`scp.exe -q -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=3 ${tmpStaging} ${host}:/tmp/run-staging.sh`;
+    await ssh(`bash /tmp/run-staging.sh`);
+} finally {
+    fs.unlinkSync(tmpStaging);
+}
 
 console.log(`⏳ Waiting 30 seconds for staging to warm up...`);
 await sleep(30000);
@@ -174,21 +180,41 @@ if (check18799.stdout !== '200' && check18799.stdout !== '401') {
     stagingPass = false;
 }
 
-console.log(`?? Killing Staging Boot Test processes...`);
-await ssh(`if [ -f /tmp/staging-boot.pid ]; then kill -9 \`cat /tmp/staging-boot.pid\`; rm /tmp/staging-boot.pid; fi`);
-await ssh(`pkill -f 'dist-electron/main/index.js --headless --user-data-dir=/tmp/niclaw-staging' || true`);
-await ssh(`pkill -f 'openclaw gateway --port 18799' || true`);
+console.log(`🧹 Killing Staging Boot Test processes...`);
+const killScript = `
+#!/bin/bash
+if [ -f /tmp/staging-boot.pid ]; then
+  pid=$(cat /tmp/staging-boot.pid)
+  if kill -0 $pid 2>/dev/null; then
+    kill -15 $pid 2>/dev/null || true
+    sleep 2
+    if kill -0 $pid 2>/dev/null; then
+      kill -9 $pid 2>/dev/null || true
+    fi
+  fi
+  rm -f /tmp/staging-boot.pid
+fi
+pkill -f 'dist-electron/main/index.js --headless --user-data-dir=/tmp/niclaw-staging' || true
+pkill -f 'openclaw gateway --port 18799' || true
+`.trim();
+
+const tmpKill = 'run-kill-temp.sh';
+fs.writeFileSync(tmpKill, killScript);
+try {
+    await $`scp.exe -q -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=3 ${tmpKill} ${host}:/tmp/run-kill.sh`;
+    await ssh(`bash /tmp/run-kill.sh`);
+} finally {
+    fs.unlinkSync(tmpKill);
+}
 
 if (!stagingPass) {
     console.error(`❌ Staging Boot Test FAILED. Deployment aborted. Services were NOT touched.`);
     const log = await ssh(`tail -n 50 /tmp/staging-boot.log`);
     console.error(log.stdout);
-    await ssh(`kill -9 $(cat /tmp/staging-boot.pid) || true`);
     process.exit(1);
 }
 
 console.log(`✅ Staging Boot Test Passed!`);
-await ssh(`kill -9 $(cat /tmp/staging-boot.pid) || true`);
 
 if (args.rehearsal) {
     console.log('\n🎭 REHEARSAL COMPLETE: Staging validation successful. Aborting before production mutation.');
@@ -216,7 +242,8 @@ try {
     await sleep(10000);
 
     console.log('🩺 Verifying deployment with verify-vm-release.mjs...');
-    await $`node scripts/verify-vm-release.mjs --target=${host} --expected-version=${version}`;
+    const { execSync } = require('child_process');
+    execSync(`pnpm.cmd zx scripts/verify-vm-release.mjs --target=${host} --expected-version=${version}`, { stdio: 'inherit' });
     console.log('✅ Deployment verification passed.');
     
     // Commit state
@@ -232,20 +259,32 @@ try {
     state.lastHealthStatus = 'ok';
 
     const stateStr = JSON.stringify(state, null, 2);
-    const stateB64 = Buffer.from(stateStr).toString('base64');
-    await ssh(`echo ${stateB64} | base64 -d | sudo tee /opt/niclaw/deployment-state.json > /dev/null`);
-    console.log('📝 Deployment state committed.');
-} catch (err) {
-    console.error('❌ Deployment verification failed! Initiating AUTOMATIC ROLLBACK...');
-    console.error(err.stdout || err.stderr);
+    const tmpState = 'deployment-state-temp.json';
+    fs.writeFileSync(tmpState, stateStr);
     try {
-        await $`node scripts/rollback-vm-artifact.mjs --target=${previousVersion} --execute`;
-        console.log('♻️ Automatic rollback completed. System restored to previous version.');
-    } catch (rollbackErr) {
-        console.error('🚨 CRITICAL: Automatic rollback failed!', rollbackErr.stdout || rollbackErr.stderr);
+        await $`scp.exe -q -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=3 ${tmpState} ${host}:/tmp/${tmpState}`;
+        await ssh(`sudo cp /tmp/${tmpState} /opt/niclaw/deployment-state.json && rm /tmp/${tmpState}`);
+    } finally {
+        fs.unlinkSync(tmpState);
     }
-    process.exit(1);
-}
+    console.log('📝 Deployment state committed.');
+    } catch (err) {
+        console.error(err.message || err);
+        console.error(`❌ Deployment verification failed! Initiating AUTOMATIC ROLLBACK...`);
+        
+        // Rollback
+        await ssh(`sudo ln -sfn /opt/niclaw/releases/${previousVersion} /opt/niclaw/current`);
+        await ssh('sudo systemctl restart openclaw-gateway.service clawx-ai-os.service jarvis-openclaw-bridge.service');
+        
+        try {
+            const { execSync } = require('child_process');
+            execSync(`pnpm.cmd zx scripts/rollback-vm-artifact.mjs --target=${previousVersion} --execute`, { stdio: 'inherit' });
+            console.log('♻️ Automatic rollback completed. System restored to previous version.');
+        } catch (rollbackErr) {
+            console.error(`🚨 CRITICAL: Automatic rollback failed! ${rollbackErr.message}`);
+        }
+        process.exit(1);
+    }
 
 // 10: Retention Simulation
 console.log(`\nRetention Policy:`);
