@@ -1,12 +1,12 @@
 import { copyFile, mkdir, stat } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
-import { app } from 'electron';
+import { pathProvider } from '../runtime/runtime-factory';
 
 export class VaultSnapshotService {
   private snapshotsDir: string;
 
   constructor() {
-    this.snapshotsDir = join(join(app.getPath('home'), '.openclaw'), 'governance', 'memory-snapshots');
+    this.snapshotsDir = join(join(pathProvider.getHomePath(), '.openclaw'), 'governance', 'memory-snapshots');
   }
 
   async initialize() {

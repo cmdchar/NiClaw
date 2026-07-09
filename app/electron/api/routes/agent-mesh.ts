@@ -4,8 +4,6 @@ import { parseJsonBody, sendJson } from '../route-utils';
 import { getSetting } from '../../utils/store';
 import { logger } from '../../utils/logger';
 
-const SUPERHERMES_URL = 'https://vm-niclaw.tail7a9097.ts.net:8002';
-
 export async function handleAgentMeshRoutes(
   req: IncomingMessage,
   res: ServerResponse,
@@ -21,9 +19,16 @@ export async function handleAgentMeshRoutes(
       return true;
     }
 
+    const fromEnv = process.env.SUPERHERMES_API_URL;
+    const baseUrl = fromEnv || await getSetting('superhermesUrl') || 'https://vm-niclaw.tail7a9097.ts.net:8002';
+
     // Map internal path back to the external mesh path
-    const targetPath = url.pathname.replace('/api/agent-mesh/', '/api/mesh/');
-    const targetUrl = `${SUPERHERMES_URL}${targetPath}${url.search}`;
+    let targetPath = url.pathname.replace('/api/agent-mesh/', '/api/mesh/');
+    if (url.pathname.includes('/agent-events')) {
+       targetPath = url.pathname.replace('/api/agent-mesh/agent-events', '/api/agent-events');
+    }
+    
+    const targetUrl = `${baseUrl}${targetPath}${url.search}`;
 
     try {
       let bodyData: any = undefined;

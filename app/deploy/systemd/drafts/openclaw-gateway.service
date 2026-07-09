@@ -1,0 +1,34 @@
+[Unit]
+Description=OpenClaw Gateway (v2026.5.28)
+After=network-online.target
+Wants=network-online.target
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+[Service]
+StandardOutput=append:/var/log/niclaw/openclaw-gateway.log
+StandardError=append:/var/log/niclaw/openclaw-gateway.log
+MemoryMax=2G
+User=debian
+Group=debian
+WorkingDirectory=/opt/niclaw/current
+ExecStart=/opt/niclaw/current/bin/openclaw gateway --port 18789
+Restart=always
+RestartSec=5
+RestartPreventExitStatus=78
+TimeoutStopSec=30
+TimeoutStartSec=30
+SuccessExitStatus=0 143
+KillMode=control-group
+Environment=HOME=/home/debian
+Environment=TMPDIR=/tmp
+Environment=PATH=/usr/bin:/home/debian/.bun/bin:/home/debian/.local/bin:/home/debian/.npm-global/bin:/home/debian/bin:/home/debian/.nix-profile/bin:/home/debian/.local/share/pnpm:/usr/local/bin:/bin
+Environment=OPENCLAW_GATEWAY_PORT=18789
+Environment=OPENCLAW_SYSTEMD_UNIT=openclaw-gateway.service
+Environment="OPENCLAW_WINDOWS_TASK_NAME=OpenClaw Gateway"
+Environment=OPENCLAW_SERVICE_MARKER=openclaw
+Environment=OPENCLAW_SERVICE_KIND=gateway
+Environment=OPENCLAW_SERVICE_VERSION=2026.5.28
+
+[Install]
+WantedBy=default.target

@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { PORTS } from '../utils/config';
+import { PORTS, getPort } from '../utils/config';
 
 /**
  * Allowed CORS origins — only the Electron renderer (Vite dev or production)
@@ -8,8 +8,8 @@ import { PORTS } from '../utils/config';
 const ALLOWED_ORIGINS = new Set([
   `http://127.0.0.1:${PORTS.CLAWX_DEV}`,
   `http://localhost:${PORTS.CLAWX_DEV}`,
-  `http://127.0.0.1:${PORTS.OPENCLAW_GATEWAY}`,
-  `http://localhost:${PORTS.OPENCLAW_GATEWAY}`,
+  `http://127.0.0.1:${getPort('OPENCLAW_GATEWAY')}`,
+  `http://localhost:${getPort('OPENCLAW_GATEWAY')}`,
 ]);
 
 export async function parseJsonBody<T>(req: IncomingMessage): Promise<T> {

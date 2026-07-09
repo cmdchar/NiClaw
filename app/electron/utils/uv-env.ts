@@ -1,7 +1,8 @@
-import { app } from 'electron';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { request } from 'https';
+import { platform } from 'os';
 import path from 'path';
+import { pathProvider, lifecycleManager } from '../runtime/runtime-factory';
 import { logger } from './logger';
 import { getOpenClawConfigDir } from './paths';
 
@@ -56,7 +57,14 @@ let cachedPromise: Promise<boolean> | null = null;
 let loggedOnce = false;
 
 function getLocaleAndTimezone(): { locale: string; timezone: string } {
-  const locale = app.getLocale?.() || '';
+  const env = process.env;
+  let locale = '';
+  try {
+    locale = lifecycleManager.getLocale();
+  } catch {}
+  if (!locale) {
+    locale = env.LC_ALL || env.LC_MESSAGES || env.LANG || env.LANGUAGE || '';
+  }
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
   return { locale, timezone };
 }
@@ -124,10 +132,6 @@ async function computeOptimization(): Promise<boolean> {
 export async function shouldOptimizeNetwork(): Promise<boolean> {
   if (cachedOptimized !== null) return cachedOptimized;
   if (cachedPromise) return cachedPromise;
-
-  if (!app.isReady()) {
-    await app.whenReady();
-  }
 
   cachedPromise = computeOptimization()
     .then((result) => {

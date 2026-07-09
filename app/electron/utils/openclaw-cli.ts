@@ -1,7 +1,7 @@
 /**
  * OpenClaw CLI utilities — cross-platform auto-install
  */
-import { app } from 'electron';
+const isPackaged = process.env.NODE_ENV !== 'development' && __dirname.includes('app.asar');
 import {
   appendFileSync,
   chmodSync,
@@ -16,6 +16,7 @@ import { homedir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { getOpenClawDir, getOpenClawEntryPath } from './paths';
 import { logger } from './logger';
+import { lifecycleManager } from '../runtime/runtime-factory';
 
 // ── Quoting helpers ──────────────────────────────────────────────────────────
 
@@ -32,8 +33,8 @@ function quoteForPowerShell(value: string): string {
 }
 
 function getPackagedWindowsNodePath(): string | null {
-  if (!app.isPackaged || process.platform !== 'win32') return null;
-  const nodePath = join(process.resourcesPath, 'bin', 'node.exe');
+  if (!isPackaged || process.platform !== 'win32') return null;
+  const nodePath = join((process as any).resourcesPath || join(dirname(process.execPath), 'resources'), 'bin', 'node.exe');
   return existsSync(nodePath) ? nodePath : null;
 }
 
@@ -56,7 +57,7 @@ export function getOpenClawCliCommand(): string {
     }
   }
 
-  if (!app.isPackaged) {
+  if (!isPackaged) {
     const openclawDir = getOpenClawDir();
     const nodeModulesDir = dirname(openclawDir);
     const binName = platform === 'win32' ? 'openclaw.cmd' : 'openclaw';
@@ -70,9 +71,9 @@ export function getOpenClawCliCommand(): string {
     }
   }
 
-  if (app.isPackaged) {
+  if (isPackaged) {
     if (platform === 'win32') {
-      const cliDir = join(process.resourcesPath, 'cli');
+      const cliDir = join((process as any).resourcesPath || join(dirname(process.execPath), 'resources'), 'cli');
       const cmdPath = join(cliDir, 'openclaw.cmd');
       if (existsSync(cmdPath)) {
         return `& ${quoteForPowerShell(cmdPath)}`;
@@ -101,15 +102,15 @@ export function getOpenClawCliCommand(): string {
 // ── Packaged CLI wrapper path ────────────────────────────────────────────────
 
 function getPackagedCliWrapperPath(): string | null {
-  if (!app.isPackaged) return null;
+  if (!isPackaged) return null;
   const platform = process.platform;
 
   if (platform === 'darwin' || platform === 'linux') {
-    const wrapper = join(process.resourcesPath, 'cli', 'openclaw');
+    const wrapper = join((process as any).resourcesPath || join(dirname(process.execPath), 'resources'), 'cli', 'openclaw');
     return existsSync(wrapper) ? wrapper : null;
   }
   if (platform === 'win32') {
-    const wrapper = join(process.resourcesPath, 'cli', 'openclaw.cmd');
+    const wrapper = join((process as any).resourcesPath || join(dirname(process.execPath), 'resources'), 'cli', 'openclaw.cmd');
     return existsSync(wrapper) ? wrapper : null;
   }
   return null;
@@ -135,7 +136,7 @@ export async function installOpenClawCli(): Promise<{
     return { success: false, error: 'Windows CLI is configured by the installer.' };
   }
 
-  if (!app.isPackaged) {
+  if (!isPackaged) {
     return { success: false, error: 'CLI install is only available in packaged builds.' };
   }
 
@@ -285,7 +286,7 @@ function ensureLocalBinInPath(): void {
 export async function autoInstallCliIfNeeded(
   notify?: (path: string) => void,
 ): Promise<void> {
-  if (!app.isPackaged) return;
+  if (!isPackaged) return;
   if (process.platform === 'win32') {
     try {
       const result = await ensureWindowsCliOnPath();
@@ -328,8 +329,8 @@ export async function autoInstallCliIfNeeded(
 // ── Completion helpers ───────────────────────────────────────────────────────
 
 function getNodeExecForCli(): string {
-  if (process.platform === 'darwin' && app.isPackaged) {
-    const appName = app.getName();
+  if (process.platform === 'darwin' && isPackaged) {
+    const appName = lifecycleManager.getAppName();
     const helperName = `${appName} Helper`;
     const helperPath = join(
       dirname(process.execPath),
@@ -344,7 +345,7 @@ function getNodeExecForCli(): string {
 }
 
 export function generateCompletionCache(): void {
-  if (!app.isPackaged) return;
+  if (!isPackaged) return;
 
   const entryPath = getOpenClawEntryPath();
   if (!existsSync(entryPath)) return;
@@ -377,7 +378,7 @@ export function generateCompletionCache(): void {
 }
 
 export function installCompletionToProfile(): void {
-  if (!app.isPackaged) return;
+  if (!isPackaged) return;
   if (process.platform === 'win32') return;
 
   const entryPath = getOpenClawEntryPath();

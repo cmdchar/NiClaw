@@ -2,13 +2,17 @@ import { useEffect, useState, useCallback } from 'react';
 import { TaskListPanel } from './TaskListPanel';
 import { AgentActivityPanel } from './AgentActivityPanel';
 import { TaskWorkspacePanel } from '@/pages/CommandCenter/components/TaskWorkspacePanel';
+import { MemorySyncWidget } from './components/MemorySyncWidget';
+import { MemoryProposalsPanel } from './components/MemoryProposalsPanel';
 import { hostApiFetch } from '@/lib/host-api';
 import { Task } from '@/types/orchestrator-workspace';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Database } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function OrchestratorWorkspace() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [viewingGlobalMemory, setViewingGlobalMemory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -37,30 +41,55 @@ export function OrchestratorWorkspace() {
     fetchTasks();
   };
 
+  const handleSelectTask = (taskId: string) => {
+    setActiveTaskId(taskId);
+    setViewingGlobalMemory(false);
+  };
+
+  const handleViewGlobalMemory = () => {
+    setViewingGlobalMemory(true);
+    setActiveTaskId(null);
+  };
+
   return (
     <div className="flex h-full w-full overflow-hidden bg-background">
       {/* Left Panel: Task List */}
       <div className="w-[300px] shrink-0 h-full border-r flex flex-col z-10 bg-background shadow-[1px_0_10px_rgba(0,0,0,0.05)]">
-        <div className="p-4 border-b flex items-center gap-2 shrink-0 bg-muted/20">
-          <Briefcase className="h-5 w-5 text-primary" />
-          <h1 className="font-semibold tracking-tight text-lg">Workspace</h1>
+        <div className="p-4 border-b flex flex-col gap-3 shrink-0 bg-muted/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-primary" />
+              <h1 className="font-semibold tracking-tight text-lg">Workspace</h1>
+            </div>
+            <MemorySyncWidget />
+          </div>
+          <Button 
+            variant={viewingGlobalMemory ? "secondary" : "outline"} 
+            className="w-full justify-start gap-2"
+            onClick={handleViewGlobalMemory}
+          >
+            <Database className="h-4 w-4" />
+            Global Memory Review
+          </Button>
         </div>
         <div className="flex-1 overflow-hidden">
           <TaskListPanel 
             tasks={tasks}
             activeTaskId={activeTaskId}
-            onSelectTask={setActiveTaskId}
+            onSelectTask={handleSelectTask}
             onRefresh={handleRefreshTasks}
             refreshing={refreshing || loading}
           />
         </div>
       </div>
 
-      {/* Center Panel: Active Task Workspace */}
+      {/* Center Panel: Active Task Workspace OR Global Memory */}
       <div className="flex-1 min-w-0 h-full flex flex-col bg-background z-0 relative">
-        {activeTaskId ? (
+        {viewingGlobalMemory ? (
+          <MemoryProposalsPanel />
+        ) : activeTaskId ? (
           <TaskWorkspacePanel 
-            key={activeTaskId} // Force remount when switching tasks to reset its internal state
+            key={activeTaskId} 
             taskId={activeTaskId} 
             onBack={() => setActiveTaskId(null)} 
           />
@@ -69,7 +98,7 @@ export function OrchestratorWorkspace() {
             <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
               <Briefcase className="h-8 w-8 text-muted-foreground/50" />
             </div>
-            <p>Select a task from the list to view its workspace.</p>
+            <p>Select a task or view global memory.</p>
           </div>
         )}
       </div>

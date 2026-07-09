@@ -23,6 +23,7 @@ interface AndroidPairingChallenge {
   codeHash: string;
   createdAt: string;
   expiresAt: string;
+  failedAttempts?: number;
 }
 
 interface AndroidSyncEvent {
@@ -183,6 +184,11 @@ export async function pairAndroidDevice(params: {
   }
 
   if (!normalizedCode || !hashEquals(hashSecret(normalizedCode), challenge.codeHash)) {
+    challenge.failedAttempts = (challenge.failedAttempts || 0) + 1;
+    if (challenge.failedAttempts >= 3) {
+      state.pairing = undefined;
+    }
+    await writeAndroidSyncState(state);
     throw new Error('Invalid pairing code');
   }
 

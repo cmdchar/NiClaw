@@ -1,4 +1,4 @@
-import { app, utilityProcess } from 'electron';
+import type { GatewayProcess } from '../runtime/interfaces/process-launcher';
 import path from 'path';
 import { existsSync } from 'fs';
 import { getOpenClawDir, getOpenClawEntryPath } from '../utils/paths';
@@ -273,8 +273,9 @@ export async function runOpenClawDoctorRepair(): Promise<boolean> {
   const platform = process.platform;
   const arch = process.arch;
   const target = `${platform}-${arch}`;
-  const binPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'bin')
+  const isPackaged = process.env.NODE_ENV !== 'development' && __dirname.includes('app.asar');
+  const binPath = isPackaged
+    ? path.join((process as any).resourcesPath || path.join(path.dirname(process.execPath), 'resources'), 'bin')
     : path.join(process.cwd(), 'resources', 'bin', target);
   const binPathExists = existsSync(binPath);
   const baseProcessEnv = process.env as Record<string, string | undefined>;

@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
-import { BrowserWindow, shell } from 'electron';
+import type { BrowserWindow } from 'electron';
+import { externalShell } from '../runtime/runtime-factory';
 import { logger } from './logger';
 import { loginOpenAICodexOAuth, type OpenAICodexOAuthCredentials } from './openai-codex-oauth';
 import { getProviderService } from '../services/providers/provider-service';
@@ -52,7 +53,7 @@ class BrowserOAuthManager extends EventEmitter {
     try {
       const token = await loginOpenAICodexOAuth({
         openUrl: async (url) => {
-          await shell.openExternal(url);
+          await externalShell.openExternal(url);
         },
         onProgress: (message) => logger.info(`[BrowserOAuth] ${message}`),
         onManualCodeRequired: ({ authorizationUrl, reason }) => {

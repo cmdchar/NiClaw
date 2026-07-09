@@ -1,0 +1,21 @@
+[Unit]
+Wants=tailscaled.service
+After=tailscaled.service
+Description=ClawX AI Operating System (Headless with Xvfb)
+After=network.target
+
+[Service]
+StandardOutput=append:/var/log/niclaw/clawx-ai-os.log
+StandardError=append:/var/log/niclaw/clawx-ai-os.log
+MemoryMax=2G
+Type=simple
+User=debian
+WorkingDirectory=/opt/niclaw/current
+ExecStart=/usr/bin/xvfb-run --server-args="-screen 0 1024x768x24" /usr/bin/pnpm exec electron dist-electron/main/index.js --headless
+Restart=always
+Environment=NODE_ENV=production
+Environment=CLAWX_HEADLESS=1
+EnvironmentFile=-/etc/niclaw/.env
+
+[Install]
+WantedBy=multi-user.target

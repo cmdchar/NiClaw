@@ -1,0 +1,1 @@
+reput release/niclaw-vm-bundle-0.4.8-rehearsal.tar.gz /tmp/niclaw-vm-bundle-0.4.8-rehearsal.tar.gz

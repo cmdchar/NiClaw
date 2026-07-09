@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { lifecycleManager, pathProvider } from '../runtime/runtime-factory';
 import path from 'path';
 import { existsSync, readFileSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'fs';
 import { homedir } from 'os';
@@ -130,7 +130,7 @@ async function measureAsync<T>(timings: Record<string, number>, key: string, fn:
 
 function appVersionForCache(): string {
   try {
-    return app.getVersion();
+    return lifecycleManager.getAppVersion();
   } catch {
     return 'unknown';
   }
@@ -180,7 +180,7 @@ function ensureConfiguredPluginsUpgraded(configuredChannels: string[]): boolean 
     }
 
     // Dev mode fallback: copy from node_modules/ with pnpm dep resolution
-    if (!app.isPackaged) {
+    if (!pathProvider.isPackaged()) {
       const npmPkgPath = join(process.cwd(), 'node_modules', ...npmName.split('/'));
       if (!existsSync(fsPath(join(npmPkgPath, 'openclaw.plugin.json')))) continue;
       const sourceVersion = readPluginVersion(join(npmPkgPath, 'package.json'));
@@ -242,7 +242,7 @@ function buildPluginSourceSignatures(configuredChannels: string[]): Record<strin
     const bundledSources = buildCandidateSources(pluginInfo.dirName);
     const bundledDir = bundledSources.find((dir) => existsSync(fsPath(join(dir, 'openclaw.plugin.json'))));
     const devPkgPath = join(process.cwd(), 'node_modules', ...pluginInfo.npmName.split('/'));
-    const sourceDir = bundledDir || (!app.isPackaged ? devPkgPath : '');
+    const sourceDir = bundledDir || (!pathProvider.isPackaged() ? devPkgPath : '');
     signatures[channelType] = sourceDir
       ? {
         sourceDir,
@@ -571,12 +571,12 @@ export async function prepareGatewayLaunchContext(port: number): Promise<Gateway
   }
 
   const gatewayArgs = ['gateway', '--port', String(port), '--token', appSettings.gatewayToken, '--allow-unconfigured', '--bind', 'lan'];
-  const mode = app.isPackaged ? 'packaged' : 'dev';
+  const mode = pathProvider.isPackaged() ? 'packaged' : 'dev';
 
   const platform = process.platform;
   const arch = process.arch;
   const target = `${platform}-${arch}`;
-  const binPath = app.isPackaged
+  const binPath = pathProvider.isPackaged()
     ? path.join(process.resourcesPath, 'bin')
     : path.join(process.cwd(), 'resources', 'bin', target);
   const binPathExists = existsSync(binPath);

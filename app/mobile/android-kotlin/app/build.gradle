@@ -11,8 +11,8 @@ android {
         applicationId "com.jarvis"
         minSdk 24
         targetSdk 34
-        versionCode 6
-        versionName "6.0"
+        versionCode 408
+        versionName "0.4.8-staging.0"
     }
 
     buildTypes {

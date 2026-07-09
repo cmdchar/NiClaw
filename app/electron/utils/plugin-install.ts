@@ -5,7 +5,8 @@
  * (DingTalk, WeCom, Feishu, WeChat, Discord, QQBot, WhatsApp).  Used both at app startup (to auto-upgrade
  * stale plugins) and when a user configures a channel.
  */
-import { app } from 'electron';
+import { pathProvider } from '../runtime/runtime-factory';
+const isPackaged = process.env.NODE_ENV !== 'development' && __dirname.includes('app.asar');
 import path from 'node:path';
 import { existsSync, cpSync, copyFileSync, statSync, mkdirSync, rmSync, readFileSync, writeFileSync, readdirSync, realpathSync } from 'node:fs';
 import { readdir, stat, copyFile, mkdir } from 'node:fs/promises';
@@ -431,7 +432,7 @@ export function ensurePluginInstalled(
   }
 
   // Dev mode fallback: copy from node_modules with pnpm-aware dep resolution
-  if (!app.isPackaged) {
+  if (!isPackaged) {
     const npmName = PLUGIN_NPM_NAMES[pluginDirName];
     if (npmName) {
       const npmPkgPath = join(process.cwd(), 'node_modules', ...npmName.split('/'));
@@ -480,14 +481,15 @@ export function ensurePluginInstalled(
 // ── Candidate source path builder ────────────────────────────────────────────
 
 export function buildCandidateSources(pluginDirName: string): string[] {
-  return app.isPackaged
+  const resourcesPath = (process as any).resourcesPath || path.join(path.dirname(process.execPath), 'resources');
+  return isPackaged
     ? [
-      join(process.resourcesPath, 'openclaw-plugins', pluginDirName),
-      join(process.resourcesPath, 'app.asar.unpacked', 'build', 'openclaw-plugins', pluginDirName),
-      join(process.resourcesPath, 'app.asar.unpacked', 'openclaw-plugins', pluginDirName),
+      join(resourcesPath, 'openclaw-plugins', pluginDirName),
+      join(resourcesPath, 'app.asar.unpacked', 'build', 'openclaw-plugins', pluginDirName),
+      join(resourcesPath, 'app.asar.unpacked', 'openclaw-plugins', pluginDirName),
     ]
     : [
-      join(app.getAppPath(), 'build', 'openclaw-plugins', pluginDirName),
+      join(process.cwd(), 'build', 'openclaw-plugins', pluginDirName),
       join(process.cwd(), 'build', 'openclaw-plugins', pluginDirName),
       join(__dirname, '../../build/openclaw-plugins', pluginDirName),
     ];

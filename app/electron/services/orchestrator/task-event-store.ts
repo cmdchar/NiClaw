@@ -6,6 +6,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { getDataDir } from '../../utils/paths';
 import { TaskWorkspace, WorkspaceEvent, WorkspaceArtifact, WorkspacePatch, WorkspaceDecision } from './workspace-types';
+import { meshPublisher } from '../mesh-publisher';
 
 export class TaskEventStore extends EventEmitter {
   private tasks: Map<string, Task> = new Map();
@@ -231,6 +232,7 @@ export class TaskEventStore extends EventEmitter {
     this.saveTasks();
     this.addEvent(id, 'status_change', `Status changed to ${status}`, { status });
     this.emit('task_updated', task);
+    meshPublisher.publishTaskStatus(id, status).catch(() => {});
   }
 
   addEvent(taskId: string, type: TaskEvent['type'], message: string, data?: any) {
@@ -283,6 +285,10 @@ export class TaskEventStore extends EventEmitter {
     this.saveTasks();
     this.saveTaskEvents(taskId);
     this.emit('task_audit', { taskId, audit });
+
+    if (action.includes('POLICY_VIOLATION') || action.includes('approval')) {
+       meshPublisher.publishTaskStatus(taskId, 'waiting_approval', { action, actor, severity }).catch(() => {});
+    }
   }
 
   updateTaskField(taskId: string, field: Partial<Task>) {
@@ -358,6 +364,7 @@ export class TaskEventStore extends EventEmitter {
     ws.updatedAt = new Date().toISOString();
     this.saveWorkspaces();
     this.emit('workspace_event', { workspaceId, event });
+    meshPublisher.publishWorkspaceEvent(workspaceId, ws.taskId, type, message, data).catch(() => {});
   }
 
   updateWorkspaceStatus(workspaceId: string, status: TaskWorkspace['status']) {

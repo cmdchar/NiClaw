@@ -1,0 +1,26 @@
+[Unit]
+Wants=tailscaled.service
+After=tailscaled.service
+Description=OpenClaw Gateway Bridge for Jarvis
+After=network-online.target clawx-ai-os.service
+Wants=network-online.target
+Requires=clawx-ai-os.service
+
+[Service]
+StandardOutput=append:/var/log/niclaw/jarvis-openclaw-bridge.log
+StandardError=append:/var/log/niclaw/jarvis-openclaw-bridge.log
+MemoryMax=2G
+Type=simple
+User=debian
+WorkingDirectory=/opt/jarvis-command-center/server
+Environment=NODE_ENV=production
+Environment=OPENCLAW_BRIDGE_HOST=127.0.0.1
+Environment=OPENCLAW_BRIDGE_PORT=18790
+Environment=OPENCLAW_BIN=/opt/niclaw/current/bin/openclaw
+Environment=JARVIS_ENV_FILE=/opt/jarvis-command-center/server/.env
+ExecStart=/usr/bin/node /opt/jarvis-command-center/server/openclaw-bridge.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

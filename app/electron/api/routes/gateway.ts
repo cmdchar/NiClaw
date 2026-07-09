@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { PORTS } from '../../utils/config';
+import { getPort } from '../../utils/config';
 import { buildOpenClawControlUiUrl } from '../../utils/openclaw-control-ui';
 import { getSetting } from '../../utils/store';
 import type { HostApiContext } from '../context';
@@ -14,7 +14,7 @@ export async function handleGatewayRoutes(
   if (url.pathname === '/api/app/gateway-info' && req.method === 'GET') {
     const status = ctx.gatewayManager.getStatus();
     const token = await getSetting('gatewayToken');
-    const port = status.port || PORTS.OPENCLAW_GATEWAY;
+    const port = status.port || getPort('OPENCLAW_GATEWAY');
     sendJson(res, 200, {
       wsUrl: `ws://127.0.0.1:${port}/ws`,
       token,
@@ -89,7 +89,7 @@ export async function handleGatewayRoutes(
     try {
       const status = ctx.gatewayManager.getStatus();
       const token = await getSetting('gatewayToken');
-      const port = status.port || PORTS.OPENCLAW_GATEWAY;
+      const port = status.port || getPort('OPENCLAW_GATEWAY');
       const view = url.searchParams.get('view') === 'dreams' ? 'dreams' : undefined;
       const urlValue = buildOpenClawControlUiUrl(port, token, { view });
       sendJson(res, 200, { success: true, url: urlValue, token, port });

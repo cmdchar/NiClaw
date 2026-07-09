@@ -14,6 +14,7 @@ import {
 import { buildBoardStatus, syncBoardSnapshot } from './board';
 import { readTasksStore, type SpatialTask } from './tasks';
 import { getSetting } from '../../utils/store';
+import { getPort } from '../../utils/config';
 
 interface AndroidPairRequest {
   code?: string;
@@ -142,8 +143,7 @@ export async function handleAndroidRoutes(
         remoteAddress: req.socket.remoteAddress,
         userAgent: headerToString(req.headers['user-agent']),
       });
-      const gatewayToken = await getSetting('gatewayToken');
-      sendJson(res, 200, { success: true, ...result, gatewayToken });
+      sendJson(res, 200, { success: true, ...result });
     } catch {
       sendJson(res, 401, { success: false, error: 'Invalid or expired pairing code' });
     }
@@ -181,7 +181,7 @@ export async function handleAndroidRoutes(
         gateway: true,
         classicJarvisWs: false,
         websocketUrl: null,
-        gatewayUrl: "http://100.82.149.22:18789",
+        gatewayUrl: `http://${(req.headers.host || url.hostname || '127.0.0.1').split(':')[0]}:${getPort('OPENCLAW_GATEWAY')}`,
         orchestratorBaseUrl: `http://${req.headers.host || url.hostname + ':' + url.port}`
       });
     } catch (error) {

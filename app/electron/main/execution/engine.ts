@@ -1,6 +1,6 @@
 import { ExecutionGraph, ExecutionTrace, NodeExecutionState } from '../../../shared/types/execution';
 import { logger } from '../../utils/logger';
-import { gatewayManager } from '../index';
+import { getGatewayManager } from '../../bootstrap/service-registry';
 import { telemetryEngine } from '../telemetry/engine';
 
 export class ExecutionEngine {
@@ -8,6 +8,13 @@ export class ExecutionEngine {
 
   async execute(graph: ExecutionGraph): Promise<ExecutionTrace> {
     const executionId = `exec_${Date.now()}`;
+    getGatewayManager().emit('notification', {
+      type: 'info',
+      title: 'Execution Started',
+      message: `Graph ${graph.metadata?.name || graph.id} execution started`,
+      timestamp: Date.now(),
+    });
+
     const trace: ExecutionTrace = {
       graphId: graph.id,
       executionId,
@@ -36,6 +43,12 @@ export class ExecutionEngine {
     } catch (error) {
       trace.status = 'failed';
       trace.endTime = Date.now();
+      getGatewayManager().emit('notification', {
+        type: 'error',
+        title: 'Execution Failed',
+        message: `Graph ${graph.metadata?.name || graph.id} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        timestamp: Date.now(),
+      });
       logger.error(`[ExecutionEngine] Graph execution failed: ${String(error)}`);
     }
 
@@ -112,7 +125,7 @@ export class ExecutionEngine {
 
     logger.info(`[ExecutionEngine] Delegating to ${agentRole} agent: ${node.label}`);
 
-    const response = await gatewayManager.rpc<any>('chat.send', {
+    const response = await getGatewayManager().rpc<any>('chat.send', {
       agentId: node.config.agentId || 'main',
       message: prompt,
       metadata: {

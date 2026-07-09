@@ -1,5 +1,6 @@
 import { listAgentsSnapshot } from '../../utils/agent-config';
 import { getOpenClawStatus } from '../../utils/paths';
+import { getPort } from '../../utils/config';
 
 export interface OpenClawHealth {
     status: 'ONLINE' | 'OFFLINE' | 'ERROR';
@@ -10,8 +11,8 @@ export interface OpenClawHealth {
 }
 
 export class OpenClawAdapter {
-    private readonly hostApiUrl = 'http://127.0.0.1:13210/api/gateway/status';
-    private readonly directApiUrl = 'http://127.0.0.1:18789/status';
+    private get hostApiUrl() { return `http://127.0.0.1:${getPort('CLAWX_HOST_API') || 13210}/api/gateway/status`; }
+    private get directApiUrl() { return `http://127.0.0.1:${getPort('OPENCLAW_GATEWAY')}/status`; }
     private lastHealth: OpenClawHealth = {
         status: 'OFFLINE',
         uptime: 0,
@@ -52,7 +53,7 @@ export class OpenClawAdapter {
             clearTimeout(timeoutId);
             const latency = Date.now() - start;
 
-            let endpointStr = `HostAPI: 13210 | Direct: ${directAlive ? '18789' : 'Down'}`;
+            let endpointStr = `HostAPI: ${getPort('CLAWX_HOST_API') || 13210} | Direct: ${directAlive ? getPort('OPENCLAW_GATEWAY') : 'Down'}`;
 
             if (data.state === 'running' || data.gatewayReady === true) {
                 this.lastHealth = {

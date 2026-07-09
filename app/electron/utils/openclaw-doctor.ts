@@ -1,4 +1,4 @@
-import { app, utilityProcess } from 'electron';
+import { processLauncher } from '../runtime/runtime-factory';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { getOpenClawDir, getOpenClawEntryPath } from './paths';
@@ -60,8 +60,9 @@ function appendDoctorOutput(
 
 function getBundledBinPath(): string {
   const target = `${process.platform}-${process.arch}`;
-  return app.isPackaged
-    ? path.join(process.resourcesPath, 'bin')
+  const isPackaged = process.env.NODE_ENV !== 'development' && __dirname.includes('app.asar');
+  return isPackaged
+    ? path.join((process as any).resourcesPath || path.join(path.dirname(process.execPath), 'resources'), 'bin')
     : path.join(process.cwd(), 'resources', 'bin', target);
 }
 
@@ -102,7 +103,7 @@ async function runDoctorCommandWithArgs(
   );
 
   return await new Promise<OpenClawDoctorResult>((resolve) => {
-    const child = utilityProcess.fork(entryScript, args, {
+    const child = processLauncher.fork(entryScript, args, {
       cwd: openclawDir,
       stdio: 'pipe',
       env: {

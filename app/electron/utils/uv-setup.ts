@@ -1,7 +1,7 @@
-import { app } from 'electron';
+const isPackaged = process.env.NODE_ENV !== 'development' && __dirname.includes('app.asar');
 import { execSync, spawn } from 'child_process';
 import { existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { getUvMirrorEnv } from './uv-env';
 import { logger } from './logger';
 import { quoteForCmd, needsWinShell } from './paths';
@@ -15,8 +15,8 @@ function getBundledUvPath(): string {
   const target = `${platform}-${arch}`;
   const binName = platform === 'win32' ? 'uv.exe' : 'uv';
 
-  if (app.isPackaged) {
-    return join(process.resourcesPath, 'bin', binName);
+  if (isPackaged) {
+    return join((process as any).resourcesPath || join(dirname(process.execPath), 'resources'), 'bin', binName);
   } else {
     return join(process.cwd(), 'resources', 'bin', target, binName);
   }
@@ -32,7 +32,7 @@ function getBundledUvPath(): string {
 function resolveUvBin(): { bin: string; source: 'bundled' | 'path' | 'bundled-fallback' } {
   const bundled = getBundledUvPath();
 
-  if (app.isPackaged) {
+  if (isPackaged) {
     if (existsSync(bundled)) {
       return { bin: bundled, source: 'bundled' };
     }

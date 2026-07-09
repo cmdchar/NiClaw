@@ -1,15 +1,12 @@
 /**
  * Persistent Storage
- * Electron-store wrapper for application settings
+ * ConfigStore wrapper for application settings
  */
 
 import { randomBytes } from 'crypto';
-import { app } from 'electron';
+import { configStore, lifecycleManager } from '../runtime/runtime-factory';
 import { resolveSupportedLanguage } from '../../shared/language';
-
-// Lazy-load electron-store (ESM module)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let settingsStoreInstance: any = null;
+import { getPort } from './config';
 
 /**
  * Generate a random token for gateway authentication
@@ -66,13 +63,11 @@ export interface AppSettings {
  * Default settings
  */
 function getSystemLocale(): string {
-  const preferredLanguages = typeof app.getPreferredSystemLanguages === 'function'
-    ? app.getPreferredSystemLanguages()
-    : [];
-  return preferredLanguages[0]
-    || (typeof app.getLocale === 'function' ? app.getLocale() : '')
-    || Intl.DateTimeFormat().resolvedOptions().locale
-    || 'en';
+  try {
+    return lifecycleManager.getLocale() || Intl.DateTimeFormat().resolvedOptions().locale || 'en';
+  } catch {
+    return Intl.DateTimeFormat().resolvedOptions().locale || 'en';
+  }
 }
 
 function createDefaultSettings(): AppSettings {
@@ -88,7 +83,7 @@ function createDefaultSettings(): AppSettings {
 
     // Gateway
     gatewayAutoStart: true,
-    gatewayPort: 18789,
+    gatewayPort: getPort('OPENCLAW_GATEWAY'),
     gatewayToken: generateToken(),
     proxyEnabled: false,
     proxyServer: '',
@@ -118,26 +113,29 @@ function createDefaultSettings(): AppSettings {
   };
 }
 
-/**
- * Get the settings store instance (lazy initialization)
- */
-async function getSettingsStore() {
-  if (!settingsStoreInstance) {
-    const Store = (await import('electron-store')).default;
-    settingsStoreInstance = new Store<AppSettings>({
-      name: 'settings',
-      defaults: createDefaultSettings(),
-    });
+let initialized = false;
+function initializeStore() {
+  if (initialized) return;
+  initialized = true;
+  const defaults = createDefaultSettings();
+  
+  // Backwards compatibility logic or default application for electron-store
+  // Actually, since electron-store takes defaults on creation, we should just populate 
+  // missing keys here.
+  for (const [key, value] of Object.entries(defaults)) {
+    if (!configStore.has(key)) {
+      configStore.set(key, value);
+    }
   }
-  return settingsStoreInstance;
 }
+
 
 /**
  * Get a setting value
  */
 export async function getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]> {
-  const store = await getSettingsStore();
-  return store.get(key);
+  initializeStore();
+  return configStore.get(key) as AppSettings[K];
 }
 
 /**
@@ -147,43 +145,54 @@ export async function setSetting<K extends keyof AppSettings>(
   key: K,
   value: AppSettings[K]
 ): Promise<void> {
-  const store = await getSettingsStore();
-  store.set(key, value);
+  initializeStore();
+  configStore.set(key, value);
 }
 
 /**
  * Get all settings
  */
 export async function getAllSettings(): Promise<AppSettings> {
-  const store = await getSettingsStore();
-  return store.store;
+  initializeStore();
+  const defaults = createDefaultSettings();
+  const result: any = {};
+  for (const key of Object.keys(defaults)) {
+    result[key] = configStore.get(key);
+  }
+  return result as AppSettings;
 }
 
 /**
  * Reset settings to defaults
  */
 export async function resetSettings(): Promise<void> {
-  const store = await getSettingsStore();
-  store.clear();
+  initializeStore();
+  const defaults = createDefaultSettings();
+  for (const [key, value] of Object.entries(defaults)) {
+    configStore.set(key, value);
+  }
 }
 
 /**
  * Export settings to JSON
  */
 export async function exportSettings(): Promise<string> {
-  const store = await getSettingsStore();
-  return JSON.stringify(store.store, null, 2);
+  const allSettings = await getAllSettings();
+  return JSON.stringify(allSettings, null, 2);
 }
 
 /**
  * Import settings from JSON
  */
 export async function importSettings(json: string): Promise<void> {
+  initializeStore();
   try {
     const settings = JSON.parse(json);
-    const store = await getSettingsStore();
-    store.set(settings);
+    for (const [key, value] of Object.entries(settings)) {
+      configStore.set(key, value);
+    }
   } catch {
     throw new Error('Invalid settings JSON');
   }
 }
+

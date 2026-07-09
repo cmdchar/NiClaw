@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { hostApiFetch } from '@/lib/host-api';
 import { cn } from '@/lib/utils';
 import { TaskWorkspacePanel } from './components/TaskWorkspacePanel';
+import { AgentMeshActivity } from './components/AgentMeshActivity';
 import { Task } from '@/types/orchestrator-workspace';
 
 interface GitStatusSnapshot {
@@ -558,33 +559,7 @@ export function CommandCenter() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-lg shadow-none">
-              <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-base tracking-normal">Agent Tasks</CardTitle>
-                <Badge variant="outline">{orchestratorTasks.length} total</Badge>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {orchestratorTasks.length === 0 ? (
-                  <EmptyState text="No agent tasks submitted." />
-                ) : (
-                  orchestratorTasks.slice(0, 8).map((task) => (
-                    <div 
-                      key={task.id} 
-                      className="flex flex-col gap-1 rounded-md border px-3 py-2 text-sm cursor-pointer hover:bg-muted/50"
-                      onClick={() => setSelectedTaskId(task.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium truncate">{task.title}</span>
-                        <Badge variant={task.status === 'failed' ? 'destructive' : 'outline'} className="text-[10px]">
-                          {task.status}
-                        </Badge>
-                      </div>
-                      <span className="text-xs text-muted-foreground truncate">{task.targetProject}</span>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+            <AgentMeshActivity tasks={orchestratorTasks} onSelectTask={setSelectedTaskId} />
 
             <Card className="rounded-lg shadow-none">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">

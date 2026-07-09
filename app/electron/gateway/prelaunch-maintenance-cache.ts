@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { pathProvider } from '../runtime/runtime-factory';
 import {
   existsSync,
   mkdirSync,
@@ -36,7 +36,7 @@ interface CacheFile {
 }
 
 function getDefaultCachePath(): string {
-  return join(app.getPath('userData'), CACHE_FILE_NAME);
+  return join(pathProvider.getUserDataPath(), CACHE_FILE_NAME);
 }
 
 function emptyCache(): CacheFile {

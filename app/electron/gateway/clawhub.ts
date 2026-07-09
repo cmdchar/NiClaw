@@ -5,7 +5,8 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { app, shell } from 'electron';
+import { externalShell } from '../runtime/runtime-factory';
+const isPackaged = process.env.NODE_ENV !== 'development' && __dirname.includes('app.asar');
 import { getOpenClawConfigDir, ensureDir, getClawHubCliBinPath, getClawHubCliEntryPath, quoteForCmd } from '../utils/paths';
 
 export interface ClawHubSearchParams {
@@ -75,7 +76,7 @@ export class ClawHubService {
         const entryPath = getClawHubCliEntryPath();
 
         this.cliEntryPath = entryPath;
-        if (!app.isPackaged && fs.existsSync(binPath)) {
+        if (!isPackaged && fs.existsSync(binPath)) {
             this.cliPath = binPath;
             this.useNodeRunner = false;
         } else {
@@ -445,7 +446,7 @@ export class ClawHubService {
 
         try {
             // Open file with default application
-            await shell.openPath(targetFile);
+            await externalShell.openPath(targetFile);
             return true;
         } catch (error) {
             console.error('Failed to open skill readme:', error);
@@ -461,7 +462,7 @@ export class ClawHubService {
         if (!skillDir) {
             throw new Error('Skill directory not found');
         }
-        const openResult = await shell.openPath(skillDir);
+        const openResult = await externalShell.openPath(skillDir);
         if (openResult) {
             throw new Error(openResult);
         }

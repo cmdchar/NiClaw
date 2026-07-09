@@ -1,247 +1,79 @@
 # BRAIN - CURRENT AI STATE
 
-## Latest update (2026-06-20) - Complete NiClaw Implementation Roadmap
+> [!CAUTION]
+> **CRITICAL RULE**: Never interpret architecture review, planning approval, or design approval as implementation approval. Infrastructure changes (systemd, firewall, SSH, VM runtime) always require explicit execution approval.
+## Latest update (2026-07-06) - Phase 4.9C Dual Runtime Support Complete
 - **Current State**:
-  - Codex created the root-level implementation roadmap needed to finish NiClaw in controlled phases.
-  - The master index is `C:\Server\niclaw\NICLAW_IMPLEMENTATION_ROADMAP.md`.
-  - Phase plans now exist in the project root for Unified Orchestrator Workspace, Persistent Task Workspace, Desktop Workspace UI, Android Workspace Control, Hermes Mesh communication, SecondBrain memory unification, VM runtime hardening, build/release, security/policy audit, production readiness, Knowledge Graph/Project Intelligence, Multi-Agent Planning Engine, and Autonomous Project Mode.
-  - Each phase document includes concrete tasks, file ownership boundaries, endpoints/contracts where relevant, validation commands, and acceptance criteria.
-  - The roadmap preserves the no-mock rule: every UI/client feature must consume real Host API, Hermes Mesh, VM runtime, or SecondBrain data.
-  - `PHASE_5_0_FINAL_QA_ACCEPTANCE.md` was replaced by `PHASE_5_0_PRODUCTION_READINESS.md` because advanced Agent Operating System phases continue after the readiness baseline.
-  - Added global `Provenance Everywhere` rule: durable records should preserve creator/time/source task/workspace/patch/agent/decision/event metadata when applicable.
-  - Added four impact milestones: NiClaw Workspace OS, Connected Agent Ecosystem, Project Intelligence Platform, and Autonomous Agent OS.
-  - Roadmap documents are now considered frozen for execution unless a real implementation blocker appears.
-  - `NICLAW_IMPLEMENTATION_ROADMAP.md` status is now formally `FROZEN`; changes are allowed only for architectural blockers, newly discovered technical constraints, or major product direction changes.
-  - `PHASE_4_4B_PERSISTENT_TASK_WORKSPACE.md` now has a three-sprint execution plan: Sprint 1 workspace types/event store, Sprint 2 kernel/routes/policy, Sprint 3 orchestrator/patch loop.
+  - **Phase 4.9B – Runtime Abstraction Layer**: COMPLETE.
+  - **Phase 4.9C – Dual Runtime Support**: COMPLETE.
+  - **Blocking issues**: NONE.
+- **Milestones**:
+  - Successfully separated bootstrapping paths (`node-bootstrap.ts`, `electron-bootstrap.ts`).
+  - Implemented explicit runtime targeting via `NICLAW_RUNTIME=node`.
+  - Resolved circular dependencies surrounding the Host API injection and safely extracted `CoreServices` types.
+  - Demonstrated full background gateway spawn from native Node, effectively unblocking headless execution.
 - **Next Exact Steps**:
-  - Start with 4.4B Sprint 1: `Workspace Types` and `TaskEventStore Extension`.
-  - Keep Codex and Antigravity on separate file ownership per phase to avoid conflicting edits.
-  - After each implemented phase, update `app/ai/BRAIN.md`, `app/ai/TASKS.md`, `app/ai/CHANGELOG_AI.md`, and any relevant SecondBrain notes before moving forward.
+  - Proceed to **Phase 4.8 – Build Release Pipeline** to establish rigorous CI/CD.
 
-## Latest update (2026-06-14) - Android Companion Host API Sync Repair
+## Previous update (2026-07-06) - Phase 4.9B Runtime Abstraction Layer Complete
 - **Current State**:
-  - Codex repaired the existing native Kotlin Android companion in `mobile/android-kotlin`; no new Android app was created and no mock data was added.
-  - Android now has a dedicated `Android Sync` screen reachable from Settings. It supports Host API URL configuration, emulator fallback (`http://10.0.2.2:13210`), pairing code entry, Test Connection, Sync Now, heartbeat event push, and real Board/Agents/Tasks status rendering.
-  - `ApiClient.kt` now separates Host API URL from the legacy WebSocket URL through `host_api_url`, defaults to `http://10.10.1.219:13210`, supports Android device IDs, stores pairing tokens locally, and sends auth through `Authorization: Bearer` instead of leaking tokens into Host API query strings.
-  - The old hardcoded Android gateway-token fallback was removed from active Android sources. Portal legacy OpenClaw URL generation now only appends a token if the user explicitly saved one.
-  - Desktop Host API now exposes real Android Sync endpoints under `/api/android/*`: `pairing`, `pair`, `status`, `board`, `agents`, `tasks`, `event`, and `sync`.
-  - Desktop Settings > Remote Access now has an `Android Pairing Code` generator that calls `/api/android/pairing` through the existing Host API renderer proxy, so phone pairing no longer requires curl.
-  - Desktop stores paired Android devices in the Electron user data directory under `android-sync/state.json`; device tokens are stored only as SHA-256 hashes, pairing codes are one-time/short-lived, recent events are sanitized, and Host API request logs mask sensitive query parameters.
-  - Android HTTP local/LAN access is explicitly configured through `network_security_config.xml` for `10.0.2.2`, `10.10.1.219`, `127.0.0.1`, and `localhost`.
-  - Backups made before edits were moved outside the repo to `C:\Server\_codex_backups\niclaw\android-sync-20260614` so Gradle does not treat `.bak` files as Android resources.
+  - **Phase 4.9B – Runtime Abstraction Layer**: COMPLETE.
+  - **Blocking issues**: NONE.
+  - **Known limitations**: `token-usage.test.ts` contains legacy mock payload mismatches unrelated to runtime abstraction.
+- **Next Exact Steps**:
+  - Proceed to **Phase 4.9C – Dual Runtime Support** to implement explicit boot-time selection (`NICLAW_RUNTIME=electron|node`) and separated bootstrapping, enabling `dist-node/host-runtime.ts` to execute as a permanent daemon.
+
+## Previous update (2026-06-21) - Stabilization Sprint 4.6S & Current Architecture
+- **Current State**:
+  - The documentation, roadmap, and AI memory have been formally reconciled to perfectly match the state of the codebase after the completion of Phases 4.4A-C, 4.5, and 4.6A-E. 
+  - **Workspace Architecture**: NiClaw has a unified `/workspace` route that handles Task lifecycles, Agent Activity, and Memory Sync, backed by the `TaskEventStore`. It coexists safely alongside the Dev Command Center.
+  - **Mesh Architecture**: The SuperHermes mesh is live. NiClaw Host API communicates with remote agents via Tailscale using `MeshPublisher`, which buffers offline events into a resilient outbox before syncing them across the ecosystem.
+  - **SecondBrain Unification**: The global memory system operates on a strict unidirectional model. Remote agents and `vm-niclaw` act as read-replicas; they propose memory changes via `MEMORY_API_TOKEN` to the Host API.
+  - **Memory Proposals & Manual Sync**: Memory proposals flow into the `MemoryProposalsPanel` in the Workspace, where the human operator holds final approval authority. Approvals commit locally and trigger a `pendingSync` state. Syncing back to `vm-niclaw` is strictly **manual** and explicitly triggered by the operator; there is no bidirectional or automatic sync.
 - **Validation**:
-  - Android: `.\gradlew.bat assembleDebug` passes.
-  - Desktop: `pnpm run typecheck` and `pnpm run build:vite` pass.
-  - Local HTTP smoke to `http://127.0.0.1:13210/api/android/pair` could not run because Host API was not running locally in this shell.
-- **Next Exact Steps**:
-  - Start NiClaw Desktop/Host API, enable Remote Access, generate an Android pairing code in Settings > Remote Access, then pair from the Android Sync screen.
-  - On emulator use `http://10.0.2.2:13210`; on a physical phone use the PC LAN/Tailscale-reachable Host API address and ensure Remote Access is enabled.
-  - After Antigravity finishes its Android Command Center UI work, run one end-to-end phone test: pair, status online, board/tasks/agents visible, Sync Now accepted by Desktop, heartbeat event recorded.
+  - Documentation accurately reflects reality: `PROJECT_STATUS.md` and `TASKS.md` have been fully reconciled. There are no falsely-marked incomplete implementations.
 
-## Latest update (2026-06-13) - OpenHuman Runtime Repair on vm-niclaw
-- **Current State**:
-  - Codex repaired the OpenHuman console on `vm-niclaw` without adding mocks.
-  - `jarvis-consoles.service` now injects the OpenHuman Rust Core bearer token server-side when proxying `POST /rpc`; renderer/mobile clients never receive the core token.
-  - `POST /chat` in `app/consoles-server.js` supports the secure Host API/OpenClaw path, polls real `chat.history`, surfaces real assistant/provider errors, and has a real local Ollama fallback.
-  - The deployed service is intentionally set to `OPENHUMAN_CHAT_MODE=ollama-direct` with `OPENHUMAN_OLLAMA_MODEL=qwen2.5:3b` because the external providers are currently unavailable for this agent (`modal` rate/timeout, `deepseek` billing, `openrouter` key limit).
-  - OpenClaw config on `vm-niclaw` now has a valid `openhuman` agent and a local `ollama-vmniclaw` provider entry; `openclaw config validate` and `openclaw agents list --bindings` pass.
-  - OpenHuman workspace memory now has the shared memory core copied into `/home/debian/.openclaw/workspace-openhuman/memory`; both `main` and `openhuman` memory indexes report `26/26 files`, `68 chunks`, `Dirty: no`.
-  - Validation on `vm-niclaw`: `POST http://127.0.0.1:7788/chat` returns real Ollama text in about 12s, `POST /rpc core.ping` returns ok, and OpenHuman UI returns HTTP 200 locally and through `https://vm-niclaw.tail7a9097.ts.net:10000/`.
-- **Next Exact Steps**:
-  - Keep OpenHuman on local Ollama direct mode until a cloud provider is credited/healthy or OpenClaw local-model context is optimized.
-  - Later, re-enable Host API/OpenClaw chat mode only after a real smoke test proves `agent:openhuman` can complete through OpenClaw without long Ollama runner stalls.
-  - Antigravity Android Command Center work remains separate; Codex did not touch Antigravity Android files.
+## Previous update (2026-06-20) - Complete NiClaw Implementation Roadmap
+- **State**: `NICLAW_IMPLEMENTATION_ROADMAP.md` created and frozen. Added global `Provenance Everywhere` rule.
 
-## Latest update (2026-06-13) - Dev Command Center Phase 1 Native in NiClaw
-- **Current State**:
-  - Codex added the native NiClaw `/command-center` route and sidebar entry.
-  - Host API now exposes real Command Center endpoints under `/api/command-center/*`: status, projects, git, tasks, logs, reports, inbox, and report generation.
-  - New backend services create and inspect a local `dev-vault` under the NiClaw app data directory, scan real development workspaces, read actual git status, parse `inbox/tasks.md`, redact sensitive log previews, and generate Markdown reports.
-  - The Command Center UI consumes only Host API data; empty/error states are shown honestly instead of using mock data.
-  - Removed the previous renderer-side Agent Mesh status patch that forced `niclaw-host-api` online. Mesh status now remains whatever SuperHermes reports.
-  - Validation passed locally on Windows: `pnpm run typecheck` and `pnpm run build:vite`.
-- **Next Exact Steps**:
-  - Antigravity should avoid the files touched by this phase and focus on Android sync hooks, deeper project health scoring, and any UI refinements requested after testing the page.
-  - Codex can take Phase 2 next: richer logs filtering, report detail/open actions, bug/deployment lanes, and optional deployment to `vm-niclaw` Host API after user approval.
+## Previous update (2026-06-14) - Android Companion Host API Sync Repair
+- **State**: Android Kotlin companion repaired, pairing integrated securely via `/api/android/*`.
 
-## Latest update (2026-06-12) - Real Agent Mesh Backend Live
-- **Current State**:
-  - Codex implemented the real SuperHermes mesh gateway on `vm-niclaw` with `/api/mesh/status`, `/api/mesh/events`, `/api/mesh/brain`, `/api/mesh/hermes-dashboard`, and `/api/mesh/smoke-tests`.
-  - The mesh endpoint is live through Tailscale HTTPS at `https://vm-niclaw.tail7a9097.ts.net:8002/api/mesh/status`.
-  - Verified real status: SuperHermes API, Hermes Dashboard, OpenClaw Bridge, OpenHuman Core, and SecondBrain/OpenClaw memory are `online`; NiClaw Host API is `auth_required` until a safe client token/gateway flow is wired.
-  - Telegram Hermes context now consumes the mesh API instead of directly extracting Hermes Dashboard protected tokens; scheduled task `SERVER Telegram Command Watcher` was restarted and is running.
-  - SuperHermes API test suite passes with the new mesh tests: `30 passed`.
-  - Antigravity contract is documented in SecondBrain as `Agent Mesh API Contract - Real Endpoints.md`; UI must use real `/api/mesh/*` data and no mock fallback.
-- **Next Exact Steps**:
-  - Antigravity finishes Windows Agent Mesh UI against the real mesh contract and removes mock/fallback sample data.
-  - Codex can add a secure NiClaw Host API auth bridge next so `niclaw-host-api` can move from `auth_required` to `online` without exposing tokens.
-  - After Antigravity finishes, run Windows typecheck/build and Android native build, then write final implementation log and re-index memory.
+## Previous update (2026-06-13) - OpenHuman Runtime Repair on vm-niclaw
+- **State**: OpenHuman console repaired via `POST /rpc` proxy, fallback to local `ollama-direct`.
 
-## Latest update (2026-06-13) - NiClaw Host API Bridge Secured
-- **Current State**:
-  - Codex finished the remaining secure Host API bridge work for the real mesh.
-  - SuperHermes now reads `SUPERHERMES_NICLAW_HOST_API_TOKEN` server-side from `/etc/superhermes-api.env` and uses it only to probe `http://127.0.0.1:13210/api/gateway/health`.
-  - Public `/api/mesh/status` responses do not expose Authorization headers, Bearer tokens, or token env names.
-  - Verified local and Tailscale mesh: all nodes are `online`, `offline=0`, `degraded=0`, including `niclaw-host-api`.
-  - Real mesh smoke test target `mesh-full-online` completed and wrote a real `agent.health` event.
-- **Next Exact Steps**:
-  - Antigravity should finish Windows Agent Mesh UI and Android UI/client wiring against `https://vm-niclaw.tail7a9097.ts.net:8002/api/mesh/*`.
-  - Codex should not touch Antigravity UI files unless explicitly asked; after Antigravity finishes, run final Windows/Android builds and memory sync.
+## Previous update (2026-06-13) - Dev Command Center Phase 1 Native in NiClaw
+- **State**: Native `/command-center` route, dev-vault creation, workspace parsing, logs preview.
+
+## Previous update (2026-06-12) - Real Agent Mesh Backend Live
+- **State**: SuperHermes mesh gateway live via `/api/mesh/*` on Tailscale. Telegram Hermes context updated.
+
+## Previous update (2026-06-13) - NiClaw Host API Bridge Secured
+- **State**: Secure server-side NiClaw Host API token injected into SuperHermes mesh for `online` status without secret leaks.
 
 ## Principal Project Direction (2026-05-31) - NiClaw Spatial AI OS
-- **Confirmed Direction**: Build NiClaw toward a 2.5D functional **Spatial AI Operating System**, inspired by the provided AXIAL STUDIO/SAMS references, without jumping prematurely into heavy full-3D visuals.
-- **Product North Star**: One coherent workspace where Explorer, Spatial Canvas, Command Palette, Agent Harness, Plan Mode, BoardAI, Kanban, Code Review, Terminal, Logs, and Android companion controls operate as one model-agnostic AI OS.
-- **Execution Rule**: Functionality first, polish second. Every visible zone must be backed by real Host API data/actions; no fake demo states or simulated backend behavior.
-- **Primary Implementation Track**:
-  - 1. Create a new desktop route/page: `src/pages/SpatialOS/index.tsx` plus route/sidebar entry.
-  - 2. Build the 2.5D shell: left Workspace Explorer, center Spatial Canvas, top Command Palette, right Inspector/AI Assistant, bottom Console/Events/Agent Logs, mini Workspace Map.
-  - 3. Connect real Host API data for agents, BoardAI, settings, health, builds, plans, and logs.
-  - 4. Add Interactive Plan Mode: `Plan -> Review -> Execute -> Observe -> Iterate`, persisted and executable through Host API.
-  - 5. Add Agent Harness cards with status, model, MCP servers, current task, logs, permissions, pause/resume, and approval gates.
-  - 6. Add native Kanban/Board/Code Review panels tied to real project tasks, files, agents, plans, and BoardAI nodes.
-  - 7. Extend Android with a `Spatial` companion tab for status, run/pause plan, approvals, BoardAI sync, and voice commands.
-- **Design Rule**: Light, premium, operational UI; 2.5D/isometric feel, restrained motion, clear density, real status indicators, and no decorative visuals that do not map to a real system object or action.
-- **No Loose Ends Rule**: Never leave final UI-only placeholders. If a Spatial OS feature needs backend/API support, build or connect the real Host API/backend contract. `vm-niclaw` is part of the active backend/runtime surface and must be considered for deployment and smoke testing.
+- **State**: NiClaw is a 2.5D Spatial AI OS. Operational functionality prioritized over fake UI.
 
-## Latest update (2026-06-12) - SuperHermes Council Integration
-- **Current State**:
-  - **Council Engine Native Migration**: Completed Faza 1 of the SuperHermes migration by bringing Council Sessions, Decision Graphs, and Voting/Review Flows natively into NiClaw using TypeScript/React.
-  - **Council Backend & State**: `CouncilEngine` coordinates subagents (Strategist, Architect, Reviewer, QA) natively in Node using `AgentProvider` abstraction. State is saved safely to `superhermes-state.json` decoupled from `plans.json`.
-  - **SpatialOS Integration**: Added Council API endpoints (`/api/council/*`) and registered the Council visualization UI under the SpatialOS dashboard as `CouncilHarness`.
-  - **Build Verified**: Handled types effectively, `tsc --noEmit` and `npm run build:vite` pass. The project compiles natively without an external Python dependency.
+## Previous update (2026-06-12) - SuperHermes Council Integration
+- **State**: CouncilEngine native migration to Node, SpatialOS integration via `/api/council/*`.
 
 ## Previous update (2026-06-06) - Upstream Merge & UI Conflicts Resolution
-- **Current State**:
-  - **Upstream Merge**: Fetched and merged `upstream/feature/ai-os-transformation-2031423738236411694` into local `feature/jarvis-mobile-integration`.
-  - **Conflict Resolution**: Successfully resolved 8 complex UI, routing, and store conflicts in `src/App.tsx`, `Sidebar.tsx`, `Agents/index.tsx`, `Builder/index.tsx`, `agents.ts`, `agent-config.ts`, `agent.ts`, and `mobile/package.json`.
-  - **Feature Preservation**: Kept our custom `JARVIS` Android Integration, `Governance`, and `SpatialOS` routes while integrating upstream's `Analytics` and `Execution Trace` routes.
-  - **Build Verified**: Cleaned up TS errors. `tsc --noEmit` and `pnpm run build:vite` pass.
-  - **Version Control**: Pushed safely to Forgejo (`https://forgejo.dracarys.ro/ai-operator/NiClaw`).
+- **State**: `upstream/feature/ai-os-transformation...` merged into `feature/jarvis-mobile-integration` successfully.
 
-## Previous update (2026-06-05) - Full Android Feature Parity: Dreams, Cron, Skills, Models & Headless Fixes
-- **Current State**:
-  - **Gateway RPC Proxy**: Added `POST /api/gateway/rpc` in [gateway.ts](file:///c:/Server/niclaw/app/electron/api/routes/gateway.ts) to forward arbitrary RPC calls from Android to `gatewayManager.rpc()`, deployed to `vm-niclaw`.
-  - **Headless Electron Stability**: Patched [ipc-handlers.ts](file:///c:/Server/niclaw/app/electron/main/ipc-handlers.ts) with null-safe `mainWindow` guards for crash-free VM headless operation.
-  - **Skills Toggle Endpoint**: Added `POST /api/skills/toggle` in [skills.ts](file:///c:/Server/niclaw/app/electron/api/routes/skills.ts) dispatching `skills.update` RPC to gateway.
-  - **Android Chat Status Fix**: Updated [ChatFragment.kt](file:///c:/Server/niclaw/app/mobile/android-kotlin/app/src/main/java/com/jarvis/ChatFragment.kt) to use `backgroundTintList` preserving circular indicator shape.
-  - **Android Dreams Sub-Screen**: Created [DreamsFragment.kt](file:///c:/Server/niclaw/app/mobile/android-kotlin/app/src/main/java/com/jarvis/DreamsFragment.kt) with metrics cards, doctor action buttons, phase/signal/diary containers, and config patch toggles, accessible from Settings.
-  - **Android Cron Jobs Sub-Screen**: Created [CronFragment.kt](file:///c:/Server/niclaw/app/mobile/android-kotlin/app/src/main/java/com/jarvis/CronFragment.kt) with job list, toggle, manual trigger, and API helpers in ApiClient.
-  - **Android Skills Sub-Screen**: Created [SkillsFragment.kt](file:///c:/Server/niclaw/app/mobile/android-kotlin/app/src/main/java/com/jarvis/SkillsFragment.kt) with skill list, enable/disable toggle, and API helpers.
-  - **Android Models/Providers Sub-Screen**: Created [ModelsFragment.kt](file:///c:/Server/niclaw/app/mobile/android-kotlin/app/src/main/java/com/jarvis/ModelsFragment.kt) with vendor icon mapping, default badge, toggle, set-default button, and API helpers.
-  - **Settings Navigation Expanded**: Added "Administrare Servicii" (Cron, Skills, Models) and "Consolidare Memorie (Dreams)" cards in Settings with back-stack fragment navigation.
-  - **Generic RPC Client**: Added `gatewayRpc` helper in [ApiClient.kt](file:///c:/Server/niclaw/app/mobile/android-kotlin/app/src/main/java/com/jarvis/ApiClient.kt) for arbitrary gateway RPC dispatching from Android.
-  - **Validation**: Desktop `pnpm run typecheck` passes (0 errors). Android `gradlew assembleDebug` BUILD SUCCESSFUL. APK installed on phone `3650f58e` and archived to OneDrive. Gateway deployed to `vm-niclaw`, service active.
-- **Next Exact Steps**:
-  - 1. E2E verify Dreams, Cron, Skills, and Models sub-screens on the physical phone over Tailscale HTTPS.
-  - 2. Connect and expand code review workspace panels with Git diff summary adapters on the Host API.
-  - 3. Consolidate Obsidian Second Brain notes and journals.
+## Previous update (2026-06-05) - Full Android Feature Parity
+- **State**: Gateway RPC proxy, Dreams, Cron, Skills, Models sub-screens integrated natively in Android app.
 
 ## Previous update (2026-06-02) - Android Spatial Companion, Gated Shell, & Kanban OS
-- **Current State**:
-  - **Tailscale HTTPS Host API Proxy & Android Companion Port Fix**: Configured a secure HTTPS proxy for port 13210 (`https://vm-niclaw.tail7a9097.ts.net:13210`) via Tailscale serve on the VM to route Host API requests properly.
-  - **Companion App HTTPS Port Routing Fix**: Modified [ApiClient.kt](file:///c:/Server/niclaw/app/mobile/android-kotlin/app/src/main/java/com/jarvis/ApiClient.kt) to route HTTPS calls to port `:13210` instead of the default 443 (which is mapped to the 18789 Gateway), resolving routing issues and restoring E2E plan actions from the phone.
-  - **Host API Request Logging**: Added request logging middleware in [server.ts](file:///c:/Server/niclaw/app/electron/api/server.ts) to audit methods, paths, and remote IPs in the daily logs on the VM.
-  - **OneDrive Deployment**: Compiled the updated Android app to `app-debug.apk` and copied it as `NiClaw-Companion.apk` to the synced OneDrive folder `C:\Users\nicus\OneDrive\Documents\111SERVER\`.
-  - **Spatial OS Host API & Browser Executors**: Implemented full execution contracts for `'host_api'` (dispatching local HTTP requests using `hostApiToken`) and `'browser'` (headless automation via native Electron `BrowserWindow` sandbox instances).
-  - **Spatial OS 2.5D Visual Polish**: Redesigned canvas zone controls into premium glassmorphic cards featuring isometric hover effects and dynamic neon pulsing status indicators.
-  - **Agent Harness Panel Expansions**: Added full support for manual approval gates toggles, active MCP configuration lists, logs, and pause/resume buttons on the Agent Harness cards inside the Spatial OS page, and updated the Zustands stores to persist settings.
-  - **Android Spatial tab & settings migration**: Added the `Spatial OS` fragment view to the bottom navigation bar switch mapping. Migrated chatbot channels configuration under Settings via a dedicated `Configurează Canale Bot` button replacing the fragment layout with back-stack support.
-  - **Kotlin compiler fix**: Resolved `textStyle` build-blocking compiler errors by switching assignments to standard Typeface helper methods. Debug app builds successfully to `app-debug.apk`.
-  - **Secure Gated Shell Execution**: Allowed specific commands (`git`, `pnpm`, `systemctl`, `pm2`) in Plan Mode via safe spawn validation rules.
-  - **Kanban Task Board**: Integrated persistent JSON task storage on the backend and Kanban grid view on the desktop frontend.
-  - **VM Deployment & Clean Typecheck**: Verified clean typechecking, synced updated files (`electron/api/context.ts`, `electron/api/server.ts`, `electron/api/routes/plans.ts`, `src/pages/SpatialOS/index.tsx`) to `/home/debian/NiClaw` on `vm-niclaw` guest workspace, and restarted the gateway service.
-  - **Android Companion App Token and Timeout Fixes**: Aligned the phone's gateway token with the VM's active token `clawx-770a755f899751f446c3e7859443bc33` in `JarvisPrefs.xml` via ADB. Modified `ApiClient.kt` to force HTTPS on port `13210` for Tailscale `.ts.net` domains, and increased OkHttpClient's read timeout to 60 seconds to support long-running VM tasks (e.g. Doctor Diagnose) without triggering client-side timeouts.
-  - **E2E Efficacy Verified**: Successfully ran a remote E2E test from the companion app on the physical phone: triggered the `doctor_diagnose` plan over Tailscale HTTPS, monitored the execution progress, and saw the completion events render live in the console on the phone screen.
-  - **Android Spatial OS Parity (Completed)**: Overhauled the Android companion app's Spatial fragment by implementing full-featured custom UI cards for:
-    1. **Agent Harness**: Dynamic listing of cluster agents with real-time toggle switches to pause/resume agents (making PUT requests to `/api/agents/:id`).
-    2. **Kanban Task Board**: Complete task creation popup, dynamic filtering by status column (To Do, In Progress, Done), and touch controls to transition tasks between statuses.
-    3. **System Health Metrics**: Real-time polling of gateway state, WebSocket transport connection, RPC Router readiness, and BoardAI reachability.
-  - **Android Build Validated**: Confirmed 100% syntax and build correctness via `gradlew.bat assembleDebug` (compilation finished cleanly in 55s) and copied the output package to the OneDrive transfer folder.
+- **State**: Tailscale HTTPS routing fixed, Plan Mode executors added, Kanban integrated.
 
-## Latest update (2026-06-11) - vm-niclaw Shared SecondBrain Memory Repaired
-- **Current State**:
-  - Windows refresh now mirrors `D:\Onedrive\SecondBrain\secondBrain` to `vm-niclaw:/home/debian/secondBrain` through `C:\Server\AI\sync-secondbrain-to-vm.ps1` using tar archive staging, not fragile `scp -r` wildcards.
-  - The sync imports VM agent runtime notes first from `AI Inbox Runs/Agent Runtime Memory`, then pushes the refreshed Obsidian vault back to `/home/debian/secondBrain`.
-  - OpenClaw memory on `vm-niclaw` uses `ollama/all-minilm` and a safe fast core in `/home/debian/.openclaw/workspace/memory`; full vault browsing is available through `/home/debian/.openclaw/workspace/secondbrain -> /home/debian/secondBrain`.
-  - Verified OpenClaw memory status: `13/13 files`, `24 chunks`, `dirty=false`, vector dims `384`; `openclaw memory search "Brain Sync Contract"` returns the shared memory contract.
-  - Hermes/GBrain PGLite was recovered after the previous WASM runtime failure. `gbrain import /home/debian/.openclaw/workspace/memory` imported `13 pages` / `16 chunks`; Hermes now has an `ExecStartPre` hook at `/usr/local/bin/hermes-gbrain-import-secondbrain-core` so every gateway restart refreshes GBrain from the same SecondBrain core.
-  - Hermes MCP startup was repaired without removing capabilities: Modal remains configured as a provider, the invalid MCP entry was removed, and Dracarys MCP now uses `/home/debian/.hermes/bin/dracarys-mcp-wrapper.sh` to start from the platform directory where `.env.local` and Prisma Client are valid.
-  - Current build baseline after memory/MCP fixes: `pnpm run typecheck`, `pnpm run build:vite`, Android `assembleDebug`, and `pnpm run package:win` all pass. Latest installer: `release/NiClaw-0.4.4-win-x64.exe` (`351,345,043` bytes).
-- **Next Exact Steps**:
-  - Keep durable Hermes/OpenClaw notes under `D:\Onedrive\SecondBrain\secondBrain\AI Inbox Runs\Agent Runtime Memory\...` so they survive the VM mirror cycle.
-  - If broader semantic recall is needed later, expand the curated `secondbrain-core` file list carefully; do not index secret/access/vault notes.
-  - Before declaring the whole product 100% complete, install/smoke the latest Windows installer, install/smoke the latest Android APK on target hardware, and run real E2E checks for Portal, Spatial OS, Plan Mode, BoardAI, Hermes/GBrain recall, OpenClaw memory search, and Obsidian note round-trip.
+## Previous update (2026-06-11) - vm-niclaw Shared SecondBrain Memory Repaired
+- **State**: `sync-secondbrain-to-vm.ps1` optimized, Hermes MCP startup fixed, Obsidian integration stabilized.
 
-## Latest update (2026-06-01) - Tailscale Connectivity & Secure Port Proxying Verified
-- **Current State**:
-  - **Tailscale Port & Access Audited**: Checked the active `tailscale serve` proxies on `vm-niclaw` (Tailnet IP `100.78.81.89`), confirming the root secure HTTPS path `https://vm-niclaw.tail7a9097.ts.net` successfully proxies to internal OpenClaw Gateway port `18789`.
-  - **Configuration Verified**: Confirmed that `"bind": "lan"` in `openclaw.json` correctly binds the gateway process to `0.0.0.0`, allowing direct listening on Tailscale interfaces.
-  - **Secure Token Authentication**: Successfully tested pre-authenticated Control UI navigation over Tailscale: `https://vm-niclaw.tail7a9097.ts.net/?token=clawx-770a755f899751f446c3e7859443bc33` cleanly serves the official static dashboard with no warning logs.
-  - **Auxiliary Port Routing**: Confirmed NousResearch Hermes Dashboard (`:8443` -> `7789`), OpenHuman Web Interface (`:10000` -> `7788`), and VS Code Web (`:8000` -> `8080`) are completely active and accessible via HTTPS proxies over the virtual private net.
+## Previous update (2026-06-01) - Tailscale Connectivity & Secure Port Proxying Verified
+- **State**: Tailscale serve proxies for OpenClaw (18789), Hermes (8443), OpenHuman (10000), VS Code (8000).
 
 ## Previous update (2026-06-01) - Modal API & GLM-5.1 Integration in Hermes & OpenClaw
-- **Previous State**:
-  - **Modal API Integration**: Configured Hermes `/home/debian/.hermes/config.yaml` to connect directly to the Modal API completions endpoint (`https://api.us-west-2.modal.direct/v1`) using the `custom` provider schema.
-  - **GLM-5.1 Model Setup**: Configured `zai-org/GLM-5.1-FP8` as the primary default LLM model inside `/home/debian/.hermes/config.yaml` to leverage GLM-5.1 for core bot messaging and terminal operations.
-  - **Credentials Storage**: Added the pre-shared static Bearer token (`modalresearch_cW6iBts2...`) to the provider config and also declared `MODAL_API_KEY` inside `/home/debian/.hermes/.env` for secondary credentials discovery.
-  - **OpenClaw Integration**: Configured OpenClaw `/home/debian/.openclaw/openclaw.json` by adding the custom `modal` provider (endpoint `https://api.us-west-2.modal.direct/v1`, type `openai-completions`), defining `modal:default` auth profile under `auth.profiles`, mapping the `zai-org/GLM-5.1-FP8` model metadata, and setting it as the primary default agent model.
-  - **OpenClaw Keys Storage**: Injected the Modal API Key directly into OpenClaw's local profile store `/home/debian/.openclaw/agents/main/agent/auth-profiles.json` and cleaned up stale plugin entries to guarantee 100% warning-free config loads.
-  - **VM Services Reloaded**: Successfully restarted `hermes-dashboard.service`, `hermes-gateway.service`, `clawx-ai-os.service`, `openclaw-gateway.service`, and `jarvis-command-center.service` on `vm-niclaw` to load the updated configurations.
-  - **Verification Smoke**: Ran real CLI smoke queries on the VM via `hermes` and verified OpenClaw model provider status via `openclaw models status` reports the provider as completely active and healthy.
+- **State**: Configured `modal` provider and `GLM-5.1-FP8` as default.
 
 ## Previous update (2026-05-30) - BoardAI Publish Verified & App Builds
-- **Current State**:
-  - **No Loose Ends Rule Recorded**: Owner confirmed that Spatial OS must never leave disconnected UI surfaces. Missing backend/API work must be implemented or wired correctly; `vm-niclaw` is an active backend/runtime target.
-  - **Plan Mode Backend Implemented**: Added real Host API route `electron/api/routes/plans.ts`, registered in `electron/api/server.ts`, with persistent JSON storage under Host API `userData/spatial/plans.json`.
-  - **Plan Mode UI Wired**: `src/pages/SpatialOS/index.tsx` now fetches `GET /api/plans`, creates persisted plans through `POST /api/plans`, runs them through `POST /api/plans/:id/run`, and displays backend run events in the console.
-  - **Executor Boundary**: Initial backend executor supports `manual` and `note` steps. Unsupported step kinds are persisted and reported as `blocked`, not simulated.
-  - **BoardAI Plan Executor Live**: Extracted reusable `syncBoardSnapshot()` from `electron/api/routes/board.ts` and wired the safe real `board_sync` executor in `electron/api/routes/plans.ts`. Spatial OS can create a BoardAI Sync plan and run the existing real publish path through Plan Mode.
-  - **Doctor Diagnose Plan Executor Live**: Wired safe read-only `doctor_diagnose` through the existing `runOpenClawDoctor()` service. Spatial OS can create a Doctor Diagnose plan; configuration-changing `--fix` remains outside Plan Mode until approval gates exist.
-  - **Spatial Host API Deployed on vm-niclaw**: Uploaded `board.ts`, `plans.ts`, and `server.ts` to `/home/debian/NiClaw`, restarted `clawx-ai-os.service`, and verified `GET /api/plans`, persisted Doctor diagnose execution (`exit=0`), and real BoardAI publish through Plan Mode.
-  - **BoardAI Runtime Metadata Normalized**: BoardAI status now rewrites runtime paths on each sync. Verified on `vm-niclaw`: revision `7`, `48` nodes, `15` arrows, reachable public board, and Linux paths under `/home/debian/NiClaw`.
-  - **Spatial Approval Gate Live**: `electron/api/routes/plans.ts` now persists step-level approval state and audit entries. Risky Plan steps are blocked until explicitly approved through `POST /api/plans/:planId/steps/:stepId/approval`.
-  - **Doctor Fix Approval-Gated**: Added real `doctor_fix` execution through `runOpenClawDoctorFix()`. Spatial OS exposes create, approve, and reject controls. VM smoke verified `pending -> blocked -> approved -> rejected -> blocked` without executing repair.
-  - **Spatial Frontend Synced to vm-niclaw**: Uploaded `src/App.tsx`, `src/components/layout/Sidebar.tsx`, and `src/pages/SpatialOS/index.tsx` to `/home/debian/NiClaw`; the remote dev runtime reloaded and returned to healthy gateway state.
-  - **Spatial Gateway Health Adapter Corrected**: Spatial OS now reads the real `/api/gateway/health` contract (`ok`, `capabilities.core.process`, `transport`, `rpcRouter`) instead of relying only on legacy summary fields. VM verification reports `running`, `connected`, `ready`, and healthy OpenClaw state.
-  - **Gateway Restart Approval-Gated and Live**: Added the real `gateway_restart` Spatial Plan executor through the existing `GatewayManager.restart()` backend path and exposed a Spatial OS quick action. Risky approvals are now one-shot: dispatch changes approval state to `consumed`, so replay is blocked until a new explicit approval is recorded.
-  - **Gateway Restart VM Smoke Verified**: Deployed `plans.ts` and the Spatial OS page to `/home/debian/NiClaw`, restarted `clawx-ai-os.service`, and verified `pending -> blocked -> approved -> completed -> consumed -> replay blocked`. Gateway health returned to `process=running`, `transport=connected`, `rpcRouter=ready`, and OpenClaw `healthy`.
-  - **Allowlisted Typecheck Plan Executor Live**: Added approval-gated `build_validation` with structured `validationProfile: "typecheck"` only. The backend runs `pnpm run typecheck` with `spawn`, no shell, a timeout, bounded output, and one-shot approval consumption.
-  - **Typecheck VM Smoke Verified**: Deployed the executor and UI to `vm-niclaw`, repaired VM checkout dependency/source drift (`@xyflow/react`, Agents store/page, Builder, Remote Access settings), and verified `blocked -> approved -> completed(exit=0) -> consumed -> replay blocked`.
-  - **VM Runtime Recovery Completed**: A live dependency refresh left the VM guest unresponsive during service restart. Recovered with Proxmox VM `115` power-cycle, removed the stale gateway process holding `18789`, reconnected through the existing Host API start path, and reverified `process=running`, `transport=connected`, `rpcRouter=ready`, OpenClaw `healthy`.
-  - **BoardAI Brainmap Auto-Regeneration Live**: Added deterministic backend generator `electron/utils/board-brainmap.ts`. Every `/api/board/sync` and Plan Mode `board_sync` now regenerates `ai/BOARD_BRAINMAP.json` from the current `ai/BRAINMAP.md` before publishing.
-  - **BoardAI Generated Publish VM Smoke Verified**: Deployed the generator and shared BoardAI route to `vm-niclaw`; direct sync published revision `8`, Plan Mode sync published revision `9`, and final canonical memory sync published revision `10`. Generated live snapshot reports `62` nodes, `60` arrows, Linux source path, and reachable public board.
-  - **Spatial OS First Pass Implemented**: Added desktop route `/spatial` via `src/pages/SpatialOS/index.tsx`, registered in `src/App.tsx`, and exposed in `src/components/layout/Sidebar.tsx` as `Spatial OS`.
-  - **2.5D Shell Live Data**: The first shell renders Workspace Explorer, Spatial Canvas, Command Palette placeholder, Inspector, Workspace Map, and Terminal/Events/Agent Logs using real Host API/stores for agents, gateway health, BoardAI status, and logs.
-  - **No-Mock Guard Preserved**: Plan Mode, Kanban, and Code Review zones explicitly show missing Host API contracts instead of simulated/demo data.
-  - **Spatial Validation**: `pnpm run typecheck`, `pnpm run lint:check` (51 existing warnings, 0 errors), and `pnpm run build:vite` pass after the first Spatial OS implementation.
-  - **Windows Production Package Built**: `pnpm run package:win` completed successfully and generated `release/NiClaw-0.4.4-win-x64.exe` (351,091,280 bytes), plus `latest.yml` and blockmap metadata.
-  - **Android Debug APK Built**: `mobile/android-kotlin/gradlew.bat assembleDebug` completed successfully and confirmed `mobile/android-kotlin/app/build/outputs/apk/debug/app-debug.apk` (6,617,726 bytes).
-  - **Build Warnings Only**: Windows package emitted existing Vite chunk/dynamic-import warnings, package-bundler patch-skip notices, and pnpm config deprecation text. Android emitted the existing Android Gradle Plugin vs `compileSdk=34` warning and Gradle 9 deprecation notice. No build-blocking errors.
-  - **BoardAI Remote Publish Live**: Found the BoardAI backend/vault in `C:\Server\board\v1\whiteboard`, generated a dedicated local API token through the official BoardAI auth endpoint, and saved it in `%USERPROFILE%\.boardai-vault\config.json`.
-  - **Host API Token Resolution**: `electron/api/routes/board.ts` now reads `BOARD_AI_TOKEN`/`BOARDAI_TOKEN` first, then falls back to the local BoardAI vault config token. It also handles UTF-8 BOM in JSON config/status files.
-  - **Remote Publish Verified**: Published `ai/BOARD_BRAINMAP.json` to `https://board.private-driver.ro/?board=728273ef-9709-4f1c-a77e-ab7086bfeff3`; remote board now reports revision `5`, `48` nodes, and `15` arrows.
-  - **BoardAI Live Controls Implemented**: Added Host API `GET /api/board/status` and `POST /api/board/sync` in `electron/api/routes/board.ts`, registered through `electron/api/server.ts`.
-  - **Windows Portal Complete**: `src/pages/Portal/index.tsx` now shows a BoardAI live status strip with reachability, revision, snapshot node/edge counts, refresh status, and local sync actions.
-  - **Android Portal Complete**: `mobile/android-kotlin` Portal now includes a BoardAI tab, WebView loading for `board.private-driver.ro`, Host API status fetch, and local sync button via `ApiClient.getBoardStatus/syncBoard`.
-  - **Validation Baseline**: `pnpm run typecheck`, `pnpm run lint:check` (warnings only), `pnpm run build:vite`, and `mobile/android-kotlin/gradlew.bat assembleDebug` pass after BoardAI Windows + Android + remote publish implementation.
-  - **BoardAI Integrated**: Added `BoardAI Brainmap` to `src/pages/Portal/index.tsx`, embedding the published `board.private-driver.ro` project board from `ai/BOARD_SYNC_STATUS.json`.
-  - **Portal Now Covers**: OpenClaw, OpenHuman, Hermes, Gemini, Open Code, and BoardAI Brainmap in one command center.
-  - **Validation Baseline**: `pnpm run typecheck`, `pnpm run lint:check`, and `pnpm run build:vite` pass after the BoardAI integration.
-  - **Agent MCP Mapping Implemented**: Visual Builder `AgentNodeV2` can now carry custom MCP server configs (`name`, `command`, `args`) in node data, display a compact MCP summary on the agent card, and edit the full list in the node settings modal.
-  - **Agent Config Sync Implemented**: Builder save/deploy now writes `mcpServers` into OpenClaw agent config for both existing and newly created agents. Host API create/update accepts `mcpServers` and returns updated snapshots after metadata writes.
-  - **DAG Runner MCP Awareness**: Server-side DAG agent execution logs configured MCP tools and includes them in node outputs.
-  - **Validation Baseline**: `pnpm run typecheck`, `pnpm run lint:check`, and `pnpm run build:vite` pass. Vite dev compilation works, but Electron live launch exits if an existing NiClaw/ClawX instance holds the single-instance lock.
-  - **Repo Resume Complete**: Re-entered `C:\Server\niclaw\app`, read local instructions and AI memory, and confirmed active work on branch `feature/jarvis-mobile-integration`.
-  - **Validation Baseline Restored**: `pnpm run typecheck` passes, `pnpm run lint:check` passes with warnings only, and Android Kotlin debug build passes via `mobile/android-kotlin/gradlew.bat assembleDebug`.
-  - **Cleanup Applied**: Removed lint-blocking unused imports/variables/catches, removed direct setState-in-effect lint violations, and ignored legacy Expo `mobile/**/*.js` files in ESLint because the monorepo config targets TS/TSX.
-  - **Hermes Obsidian Second Brain Integration**: Successfully integrated the Obsidian Second Brain vault (`/home/debian/secondBrain`) directly into the background Hermes agent bot service (`hermes-gateway.service`) by setting the `OBSIDIAN_VAULT_PATH` environment variable in the VM's `.env` configurations. Re-synchronized and restarted the service to activate the native, robust `obsidian` note-taking and search skills.
-  - **Direct DeepSeek Integration**: Configured Hermes `/home/debian/.hermes/config.yaml` to connect directly to the official DeepSeek API (`https://api.deepseek.com/v1`) using the `custom` provider schema and the direct DeepSeek API key (`sk-da37b1e1...`). This bypasses OpenRouter completely to eliminate free daily limit caps and reduce latency.
-  - **DeepSeek Integration**: Set `deepseek/deepseek-chat` as the default model inside `/home/debian/.hermes/config.yaml` to leverage DeepSeek for all core bot messaging flows. Fixed auxiliary Gemini credential keys to prevent HTTP 403 authorization warnings.
-  - **Sync Parity Recovery**: Identified permission blockages and file lock issues during the streaming sync process (`sync-server-folder-to-vm.ps1`). Patched the PowerShell pipeline to exclude the Nextcloud temporary cache (`obsidian-nextcloud-stage`) and assets directory (`imports`), and restarted the streaming transfer of `C:\Server` to `/home/debian/Server` on the remote VM guest cleanly.
-- **Next Exact Steps**:
-  - 1. Connect and expand code review workspace panels with Git diff summary adapters on the Host API.
-  - 2. Sync the updated Android Kotlin client and Host API code changes to `/home/debian/NiClaw` on `vm-niclaw`.
-  - 3. Consolidate Obsidian Second Brain notes and journals.
-
- -   * * 2 0 2 6 - 0 6 - 2 0   P h a s e   4 . 4 B * * :   A n t i g r a v i t y   i m p l e m e n t e d   A n d r o i d   W o r k s p a c e   V i e w .   T a s k D e t a i l F r a g m e n t   n o w   f e t c h e s   / a p i / o r c h e s t r a t o r / t a s k s / : t a s k I d / w o r k s p a c e   t o   d i s p l a y   a   d u r a b l e   t i m e l i n e ,   s e p a r a t i n g   t a s k s ,   c o m m a n d s ,   a r t i f a c t s ,   a n d   p a t c h e s   s e a m l e s s l y .   A l s o   i n t e g r a t e d   p a t c h   r e v i e w   d i r e c t l y   f r o m   w o r k s p a c e   p a y l o a d s .  
- 
+- **State**: Real BoardAI publish added to Plan Mode. Windows installer and Android debug APK built successfully.

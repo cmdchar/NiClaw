@@ -23,6 +23,7 @@ import { handleBoardRoutes } from './routes/board';
 import { handlePlanRoutes } from './routes/plans';
 import { handleTaskRoutes } from './routes/tasks';
 import { handleObsidianRoutes } from './routes/obsidian';
+import { handleMemoryRoutes } from './routes/memory';
 import { handleDreamsRoutes } from './routes/dreams';
 import { handleGovernanceRoutes } from './routes/governance';
 import { handleCouncilRoutes } from './routes/council';
@@ -56,6 +57,7 @@ const coreRouteHandlers: RouteHandler[] = [
   handlePlanRoutes,
   handleTaskRoutes,
   handleObsidianRoutes,
+  handleMemoryRoutes,
   handleDreamsRoutes,
   handleGovernanceRoutes,
   handleDiagnosticsRoutes,

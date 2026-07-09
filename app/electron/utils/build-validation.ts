@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { processLauncher } from '../runtime/runtime-factory';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
@@ -35,7 +35,7 @@ function appendOutput(current: string, data: Buffer | string): string {
 
 export async function runBuildValidation(profile: BuildValidationProfile): Promise<BuildValidationResult> {
   const config = BUILD_VALIDATION_PROFILES[profile];
-  const cwd = app.getAppPath();
+  const cwd = process.cwd();
   const command = `pnpm run ${config.script}`;
   const startedAt = Date.now();
 

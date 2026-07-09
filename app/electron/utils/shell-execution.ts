@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { processLauncher } from '../runtime/runtime-factory';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
@@ -82,7 +82,7 @@ function appendOutput(current: string, data: Buffer | string): string {
 
 export async function runShellCommand(commandLine: string): Promise<ShellExecutionResult> {
   const startedAt = Date.now();
-  const cwd = app.getAppPath();
+  const cwd = process.cwd();
 
   if (!isCommandAllowed(commandLine)) {
     return {

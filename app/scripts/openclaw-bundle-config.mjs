@@ -36,4 +36,8 @@ export const EXTRA_BUNDLED_PACKAGES = [
   // Electron main process QR login flows resolve these files from the
   // bundled OpenClaw runtime context in packaged builds.
   'qrcode-terminal',
+
+  // OpenClaw runtime files import dotenv from bundled dist chunks. Keep it
+  // explicit so VM artifacts do not depend on a parent/global node_modules.
+  'dotenv',
 ];

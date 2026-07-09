@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir, appendFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { app } from 'electron';
+import { pathProvider } from '../runtime/runtime-factory';
 import { memoryPromotionService } from './memory-promotion';
 
 export type GovernanceAction = 'create_note' | 'append_to_note' | 'create_link' | 'create_folder';
@@ -27,12 +27,12 @@ export class MemoryGovernanceService {
   private logPath: string;
 
   constructor() {
-    this.logPath = join(app.getPath('home'), '.openclaw', 'governance', 'memory-change-log.jsonl');
+    this.logPath = join(pathProvider.getHomePath(), '.openclaw', 'governance', 'memory-change-log.jsonl');
   }
 
   async initialize() {
     try {
-      await mkdir(join(app.getPath('home'), '.openclaw', 'governance'), { recursive: true });
+      await mkdir(join(pathProvider.getHomePath(), '.openclaw', 'governance'), { recursive: true });
     } catch (e) {
       console.warn('[MemoryGovernanceService] Error creating governance dir', e);
     }

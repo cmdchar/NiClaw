@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { app } from 'electron';
+import { pathProvider } from '../runtime/runtime-factory';
 import { logger } from '../utils/logger';
 import { extensionRegistry } from './registry';
 import type { Extension } from './types';
@@ -18,10 +18,10 @@ export function registerBuiltinExtension(id: string, factory: () => Extension): 
 }
 
 function resolveManifestPath(): string {
-  if (app.isPackaged) {
+  if (pathProvider.isPackaged()) {
     return join(process.resourcesPath, 'clawx-extensions.json');
   }
-  return join(app.getAppPath(), 'clawx-extensions.json');
+  return join(pathProvider.getAppPath(), 'clawx-extensions.json');
 }
 
 export async function loadExtensionsFromManifest(): Promise<void> {

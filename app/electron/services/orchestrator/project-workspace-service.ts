@@ -1,3 +1,4 @@
+import { pathProvider } from '../../runtime/runtime-factory';
 import { ProjectConfig, ProjectsRegistry } from './types';
 import { logger } from '../utils/logger';
 import fs from 'fs';
@@ -8,7 +9,7 @@ export class ProjectWorkspaceService {
 
   constructor() {
     this.storePromise = import('electron-store').then(({ default: Store }) => {
-      return new Store({ name: 'projects-registry' });
+      return new Store({ name: 'projects-registry', cwd: pathProvider.getUserDataPath() });
     });
   }
 

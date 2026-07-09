@@ -886,12 +886,33 @@ function findFilesByName(rootDir, matcher) {
   return matches;
 }
 
+function findFirstFileContaining(rootDir, matcher, needles) {
+  for (const file of findFilesByName(rootDir, matcher)) {
+    let content = '';
+    try {
+      content = fs.readFileSync(file, 'utf8');
+    } catch {
+      continue;
+    }
+    if (needles.every((needle) => content.includes(needle))) {
+      return file;
+    }
+  }
+  return null;
+}
+
 function patchBundledRuntime(outputDir) {
+  const distDir = path.join(outputDir, 'dist');
   const replacePatches = [
     {
       label: 'workspace command runner',
-      target: () => findFirstFileByName(path.join(outputDir, 'dist'), /^workspace-.*\.js$/),
-      search: `\tconst child = spawn(resolvedCommand, finalArgv.slice(1), {
+      target: () =>
+        findFirstFileContaining(distDir, /^(exec|workspace)-.*\.js$/, [
+          'const child = spawn(',
+          'shouldSpawnWithShell',
+        ]),
+      searches: [
+        `\tconst child = spawn(resolvedCommand, finalArgv.slice(1), {
 \t\tstdio,
 \t\tcwd,
 \t\tenv: resolvedEnv,
@@ -901,6 +922,7 @@ function patchBundledRuntime(outputDir) {
 \t\t\tplatform: process$1.platform
 \t\t}) ? { shell: true } : {}
 \t});`,
+      ],
       replace: `\tconst child = spawn(resolvedCommand, finalArgv.slice(1), {
 \t\tstdio,
 \t\tcwd,
@@ -912,6 +934,7 @@ function patchBundledRuntime(outputDir) {
 \t\t\tplatform: process$1.platform
 \t\t}) ? { shell: true } : {}
 \t});`,
+      alreadyPatched: ['windowsHide: invocation.windowsHide', 'windowsHide: true'],
     },
     // Note: OpenClaw 3.31 removed the hash-suffixed agent-scope-*.js, chrome-*.js,
     // and qmd-manager-*.js files from dist/plugin-sdk/. Patches for those spawn
@@ -927,12 +950,16 @@ function patchBundledRuntime(outputDir) {
     }
 
     const current = fs.readFileSync(target, 'utf8');
-    if (!current.includes(patch.search)) {
-      echo`   ⚠️  Skipped patch for ${patch.label}: expected source snippet not found`;
+    const search = (patch.searches || [patch.search]).find((candidate) => current.includes(candidate));
+    if (!search) {
+      const alreadyPatched = (patch.alreadyPatched || []).some((needle) => current.includes(needle));
+      if (!alreadyPatched) {
+        echo`   ⚠️  Skipped patch for ${patch.label}: expected source snippet not found`;
+      }
       continue;
     }
 
-    const next = current.replace(patch.search, patch.replace);
+    const next = current.replace(search, patch.replace);
     if (next !== current) {
       fs.writeFileSync(target, next, 'utf8');
       count++;
@@ -944,19 +971,28 @@ function patchBundledRuntime(outputDir) {
   }
 
   const ptyTargets = findFilesByName(
-    path.join(outputDir, 'dist'),
-    /^(subagent-registry|reply|pi-embedded)-.*\.js$/,
+    distDir,
+    /^(bash-tools|supervisor|subagent-registry|reply|pi-embedded)-.*\.js$/,
   );
   const ptyPatches = [
     {
       label: 'pty launcher windowsHide',
-      search: `\tconst pty = spawn(params.shell, params.args, {
+      searches: [
+        `\tconst pty = spawn(params.shell, params.args, {
 \t\tcwd: params.cwd,
 \t\tenv: params.env ? toStringEnv(params.env) : void 0,
 \t\tname: params.name ?? process.env.TERM ?? "xterm-256color",
 \t\tcols: params.cols ?? 120,
 \t\trows: params.rows ?? 30
 \t});`,
+        `\tconst pty = spawn(preparedSpawn.command, preparedSpawn.args, {
+\t\tcwd: params.cwd,
+\t\tenv: preparedSpawn.env ? toStringEnv(preparedSpawn.env) : void 0,
+\t\tname: params.name ?? process.env.TERM ?? "xterm-256color",
+\t\tcols: params.cols ?? 120,
+\t\trows: params.rows ?? 30
+\t});`,
+      ],
       replace: `\tconst pty = spawn(params.shell, params.args, {
 \t\tcwd: params.cwd,
 \t\tenv: params.env ? toStringEnv(params.env) : void 0,
@@ -965,16 +1001,38 @@ function patchBundledRuntime(outputDir) {
 \t\trows: params.rows ?? 30,
 \t\twindowsHide: true
 \t});`,
+      replaceBySearch: new Map([
+        [
+          `\tconst pty = spawn(preparedSpawn.command, preparedSpawn.args, {
+\t\tcwd: params.cwd,
+\t\tenv: preparedSpawn.env ? toStringEnv(preparedSpawn.env) : void 0,
+\t\tname: params.name ?? process.env.TERM ?? "xterm-256color",
+\t\tcols: params.cols ?? 120,
+\t\trows: params.rows ?? 30
+\t});`,
+          `\tconst pty = spawn(preparedSpawn.command, preparedSpawn.args, {
+\t\tcwd: params.cwd,
+\t\tenv: preparedSpawn.env ? toStringEnv(preparedSpawn.env) : void 0,
+\t\tname: params.name ?? process.env.TERM ?? "xterm-256color",
+\t\tcols: params.cols ?? 120,
+\t\trows: params.rows ?? 30,
+\t\twindowsHide: true
+\t});`,
+        ],
+      ]),
+      alreadyPatched: ['\t\trows: params.rows ?? 30,\n\t\twindowsHide: true\n\t});'],
     },
     {
       label: 'disable pty on windows',
-      search: `\t\t\tconst usePty = params.pty === true && !sandbox;`,
+      searches: [`\t\t\tconst usePty = params.pty === true && !sandbox;`],
       replace: `\t\t\tconst usePty = params.pty === true && !sandbox && process.platform !== "win32";`,
+      alreadyPatched: [`\t\t\tconst usePty = params.pty === true && !sandbox && process.platform !== "win32";`],
     },
     {
       label: 'disable approval pty on windows',
-      search: `\t\t\t\t\tpty: params.pty === true && !sandbox,`,
+      searches: [`\t\t\t\t\tpty: params.pty === true && !sandbox,`],
       replace: `\t\t\t\t\tpty: params.pty === true && !sandbox && process.platform !== "win32",`,
+      alreadyPatched: [`\t\t\t\t\tpty: params.pty === true && !sandbox && process.platform !== "win32",`],
     },
   ];
 
@@ -983,16 +1041,24 @@ function patchBundledRuntime(outputDir) {
     let matchedAny = false;
     for (const target of ptyTargets) {
       const current = fs.readFileSync(target, 'utf8');
-      if (!current.includes(patch.search)) continue;
+      const search = patch.searches.find((candidate) => current.includes(candidate));
+      if (!search) continue;
       matchedAny = true;
-      const next = current.replaceAll(patch.search, patch.replace);
+      const replace = patch.replaceBySearch?.get(search) || patch.replace;
+      const next = current.replaceAll(search, replace);
       if (next !== current) {
         fs.writeFileSync(target, next, 'utf8');
         ptyCount++;
       }
     }
     if (!matchedAny) {
-      echo`   ⚠️  Skipped patch for ${patch.label}: expected source snippet not found`;
+      const alreadyPatched = ptyTargets.some((target) => {
+        const current = fs.readFileSync(target, 'utf8');
+        return patch.alreadyPatched.some((needle) => current.includes(needle));
+      });
+      if (!alreadyPatched) {
+        echo`   ⚠️  Skipped patch for ${patch.label}: expected source snippet not found`;
+      }
     }
   }
 
@@ -1012,7 +1078,6 @@ function patchBundledRuntime(outputDir) {
   const ORIGINAL_SHORT = 'Do NOT retry the browser tool.';
   const PATCHED_SHORT = 'You may retry once if this was a transient error.';
 
-  const distDir = path.join(outputDir, 'dist');
   let hintCount = 0;
   if (fs.existsSync(distDir)) {
     for (const file of fs.readdirSync(distDir)) {

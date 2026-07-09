@@ -1,10 +1,11 @@
-import { app, utilityProcess } from 'electron';
 import { existsSync, writeFileSync } from 'fs';
 import path from 'path';
 import type { GatewayLaunchContext } from './config-sync';
 import type { GatewayLifecycleState } from './process-policy';
 import { logger } from '../utils/logger';
 import { appendNodeRequireToNodeOptions } from '../utils/paths';
+import { processLauncher, pathProvider } from '../runtime/runtime-factory';
+import type { GatewayProcess } from '../runtime/interfaces/process-launcher';
 
 const GATEWAY_FETCH_PRELOAD_SOURCE = `'use strict';
 (function () {
@@ -81,7 +82,7 @@ const GATEWAY_FETCH_PRELOAD_SOURCE = `'use strict';
 `;
 
 function ensureGatewayFetchPreload(): string {
-  const dest = path.join(app.getPath('userData'), 'gateway-fetch-preload.cjs');
+  const dest = path.join(pathProvider.getUserDataPath(), 'gateway-fetch-preload.cjs');
   try {
     writeFileSync(dest, GATEWAY_FETCH_PRELOAD_SOURCE, 'utf-8');
   } catch {
@@ -98,9 +99,9 @@ export async function launchGatewayProcess(options: {
   getShouldReconnect: () => boolean;
   onStderrLine: (line: string) => void;
   onSpawn: (pid: number | undefined) => void;
-  onExit: (child: Electron.UtilityProcess, code: number | null) => void;
+  onExit: (child: GatewayProcess, code: number | null) => void;
   onError: (error: Error) => void;
-}): Promise<{ child: Electron.UtilityProcess; lastSpawnSummary: string }> {
+}): Promise<{ child: GatewayProcess; lastSpawnSummary: string }> {
   const {
     openclawDir,
     entryScript,
@@ -120,32 +121,14 @@ export async function launchGatewayProcess(options: {
 
   const runtimeEnv = { ...forkEnv };
 
-  // Disable OpenClaw's mDNS/Bonjour gateway advertiser unconditionally.
-  //
-  // The OpenClaw gateway advertises `_openclaw-gw._tcp.local` on every
-  // active network interface using a hardcoded `openclaw.local` hostname,
-  // which causes:
-  //   - cross-machine name collisions when multiple OpenClaw/ClawX peers
-  //     share a LAN (each falls back to "<name> (OpenClaw) (2)")
-  //   - self-collisions on multi-homed hosts (Wi-Fi + Tailscale + utun ...)
-  //   - "ghost" record collisions after an unclean ClawX exit, because
-  //     SIGKILL prevents ciao from emitting the mDNS goodbye record.
-  //
-  // ClawX has no UI for LAN gateway discovery today, so the advertiser is
-  // pure log noise.  `OPENCLAW_DISABLE_BONJOUR=1` short-circuits
-  // `startGatewayBonjourAdvertiser()` (openclaw `src/infra/bonjour.ts`,
-  // `isDisabledByEnv()`).  Set after the `forkEnv` spread so any
-  // pre-existing value inherited from the user shell cannot re-enable it.
   runtimeEnv.OPENCLAW_DISABLE_BONJOUR = '1';
   runtimeEnv.OPENCLAW_TELEMETRY_DISABLED = '1';
   runtimeEnv.OPENCLAW_NO_TELEMETRY = '1';
   runtimeEnv.DO_NOT_TRACK = '1';
 
   // Only apply the fetch/child_process preload in dev mode.
-  // In packaged builds Electron's UtilityProcess rejects NODE_OPTIONS
-  // with --require, logging "Most NODE_OPTIONs are not supported in
-  // packaged apps" and the preload never loads.
-  if (!app.isPackaged) {
+  const isPackaged = process.env.NODE_ENV !== 'development' && __dirname.includes('app.asar');
+  if (!isPackaged) {
     try {
       const preloadPath = ensureGatewayFetchPreload();
       if (existsSync(preloadPath)) {
@@ -159,12 +142,11 @@ export async function launchGatewayProcess(options: {
     }
   }
 
-  return await new Promise<{ child: Electron.UtilityProcess; lastSpawnSummary: string }>((resolve, reject) => {
-    const child = utilityProcess.fork(entryScript, gatewayArgs, {
+  return await new Promise<{ child: GatewayProcess; lastSpawnSummary: string }>((resolve, reject) => {
+    const child = processLauncher.fork(entryScript, gatewayArgs, {
       cwd: openclawDir,
-      stdio: 'pipe',
+      stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
       env: runtimeEnv as NodeJS.ProcessEnv,
-      serviceName: 'OpenClaw Gateway',
     });
 
     let settled = false;
@@ -179,25 +161,20 @@ export async function launchGatewayProcess(options: {
       reject(error);
     };
 
-    child.on('error', (error) => {
+    child.on('error', (error: any) => {
       logger.error('Gateway process spawn error:', error);
       options.onError(error);
       rejectOnce(error);
     });
 
     child.on('exit', (code: number) => {
-      // Only check shouldReconnect — not current state.  On Windows the WS
-      // close handler fires before the process exit handler and sets state to
-      // 'stopped', which would make an unexpected crash look like a planned
-      // shutdown in logs.  shouldReconnect is the reliable indicator: stop()
-      // sets it to false (expected), crashes leave it true (unexpected).
       const expectedExit = !options.getShouldReconnect();
       const level = expectedExit ? logger.info : logger.warn;
       level(`Gateway process exited (code=${code}, expected=${expectedExit ? 'yes' : 'no'})`);
       options.onExit(child, code);
     });
 
-    child.stderr?.on('data', (data) => {
+    child.stderr?.on('data', (data: any) => {
       const raw = data.toString();
       for (const line of raw.split(/\r?\n/)) {
         options.onStderrLine(line);
@@ -209,5 +186,18 @@ export async function launchGatewayProcess(options: {
       options.onSpawn(child.pid);
       resolveOnce();
     });
+    
+    // In node's child_process.fork, spawn might not emit if it's already running.
+    // For safety with utilityProcess which emits it vs node child_process:
+    if (child.pid) {
+      // Ensure we resolve if spawn already happened or if the emitter didn't catch it
+      setTimeout(() => {
+        if (!settled) {
+          logger.info(`Gateway process started (fallback pid=${child.pid})`);
+          options.onSpawn(child.pid);
+          resolveOnce();
+        }
+      }, 50);
+    }
   });
 }

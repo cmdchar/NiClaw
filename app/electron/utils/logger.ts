@@ -7,7 +7,7 @@
  * Only the final `process.on('exit')` handler uses synchronous I/O to
  * guarantee the last few messages are flushed before the process exits.
  */
-import { app } from 'electron';
+import { pathProvider } from '../runtime/runtime-factory';
 import { join } from 'path';
 import { existsSync, mkdirSync, appendFileSync } from 'fs';
 import { appendFile, open, readdir, stat } from 'fs/promises';
@@ -91,11 +91,12 @@ process.on('exit', flushBufferSync);
 export function initLogger(): void {
   try {
     // In production, default to INFO to reduce log volume and overhead.
-    if (app.isPackaged && currentLevel < LogLevel.INFO) {
+    const isPackaged = process.env.NODE_ENV !== 'development' && __dirname.includes('app.asar');
+    if (isPackaged && currentLevel < LogLevel.INFO) {
       currentLevel = LogLevel.INFO;
     }
 
-    logDir = join(app.getPath('userData'), 'logs');
+    logDir = pathProvider.getLogsPath();
 
     if (!existsSync(logDir)) {
       mkdirSync(logDir, { recursive: true });

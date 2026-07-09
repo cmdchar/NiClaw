@@ -1,6 +1,8 @@
 import { PostHog } from 'posthog-node';
 import { machineIdSync } from 'node-machine-id';
-import { app } from 'electron';
+import { join } from 'path';
+import { pathProvider, lifecycleManager } from '../runtime/runtime-factory';
+
 import { getSetting, setSetting } from './store';
 import { logger } from './logger';
 
@@ -11,9 +13,17 @@ const TELEMETRY_SHUTDOWN_TIMEOUT_MS = 1500;
 let posthogClient: PostHog | null = null;
 let distinctId: string = '';
 
+function getAppVersion(): string {
+    try {
+        return lifecycleManager.getAppVersion();
+    } catch (error) {
+        return 'unknown';
+    }
+}
+
 function getCommonProperties(): Record<string, string> {
     return {
-        $app_version: app.getVersion(),
+        $app_version: getAppVersion(),
         $os: process.platform,
         os_tag: process.platform,
         arch: process.arch,

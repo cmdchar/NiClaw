@@ -40,21 +40,28 @@ function resolveOpenClawPackageJson(packageName: string): string {
     }
 }
 
-const baileysPath = dirname(resolveOpenClawPackageJson('@whiskeysockets/baileys'));
+// Load Baileys dependencies dynamically (Lazy)
+let makeWASocket: any;
+let initAuth: any;
+let DisconnectReason: any;
+let fetchLatestBaileysVersion: any;
 
-// Load Baileys dependencies dynamically
-const {
-    default: makeWASocket,
-    useMultiFileAuthState: initAuth, // Rename to avoid React hook linter error
-    DisconnectReason,
-    fetchLatestBaileysVersion
-} = require(baileysPath);
+function ensureBaileys() {
+    if (makeWASocket) return;
+    const baileysPath = dirname(resolveOpenClawPackageJson('@whiskeysockets/baileys'));
+    const baileys = require(baileysPath);
+    makeWASocket = baileys.default;
+    initAuth = baileys.useMultiFileAuthState;
+    DisconnectReason = baileys.DisconnectReason;
+    fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion;
+}
+
 
 // Types from Baileys (approximate since we don't have types for dynamic require)
 interface BaileysError extends Error {
     output?: { statusCode?: number };
 }
-type BaileysSocket = ReturnType<typeof makeWASocket>;
+type BaileysSocket = any; // Was ReturnType<typeof makeWASocket>;
 type ConnectionState = {
     connection: 'close' | 'open' | 'connecting';
     lastDisconnect?: {
@@ -309,11 +316,10 @@ export class WhatsAppLoginManager extends EventEmitter {
             }
 
             console.log('[WhatsAppLogin] Loading auth state...');
+            ensureBaileys();
             const { state, saveCreds } = await initAuth(authDir);
-
-            console.log('[WhatsAppLogin] Fetching latest version...');
             const { version } = await fetchLatestBaileysVersion();
-
+            
             console.log(`[WhatsAppLogin] Starting login for ${accountId}, version: ${version}`);
 
             this.socket = makeWASocket({
