@@ -11,6 +11,29 @@ export async function handleAgentMeshRoutes(
   ctx: HostApiContext,
 ): Promise<boolean> {
   void ctx;
+  
+  if (url.pathname === '/api/agent-mesh/status' && req.method === 'GET') {
+    const { meshClient } = require('../../services/mesh/mesh-client');
+    sendJson(res, 200, {
+      success: true,
+      status: meshClient.getStatus(),
+      agentId: meshClient.getAgentId()
+    });
+    return true;
+  }
+
+  if (url.pathname === '/api/agent-mesh/message' && req.method === 'POST') {
+    try {
+      const body = await parseJsonBody(req);
+      logger.info(`[Mesh] Received message from ${body.from || 'unknown'}: ${body.topic}`);
+      // In v1, we just ack the message.
+      sendJson(res, 200, { success: true, message: 'Message received and logged.' });
+    } catch (e: any) {
+      sendJson(res, 400, { success: false, error: 'Invalid payload' });
+    }
+    return true;
+  }
+
   // Common handler for Mesh Proxy endpoints
   if (url.pathname.startsWith('/api/agent-mesh/')) {
     const gatewayToken = await getSetting('gatewayToken');

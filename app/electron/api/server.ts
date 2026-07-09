@@ -129,6 +129,10 @@ export function startHostApiServer(ctx: HostApiContext, port = getPort('CLAWX_HO
   }
   scheduleNightlyDreaming();
 
+  // Initialize Agent Mesh connection (Phase 4.5)
+  const { meshClient } = require('../services/mesh/mesh-client');
+  meshClient.start().catch((err: any) => logger.error('[MeshClient] Initialization failed', err));
+
   const server = createServer(async (req, res) => {
     try {
       const requestUrl = new URL(req.url || '/', `http://127.0.0.1:${port}`);
