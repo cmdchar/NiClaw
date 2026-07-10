@@ -10,7 +10,7 @@
   - **Phase 4.5 (Agent Mesh Initialization v1)** is COMPLETE (Host API now has a `MeshClientService` that maintains heartbeat, connects safely to SuperHermes, and exposes local `/api/agent-mesh/status`).
 - **Outstanding Work for Hermes / Next Agents**:
   - **Phase 4.5 Remaining Tasks**:
-    - Build out the *Telegram Hermes Context Provider* (`4.5.4`).
+    - ~~Build out the *Telegram Hermes Context Provider* (`4.5.4`).~~ ✅ COMPLETE (commit `7213715`)
     - Integrate Mesh Events into the *Desktop Agent Activity Cards* (`4.5.5`) so the user can visually see what agents are doing in the UI.
     - Extend the *Android Agent Activity* screen (`4.5.6`).
   - **Next Major Roadmap Phases (Pending Operator Direction)**:

@@ -87,13 +87,13 @@ Acceptance:
 
 On `vm-niclaw`:
 
-- [ ] Add context endpoint or context assembler for Hermes.
-- [ ] Include active tasks.
-- [ ] Include recent workspace events.
-- [ ] Include agent health.
-- [ ] Include memory sync status.
-- [ ] Include Android sync devices.
-- [ ] Include current blocked approvals.
+- [x] Add context endpoint or context assembler for Hermes.
+- [x] Include active tasks.
+- [x] Include recent workspace events.
+- [x] Include agent health.
+- [x] Include memory sync status.
+- [x] Include Android sync devices.
+- [x] Include current blocked approvals.
 
 Acceptance:
 
