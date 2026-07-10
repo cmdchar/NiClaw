@@ -32,6 +32,7 @@ import { handleCommandCenterRoutes } from './routes/command-center';
 import { handleModelsRoutes } from './routes/models';
 import { handleOrchestratorRoutes } from './routes/orchestrator';
 import { handleAndroidRoutes, isAndroidPairRequest } from './routes/android';
+import { handleHermesContextRoutes } from './routes/hermes-context';
 import { sendJson, setCorsHeaders, requireJsonContentType } from './route-utils';
 import { hermesDreamEngine } from '../services/dream-engine';
 
@@ -66,6 +67,7 @@ const coreRouteHandlers: RouteHandler[] = [
   handleCouncilRoutes,
   handleAndroidRoutes,
   handleAgentMeshRoutes,
+  handleHermesContextRoutes,
   handleCommandCenterRoutes,
   handleModelsRoutes,
   handleOrchestratorRoutes,
