@@ -1,6 +1,6 @@
 # Phase 4.5 - Agent Communication, Hermes Awareness, And Mesh Reporting
 
-Status: planned
+Status: partial (v1 complete)
 Created: 2026-06-20
 
 ## Objective

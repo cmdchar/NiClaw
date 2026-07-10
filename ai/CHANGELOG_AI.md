@@ -1,5 +1,29 @@
 # NiClaw AI Changelog
 
+## 2026-06-21 - Phase 4.8E2B VM Bundle Port Override Closeout
+
+### Fixed
+- `app/electron/main/index.ts`: added the missing `getPort` import required by production headless boot after port override changes.
+- `app/scripts/openclaw-bundle-config.mjs`: added `dotenv` to bundled OpenClaw runtime dependencies so the VM artifact can boot the gateway without missing-package failure.
+- `app/scripts/package-vm-bundle.mjs`: fixed VM `.npmrc` newline handling, preserved executable mode for Linux runtime binaries inside the tarball, and added validation for `resources/bin/linux-x64/uv`.
+
+### Verified Locally
+- `node --check app/scripts/package-vm-bundle.mjs` passed.
+- `pnpm run package:vm` passed.
+- Final artifact checksum: `b5dc375a33e1f1d284c0f833b1a9df6fc48057405cadba1bf066a759d805ab82`.
+- Tarball inspection confirms `.npmrc` is line-safe and `resources/bin/linux-x64/uv` is `-rwxr-xr-x`.
+
+### Blocked
+- VM staging validation could not be completed because `vm-niclaw` and Proxmox Tailscale endpoints stopped completing SSH/HTTP handshakes.
+- A partial artifact exists on `vm-niclaw` under `/tmp/niclaw-artifacts/` and must be removed/retransferred before the next staging extraction.
+
+## 2026-06-21 - OpenClaw Bundle Patch Compatibility
+
+### Fixed
+- `app/scripts/bundle-openclaw.mjs`: Updated optional bundled runtime patching for current OpenClaw output layout.
+- The workspace command runner patch now recognizes the current `exec-*.js` runtime and treats upstream `windowsHide` support as already safe.
+- PTY hardening now targets current `bash-tools-*.js` and `supervisor-*.js` files, applying `windowsHide: true` and disabling PTY on Windows without stale skipped-patch warnings.
+
 ## 2026-06-20 – Phase 4.4C Desktop Workspace UI
 
 ### Completed

@@ -2,7 +2,39 @@
 
 > [!CAUTION]
 > **CRITICAL RULE**: Never interpret architecture review, planning approval, or design approval as implementation approval. Infrastructure changes (systemd, firewall, SSH, VM runtime) always require explicit execution approval.
-## Latest update (2026-07-06) - Phase 4.9C Dual Runtime Support Complete
+## Latest update (2026-07-10) - Full System Backup & Handover to Hermes
+- **Current State**:
+  - The repository was successfully duplicated to a full clone at `D:\ai\Server\niclawbeforeCLI` (17.4 GB) to serve as a robust, safe baseline before starting massive CLI-based refactoring.
+  - The codebase currently sits at `v0.4.8-staging.0`.
+  - **Phase 4.9 (Security Policy Audit)** and **Phase 5.0 (Final Tagging)** are 100% COMPLETE.
+  - **Phase 4.5 (Agent Mesh Initialization v1)** is COMPLETE (Host API now has a `MeshClientService` that maintains heartbeat, connects safely to SuperHermes, and exposes local `/api/agent-mesh/status`).
+- **Outstanding Work for Hermes / Next Agents**:
+  - **Phase 4.5 Remaining Tasks**:
+    - Build out the *Telegram Hermes Context Provider* (`4.5.4`).
+    - Integrate Mesh Events into the *Desktop Agent Activity Cards* (`4.5.5`) so the user can visually see what agents are doing in the UI.
+    - Extend the *Android Agent Activity* screen (`4.5.6`).
+  - **Next Major Roadmap Phases (Pending Operator Direction)**:
+    - Phase 4.6 (SecondBrain Unification) or further Agent Mesh UI tasks depending on priority.
+- **Critical Context for Next Agent**:
+  - Do NOT break the baseline deployment process.
+  - Development operations will shift towards heavy CLI execution instead of pure GUI. Use the `niclawbeforeCLI` backup on `D:` if disastrous rollbacks are needed.
+  - The `MeshClientService` is already wired in `startHostApiServer()` (see `app/electron/api/server.ts`).
+
+## Previous update (2026-07-09) - Agent Mesh Initialization (v1) & v0.4.8 Baseline
+- **Current State**:
+  - **Phase 4.9 â€“ Security Policy Audit**: COMPLETE.
+  - **Phase 5.0 â€“ Final Tagging**: COMPLETE (Tagged `v0.4.8` as stable baseline).
+  - **Phase 4.5 â€“ Agent Mesh Initialization (v1)**: COMPLETE.
+  - **Blocking issues**: NONE.
+- **Milestones**:
+  - Hardened the deployment pipeline and verified `openclaw` bundle on the VM.
+  - Audited security policies, removed legacy hardcoded tokens in `openclaw-adapter.ts`, generated `PHASE_4_9_AUDIT_REPORT.md`.
+  - Implemented `MeshClientService` inside Host API to establish resilient heartbeat, connection, and registration with SuperHermes mesh.
+  - Corrected `preinstalled-manifest.json` pointing to `self-improving-agent`, enabling successful production builds.
+- **Next Exact Steps**:
+  - Awaiting operator directive: proceed with UI integration for Agent Mesh (Task 4.5.5 - Desktop Agent Activity Cards) or explore other areas of the roadmap.
+
+## Previous update (2026-07-06) - Phase 4.9C Dual Runtime Support Complete
 - **Current State**:
   - **Phase 4.9B – Runtime Abstraction Layer**: COMPLETE.
   - **Phase 4.9C – Dual Runtime Support**: COMPLETE.
